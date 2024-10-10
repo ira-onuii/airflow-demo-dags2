@@ -4,7 +4,7 @@ from airflow.operators.bash import BashOperator
 from datetime import datetime, timedelta
 
 @dag(start_date=datetime(2024, 2, 2), schedule_interval='@daily', catchup=False)
-def test_day_dag2():
+def test_day_dag3():
 
     # Define tasks
     task_1 = BashOperator(task_id='brush_teeth', bash_command='echo "Brushed teeth"', retries=3, retry_delay=timedelta(minutes=5))
@@ -43,4 +43,4 @@ def test_day_dag2():
     # Set final task dependency
     review_day(news_result, work_result, relax_result)
 
-test_day_dag2()
+test_day_dag3()
