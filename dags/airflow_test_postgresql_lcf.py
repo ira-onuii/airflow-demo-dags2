@@ -42,12 +42,12 @@ def lcf_save_results_to_s3(**context):
     lcf_save_to_s3_with_hook(df, 'onuii-data-pipeline', 'lecture_change_form', lcf_filename)
 
 def lcf_insert_postgres_data(**context):
-    from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
+    from airflow.providers.postgres.hooks.postgres import PostgresHook
 
     records = context['ti'].xcom_pull(task_ids='lcf_run_select_query')
     insert_query = warehouse_query.lcf_insert_query
 
-    pg_hook = SQLExecuteQueryOperator(postgres_conn_id='postgres_dev_conn')
+    pg_hook = PostgresHook(postgres_conn_id='postgres_dev_conn')
     pg_conn = pg_hook.get_conn()
     pg_cursor = pg_conn.cursor()
 

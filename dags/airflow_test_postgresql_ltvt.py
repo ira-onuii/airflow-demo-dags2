@@ -1,3 +1,10 @@
+import sys
+import os
+
+# 현재 파일이 있는 디렉토리를 sys.path에 추가
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+import warehouse_query
+
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 #from airflow.providers.trino.operators.trino import TrinoOperator
@@ -5,7 +12,6 @@ from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.utils.dates import days_ago
 from datetime import datetime, timedelta
 #from airflow.operators.bash import BashOperator
-import custom_modules.warehouse_query
 import pandas as pd
 from io import StringIO
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
@@ -26,7 +32,7 @@ def ltvt_save_to_s3_with_hook(data, bucket_name, folder_name, file_name):
     hook.load_string(csv_buffer.getvalue(), key=f"{folder_name}/{file_name}", bucket_name=bucket_name, replace=True)
 
 def ltvt_run_select_query():
-    select_query = custom_modules.warehouse_query.ltvt_select_query
+    select_query = warehouse_query.ltvt_select_query
     return select_query
 
 def ltvt_save_results_to_s3(**context):
@@ -39,7 +45,7 @@ def ltvt_insert_postgres_data(**context):
     from airflow.providers.postgres.hooks.postgres import PostgresHook
 
     records = context['ti'].xcom_pull(task_ids='ltvt_run_select_query')
-    insert_query = custom_modules.warehouse_query.ltvt_insert_query
+    insert_query = warehouse_query.ltvt_insert_query
 
     pg_hook = PostgresHook(postgres_conn_id='postgres_dev_conn')
     pg_conn = pg_hook.get_conn()
@@ -84,7 +90,7 @@ ltvt_run_query = SQLExecuteQueryOperator(
 ltvt_delete_row = SQLExecuteQueryOperator(
     task_id="ltvt_delete_row",
     conn_id='postgres_dev_conn',
-    sql=custom_modules.warehouse_query.ltvt_delete_query
+    sql=warehouse_query.ltvt_delete_query
 )
 
 ltvt_insert_data = PythonOperator(
