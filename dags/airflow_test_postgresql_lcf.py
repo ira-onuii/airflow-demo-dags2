@@ -5,7 +5,7 @@ from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.utils.dates import days_ago
 from datetime import datetime, timedelta
 #from airflow.operators.bash import BashOperator
-import warehouse_query
+from custom_modules import warehouse_query
 import pandas as pd
 from io import StringIO
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
