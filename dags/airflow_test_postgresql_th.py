@@ -16,15 +16,15 @@ import pandas as pd
 from io import StringIO
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 
-
-
 date = str(((datetime.now()) + timedelta(hours=9)).strftime("%Y-%m-%d"))
 
-ltvt_filename = 'pg_lecture_teacher_vt_'+date + '.csv'
+th_filename = 'pg_tteok_ham_'+date + '.csv'
 
 
-#ltvt
-def ltvt_save_to_s3_with_hook(data, bucket_name, folder_name, file_name):
+
+
+#th
+def th_save_to_s3_with_hook(data, bucket_name, folder_name, file_name):
     csv_buffer = StringIO()
     data.to_csv(csv_buffer, index=False)
 
@@ -33,17 +33,17 @@ def ltvt_save_to_s3_with_hook(data, bucket_name, folder_name, file_name):
 
 
 
-def ltvt_save_results_to_s3(**context):
-    query_results = context['ti'].xcom_pull(task_ids='ltvt_run_select_query')
-    column_names = ["lecture_teacher_vt_No", "teacher_user_No", "lecture_vt_No", "last_schedule_No", "teacher_vt_status", "academic_departments", "teacher_academic_major", "division_of_matching_standard", "active_done_month", "total_done_month", "reactive_at", "create_at", "update_at", "lecture_subject_id"]
+def th_save_results_to_s3(**context):
+    query_results = context['ti'].xcom_pull(task_ids='th_run_select_query')
+    column_names = ["tteok_ham_No", "item_type", "item_detailed_type", "tteok_ham_type", "group_No", "shelf_life", "months", "tteok_ham_title", "tteok_ham_subtitle1", "tteok_ham_subtitle2", "tteok_ham_subtitle3", "subjects", "isshow", "tteok_ham_price"]
     df = pd.DataFrame(query_results, columns=column_names)
-    ltvt_save_to_s3_with_hook(df, 'onuii-data-pipeline', 'lecture_teacher_vt', ltvt_filename)
+    th_save_to_s3_with_hook(df, 'onuii-data-pipeline', 'tteok_ham', th_filename)
 
-def ltvt_insert_postgres_data(**context):
+def th_insert_postgres_data(**context):
     from airflow.providers.postgres.hooks.postgres import PostgresHook
 
-    records = context['ti'].xcom_pull(task_ids='ltvt_run_select_query')
-    insert_query = warehouse_query.ltvt_insert_query
+    records = context['ti'].xcom_pull(task_ids='th_run_select_query')
+    insert_query = warehouse_query.th_insert_query
 
     pg_hook = PostgresHook(postgres_conn_id='postgres_dev_conn')
     pg_conn = pg_hook.get_conn()
@@ -58,6 +58,10 @@ def ltvt_insert_postgres_data(**context):
     pg_cursor.close()
     pg_conn.close()
 
+
+
+
+
 default_args = {
     'owner': 'Chad',
     'depends_on_past': False,
@@ -67,41 +71,43 @@ default_args = {
 }
 
 dag = DAG(
-    'data-warehouse-test-postgresql-ltvt',
+    'data-warehouse-test-postgresql-th',
     default_args=default_args,
     description='Run query and load result to S3',
-    schedule='5 17 * * *',
+    schedule='30 17 * * *',
 )
 
 
 
 
-#ltvt
-ltvt_run_query = SQLExecuteQueryOperator(
-    task_id='ltvt_run_select_query',
-    sql=warehouse_query.ltvt_select_query,
+#th
+th_run_query = SQLExecuteQueryOperator(
+    task_id='th_run_select_query',
+    sql=warehouse_query.th_select_query,
     conn_id='legacy_staging_conn',
     do_xcom_push=True,
     dag=dag,
 )
 
-ltvt_delete_row = SQLExecuteQueryOperator(
-    task_id="ltvt_delete_row",
-    conn_id='postgres_dev_conn',
-    sql=warehouse_query.ltvt_delete_query
+th_delete_row = SQLExecuteQueryOperator(
+    task_id="th_delete_row",
+    conn_id='postgres_conn',
+    sql=warehouse_query.th_delete_query
 )
 
-ltvt_insert_data = PythonOperator(
-    task_id='insert_ltvt_data',
-    python_callable=ltvt_insert_postgres_data,
+th_insert_data = PythonOperator(
+    task_id='insert_th_data',
+    python_callable=th_insert_postgres_data,
     provide_context=True,
 )
 
-ltvt_save_to_s3_task = PythonOperator(
-    task_id='ltvt_save_to_s3',
-    python_callable=ltvt_save_results_to_s3,
+th_save_to_s3_task = PythonOperator(
+    task_id='th_save_to_s3',
+    python_callable=th_save_results_to_s3,
     provide_context=True,
 )
+
+
 
 
 
@@ -112,6 +118,6 @@ ltvt_save_to_s3_task = PythonOperator(
 #     bash_command='dbt run --profiles-dir /opt/airflow/dbt_project/.dbt --project-dir /opt/airflow/dbt_project --models /opt/airflow/dbt_project/models/pg_active_lecture/active_lecture.sql',
 # )
 
-ltvt_run_query >> ltvt_delete_row >> ltvt_insert_data >> ltvt_save_to_s3_task 
+th_run_query >> th_delete_row >> th_insert_data >> th_save_to_s3_task 
 
 

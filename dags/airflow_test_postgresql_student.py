@@ -16,15 +16,16 @@ import pandas as pd
 from io import StringIO
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 
-
-
 date = str(((datetime.now()) + timedelta(hours=9)).strftime("%Y-%m-%d"))
 
-ltvt_filename = 'pg_lecture_teacher_vt_'+date + '.csv'
+student_filename = 'pg_student_'+date + '.csv'
 
 
-#ltvt
-def ltvt_save_to_s3_with_hook(data, bucket_name, folder_name, file_name):
+
+
+
+#student
+def student_save_to_s3_with_hook(data, bucket_name, folder_name, file_name):
     csv_buffer = StringIO()
     data.to_csv(csv_buffer, index=False)
 
@@ -33,17 +34,17 @@ def ltvt_save_to_s3_with_hook(data, bucket_name, folder_name, file_name):
 
 
 
-def ltvt_save_results_to_s3(**context):
-    query_results = context['ti'].xcom_pull(task_ids='ltvt_run_select_query')
-    column_names = ["lecture_teacher_vt_No", "teacher_user_No", "lecture_vt_No", "last_schedule_No", "teacher_vt_status", "academic_departments", "teacher_academic_major", "division_of_matching_standard", "active_done_month", "total_done_month", "reactive_at", "create_at", "update_at", "lecture_subject_id"]
+def student_save_results_to_s3(**context):
+    query_results = context['ti'].xcom_pull(task_ids='student_run_select_query')
+    column_names = ["user_No", "term_grade_id", "parent_phone_number", "parent_name", "year"]
     df = pd.DataFrame(query_results, columns=column_names)
-    ltvt_save_to_s3_with_hook(df, 'onuii-data-pipeline', 'lecture_teacher_vt', ltvt_filename)
+    student_save_to_s3_with_hook(df, 'onuii-data-pipeline', 'student', student_filename)
 
-def ltvt_insert_postgres_data(**context):
+def student_insert_postgres_data(**context):
     from airflow.providers.postgres.hooks.postgres import PostgresHook
 
-    records = context['ti'].xcom_pull(task_ids='ltvt_run_select_query')
-    insert_query = warehouse_query.ltvt_insert_query
+    records = context['ti'].xcom_pull(task_ids='student_run_select_query')
+    insert_query = warehouse_query.student_insert_query
 
     pg_hook = PostgresHook(postgres_conn_id='postgres_dev_conn')
     pg_conn = pg_hook.get_conn()
@@ -51,12 +52,16 @@ def ltvt_insert_postgres_data(**context):
 
     for record in records:
         pg_cursor.execute(insert_query, (
-            record[0], record[1], record[2], record[3], record[4], record[5], record[6], record[7], record[8], record[9], record[10], record[11], record[12], record[13]
+            record[0], record[1], record[2], record[3], record[4]
         ))
 
     pg_conn.commit()
     pg_cursor.close()
     pg_conn.close()
+
+
+
+
 
 default_args = {
     'owner': 'Chad',
@@ -67,41 +72,42 @@ default_args = {
 }
 
 dag = DAG(
-    'data-warehouse-test-postgresql-ltvt',
+    'data-warehouse-test-postgresql-student',
     default_args=default_args,
     description='Run query and load result to S3',
-    schedule='5 17 * * *',
+    schedule='25 17 * * *',
 )
 
 
 
-
-#ltvt
-ltvt_run_query = SQLExecuteQueryOperator(
-    task_id='ltvt_run_select_query',
-    sql=warehouse_query.ltvt_select_query,
+#student
+student_run_query = SQLExecuteQueryOperator(
+    task_id='student_run_select_query',
+    sql=warehouse_query.student_select_query,
     conn_id='legacy_staging_conn',
     do_xcom_push=True,
     dag=dag,
 )
 
-ltvt_delete_row = SQLExecuteQueryOperator(
-    task_id="ltvt_delete_row",
-    conn_id='postgres_dev_conn',
-    sql=warehouse_query.ltvt_delete_query
+student_delete_row = SQLExecuteQueryOperator(
+    task_id="student_delete_row",
+    conn_id='postgres_conn',
+    sql=warehouse_query.student_delete_query
 )
 
-ltvt_insert_data = PythonOperator(
-    task_id='insert_ltvt_data',
-    python_callable=ltvt_insert_postgres_data,
+student_insert_data = PythonOperator(
+    task_id='insert_student_data',
+    python_callable=student_insert_postgres_data,
     provide_context=True,
 )
 
-ltvt_save_to_s3_task = PythonOperator(
-    task_id='ltvt_save_to_s3',
-    python_callable=ltvt_save_results_to_s3,
+student_save_to_s3_task = PythonOperator(
+    task_id='student_save_to_s3',
+    python_callable=student_save_results_to_s3,
     provide_context=True,
 )
+
+
 
 
 
@@ -112,6 +118,6 @@ ltvt_save_to_s3_task = PythonOperator(
 #     bash_command='dbt run --profiles-dir /opt/airflow/dbt_project/.dbt --project-dir /opt/airflow/dbt_project --models /opt/airflow/dbt_project/models/pg_active_lecture/active_lecture.sql',
 # )
 
-ltvt_run_query >> ltvt_delete_row >> ltvt_insert_data >> ltvt_save_to_s3_task 
+student_run_query >> student_delete_row >> student_insert_data >> student_save_to_s3_task 
 
 
