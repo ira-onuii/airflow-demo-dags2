@@ -5,7 +5,7 @@ from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.utils.dates import days_ago
 from datetime import datetime, timedelta
 #from airflow.operators.bash import BashOperator
-from custom_modules import warehouse_query
+import custom_modules.warehouse_query
 import pandas as pd
 from io import StringIO
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
@@ -25,7 +25,7 @@ def lcf_save_to_s3_with_hook(data, bucket_name, folder_name, file_name):
     hook.load_string(csv_buffer.getvalue(), key=f"{folder_name}/{file_name}", bucket_name=bucket_name, replace=True)
 
 def lcf_run_select_query():
-    select_query = warehouse_query.lcf_select_query
+    select_query = custom_modules.warehouse_query.lcf_select_query
     return select_query
 
 def lcf_save_results_to_s3(**context):
@@ -38,7 +38,7 @@ def lcf_insert_postgres_data(**context):
     from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 
     records = context['ti'].xcom_pull(task_ids='lcf_run_select_query')
-    insert_query = warehouse_query.lcf_insert_query
+    insert_query = custom_modules.warehouse_query.lcf_insert_query
 
     pg_hook = SQLExecuteQueryOperator(postgres_conn_id='postgres_dev_conn')
     pg_conn = pg_hook.get_conn()
@@ -86,7 +86,7 @@ lcf_run_query = SQLExecuteQueryOperator(
 lcf_delete_row = SQLExecuteQueryOperator(
     task_id="lcf_delete_row",
     conn_id='postgres_dev_conn',
-    sql=warehouse_query.lcf_delete_query
+    sql=custom_modules.warehouse_query.lcf_delete_query
 )
 
 lcf_insert_data = PythonOperator(
