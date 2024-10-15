@@ -90,7 +90,7 @@ scph_run_query = SQLExecuteQueryOperator(
 
 scph_delete_row = SQLExecuteQueryOperator(
     task_id="scph_delete_row",
-    conn_id='postgres_conn',
+    conn_id='postgres_dev_conn',
     sql=warehouse_query.scph_delete_query
 )
 

@@ -31,7 +31,7 @@ def payment_save_to_s3_with_hook(data, bucket_name, folder_name, file_name):
 
 
 def payment_save_results_to_s3(**context):
-    query_results = context['ti'].xcom_pull(task_ids='ltvt_run_select_query')
+    query_results = context['ti'].xcom_pull(task_ids='payment_run_select_query')
     column_names = ["payment_No", "user_No", "LGD_AMOUNT", "LGD_BUYER", "order_id", "LGD_TID", "LGD_PAYTYPE", "TTEOK_HAM_No", "LGD_PRODUCTINFO", "payment_regdate", "memo", "lecture_vt_No", "supply_value", "additional_tax", "cancelled_supply_value", "cancelled_additional_tax", "completed_at", "discountd_value", "cancelled_pg_tid", "cancelled_amount", "cancelled_pg_fee", "state", "original_payment_id", "payment_method"]
     df = pd.DataFrame(query_results, columns=column_names)
     payment_save_to_s3_with_hook(df, 'onuii-data-pipeline', 'payment', payment_filename)
@@ -75,7 +75,7 @@ dag = DAG(
 
 #payment
 payment_run_query = SQLExecuteQueryOperator(
-    task_id='payment_run_trino_query',
+    task_id='payment_run_select_query',
     sql=warehouse_query.payment_select_query,
     conn_id='legacy_staging_conn',
     do_xcom_push=True,
@@ -84,7 +84,7 @@ payment_run_query = SQLExecuteQueryOperator(
 
 payment_delete_row = SQLExecuteQueryOperator(
     task_id="payment_delete_row",
-    conn_id='postgres_conn',
+    conn_id='postgres_dev_conn',
     sql=warehouse_query.payment_delete_query
 )
 

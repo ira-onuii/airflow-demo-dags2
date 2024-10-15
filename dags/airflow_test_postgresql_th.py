@@ -91,7 +91,7 @@ th_run_query = SQLExecuteQueryOperator(
 
 th_delete_row = SQLExecuteQueryOperator(
     task_id="th_delete_row",
-    conn_id='postgres_conn',
+    conn_id='postgres_dev_conn',
     sql=warehouse_query.th_delete_query
 )
 

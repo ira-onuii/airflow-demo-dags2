@@ -84,7 +84,7 @@ dag = DAG(
 
 #scs
 scs_run_query = SQLExecuteQueryOperator(
-    task_id='scs_run_trino_query',
+    task_id='scs_run_select_query',
     sql=warehouse_query.scs_select_query,
     conn_id='legacy_staging_conn',
     do_xcom_push=True,
@@ -93,7 +93,7 @@ scs_run_query = SQLExecuteQueryOperator(
 
 scs_delete_row = SQLExecuteQueryOperator(
     task_id="scs_delete_row",
-    conn_id='postgres_conn',
+    conn_id='postgres_dev_conn',
     sql=warehouse_query.scs_delete_query
 )
 
