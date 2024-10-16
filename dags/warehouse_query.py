@@ -39,9 +39,39 @@ select lecture_change_form_No, lecture_vt_No, integration_No, form_type, process
 	from lecture_change_form
 '''
 
-lvts_select_query = '''
+lvts_select_query1 = '''
 select schedule_No, follow_No, lecture_vt_No, lecture_cycle_No, stage_count, cycle_count, is_free, offer_type, schedule_state, tutoring_datetime, last_tutoring_datetime, create_datetime, update_datetime, cycle_payment_item, per_done_month
 	from lecture_VT_schedules
+	where schedule_No between 1 and 50000
+'''
+
+lvts_select_query2 = '''
+select schedule_No, follow_No, lecture_vt_No, lecture_cycle_No, stage_count, cycle_count, is_free, offer_type, schedule_state, tutoring_datetime, last_tutoring_datetime, create_datetime, update_datetime, cycle_payment_item, per_done_month
+	from lecture_VT_schedules
+	where schedule_No between 50001 and 100000
+'''
+
+lvts_select_query3 = '''
+select schedule_No, follow_No, lecture_vt_No, lecture_cycle_No, stage_count, cycle_count, is_free, offer_type, schedule_state, tutoring_datetime, last_tutoring_datetime, create_datetime, update_datetime, cycle_payment_item, per_done_month
+	from lecture_VT_schedules
+	where schedule_No between 100001 and 150000
+'''
+
+lvts_select_query4 = '''
+select schedule_No, follow_No, lecture_vt_No, lecture_cycle_No, stage_count, cycle_count, is_free, offer_type, schedule_state, tutoring_datetime, last_tutoring_datetime, create_datetime, update_datetime, cycle_payment_item, per_done_month
+	from lecture_VT_schedules
+	where schedule_No between 15001 and 200000
+'''
+
+lvts_select_query5 = '''
+select schedule_No, follow_No, lecture_vt_No, lecture_cycle_No, stage_count, cycle_count, is_free, offer_type, schedule_state, tutoring_datetime, last_tutoring_datetime, create_datetime, update_datetime, cycle_payment_item, per_done_month
+	from lecture_VT_schedules
+	where schedule_No between 20001 and 250000
+'''
+
+lvts_pg_query = '''
+select *
+	from lecture_vt_schedules
 '''
 
 ltvt_select_query = '''
