@@ -60,7 +60,7 @@ select schedule_No, follow_No, lecture_vt_No, lecture_cycle_No, stage_count, cyc
 lvts_select_query4 = '''
 select schedule_No, follow_No, lecture_vt_No, lecture_cycle_No, stage_count, cycle_count, is_free, offer_type, schedule_state, tutoring_datetime, last_tutoring_datetime, create_datetime, update_datetime, cycle_payment_item, per_done_month
 	from lecture_VT_schedules
-	where schedule_No between 15001 and 200000
+	where schedule_No between 150001 and 200000
 '''
 
 lvts_select_query5 = '''
