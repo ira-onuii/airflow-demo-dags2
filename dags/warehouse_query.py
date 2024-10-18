@@ -4,6 +4,13 @@ date = str(((datetime.now()) + timedelta(hours=9)).strftime("%Y-%m-%d"))
 
 table_name = f'"{date}"'
 
+
+
+las_select_query = '''
+select lecture_vt_no, `학생번호`, `학교명`, `희망전공`, `학년`, `주소`, `지역`, `희망성별`, `신청_동기`, `다른학교튜터가능`, `신청 ipad 색상`
+	from lecture_application_students las
+'''
+
 lvt_select_query = '''
 select lecture_vt_no,student_user_no,lecture_subject_id,student_type,tutoring_state,payment_item,next_payment_item,current_schedule_no,stage_max_cycle_count,stage_free_cycle_count,stage_pre_offer_cycle_count,stage_offer_cycle_count,create_datetime,update_datetime,last_done_datetime,application_datetime,memo,total_subject_done_month,reactive_datetime
 	from lecture_video_tutoring lvt
@@ -12,6 +19,7 @@ select lecture_vt_no,student_user_no,lecture_subject_id,student_type,tutoring_st
 user_select_query = '''
 select user_No, term_user_type, user_status, email_id, nickname, name, phone_number, device, school_seq, sex, birth_year, recent_login_datetime, join_datetime, login_version, login_device
 	from user u
+    where u.user_No >= 450000
 '''
 
 ttn_select_query = '''
@@ -39,40 +47,15 @@ select lecture_change_form_No, lecture_vt_No, integration_No, form_type, process
 	from lecture_change_form
 '''
 
-lvts_select_query1 = '''
-select schedule_No, follow_No, lecture_vt_No, lecture_cycle_No, stage_count, cycle_count, is_free, offer_type, schedule_state, tutoring_datetime, last_tutoring_datetime, create_datetime, update_datetime, cycle_payment_item, per_done_month
-	from lecture_VT_schedules
-	where schedule_No between 1 and 50000
-'''
 
-lvts_select_query2 = '''
-select schedule_No, follow_No, lecture_vt_No, lecture_cycle_No, stage_count, cycle_count, is_free, offer_type, schedule_state, tutoring_datetime, last_tutoring_datetime, create_datetime, update_datetime, cycle_payment_item, per_done_month
-	from lecture_VT_schedules
-	where schedule_No between 50001 and 100000
-'''
 
-lvts_select_query3 = '''
-select schedule_No, follow_No, lecture_vt_No, lecture_cycle_No, stage_count, cycle_count, is_free, offer_type, schedule_state, tutoring_datetime, last_tutoring_datetime, create_datetime, update_datetime, cycle_payment_item, per_done_month
-	from lecture_VT_schedules
-	where schedule_No between 100001 and 150000
-'''
-
-lvts_select_query4 = '''
-select schedule_No, follow_No, lecture_vt_No, lecture_cycle_No, stage_count, cycle_count, is_free, offer_type, schedule_state, tutoring_datetime, last_tutoring_datetime, create_datetime, update_datetime, cycle_payment_item, per_done_month
-	from lecture_VT_schedules
-	where schedule_No between 150001 and 200000
-'''
-
-lvts_select_query5 = '''
+lvts_select_query = '''
 select schedule_No, follow_No, lecture_vt_No, lecture_cycle_No, stage_count, cycle_count, is_free, offer_type, schedule_state, tutoring_datetime, last_tutoring_datetime, create_datetime, update_datetime, cycle_payment_item, per_done_month
 	from lecture_VT_schedules
 	where schedule_No between 20001 and 250000
 '''
 
-lvts_pg_query = '''
-select *
-	from lecture_vt_schedules
-'''
+
 
 ltvt_select_query = '''
 select lecture_teacher_vt_No, teacher_user_No, lecture_vt_No, last_schedule_No, teacher_vt_status
@@ -86,6 +69,27 @@ select payment_No, user_No, LGD_AMOUNT, LGD_BUYER, order_id, LGD_TID, LGD_PAYTYP
 	from payment p
 '''
 
+teacher_select_query = '''
+select user_No, teacher_school_subject, hakbun, univ_graduate_type, graduate_highschool_seq, seoltab_tutoring_ON_OFF, selected_subjects, seoltab_state, seoltab_state_updateAT
+        from teacher
+'''
+
+school_select_query = '''
+select * from school
+'''
+
+stc_select_query = '''
+select user_No, TUTORING_PR from seoltab_teacher_config
+'''
+
+lt_select_query = '''
+select user_No, rental_fee_type, create_datetime, active_count from lecture_tutor
+'''
+
+account_select_query = '''
+select user_No, cash, point from account
+'''
+
 scph_select_query = '''
 select change_pause_history_No,lecture_change_form_No,lecture_vt_No
 	,active_count,total_done_month,rent_total_done_month,own_total_done_month
@@ -96,6 +100,13 @@ select change_pause_history_No,lecture_change_form_No,lecture_vt_No
     ,phone_number,parent_phone_number,teacher_phone_number,form_count,stage_offer_cycle_count,stage_pre_offer_cycle_count
 	from student_change_pause_history
 '''
+
+school_university_select_query = '''
+select *
+	from school_university
+'''
+
+
 
 lvt_insert_query = f'''
 	INSERT INTO raw_data.lecture_video_tutoring (lecture_vt_no,student_user_no,lecture_subject_id,student_type,tutoring_state,payment_item,next_payment_item,current_schedule_no,stage_max_cycle_count,stage_free_cycle_count,stage_pre_offer_cycle_count,stage_offer_cycle_count,create_datetime,update_datetime,last_done_datetime,application_datetime,memo,total_subject_done_month,reactive_datetime)
@@ -157,6 +168,42 @@ scph_insert_query = f'''
     ,reason,reason_detail,teacher_review_content,update_datetime
     ,phone_number,parent_phone_number,teacher_phone_number,form_count,stage_offer_cycle_count,stage_pre_offer_cycle_count)
 	VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+'''
+
+school_insert_query = f'''
+	INSERT INTO raw_data.school (seq, schoolName, schoolGubun, schoolType, estType, region, link, total_count)
+	VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+'''
+
+las_insert_query = f'''
+	INSERT INTO raw_data.lecture_application_students (lecture_vt_no, `학생번호`, `학교명`, `희망전공`, `학년`, `주소`, `지역`, `희망성별`, `신청_동기`, `다른학교튜터가능`, `신청 ipad 색상`)
+	VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+'''
+
+teacher_insert_query = f'''
+	INSERT INTO raw_data.teacher (user_No, teacher_school_subject, hakbun, univ_graduate_type, graduate_highschool_seq, seoltab_tutoring_ON_OFF, selected_subjects, seoltab_state, seoltab_state_updateAT)
+	VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+'''
+
+
+school_university_insert_query = f'''
+	INSERT INTO raw_data.school_university (seq, schoolName, campusName, schoolGubun, schoolType, schoolEmail, estType, region, link, total_count, is_show)
+	VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+'''
+
+stc_insert_query = f'''
+	INSERT INTO raw_data.seoltab_teacher_config (user_No, TUTORING_PR)
+	VALUES (%s, %s)
+'''
+
+lt_insert_query = f'''
+	INSERT INTO raw_data.lecture_tutor (user_No, rental_fee_type, create_datetime, active_count)
+	VALUES (%s, %s, %s, %s)
+'''
+
+account_insert_query = f'''
+	INSERT INTO raw_data.account ( user_No, cash, point)
+	VALUES (%s, %s, %s)
 '''
 
 lvt_delete_query = '''
@@ -221,6 +268,48 @@ commit;
 
 scph_delete_query = '''
 delete from raw_data.student_change_pause_history;
+
+commit;
+'''
+
+school_university_delete_query = '''
+delete from raw_data."school_university";
+
+commit;
+'''
+
+las_delete_query = '''
+delete from raw_data."lecture_application_students";
+
+commit;
+'''
+
+teacher_delete_query = '''
+delete from raw_data."teacher";
+
+commit;
+'''
+
+school_delete_query = '''
+delete from raw_data."school";
+
+commit;
+'''
+
+stc_delete_query = '''
+delete from raw_data."seoltab_teacher_config";
+
+commit;
+'''
+
+lt_delete_query = '''
+delete from raw_data."lecture_tutor";
+
+commit;
+'''
+
+account_delete_query = '''
+delete from raw_data."account";
 
 commit;
 '''
