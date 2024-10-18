@@ -1,0 +1,14 @@
+# Python 3.9 기반 이미지 사용 (dbt는 Python 패키지이기 때문에 Python 환경이 필요함)
+FROM python:3.9
+
+# 작업 디렉토리 설정
+WORKDIR /app
+
+# dbt 설치
+RUN pip install dbt
+
+# 필요한 경우 dbt를 실행할 때 사용할 profiles.yml을 복사
+COPY ./.dbt/profiles.yml /root/.dbt/profiles.yml
+
+# 기본적으로 dbt --help 명령을 실행하도록 설정
+CMD ["dbt", "--help"]
