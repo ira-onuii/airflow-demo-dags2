@@ -176,7 +176,7 @@ school_insert_query = f'''
 '''
 
 las_insert_query = f'''
-	INSERT INTO raw_data.lecture_application_students (lecture_vt_no, `학생번호`, `학교명`, `희망전공`, `학년`, `주소`, `지역`, `희망성별`, `신청_동기`, `다른학교튜터가능`, `신청 ipad 색상`)
+	INSERT INTO raw_data.lecture_application_students (lecture_vt_no, "학생번호", "학교명", "희망전공", "학년", "주소", "지역", "희망성별", "신청_동기", "다른학교튜터가능", "신청 ipad 색상")
 	VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 '''
 
