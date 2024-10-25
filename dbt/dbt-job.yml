@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dbt-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dbt
+  template:
+    metadata:
+      labels:
+        app: dbt
+    spec:
+      containers:
+      - name: dbt
+        image: python:3.9-slim
+        command: ["/bin/sh", "-c", "pip install dbt-core"]
+        volumeMounts:
+        - name: dbt-dev
+          mountPath: /dbt  # 파드 내부에서의 경로
+      volumes:
+      - name: dbt-dev
+        hostPath:
+          path: /home/ubuntu/files/airflow-demo-dags2/dbt/dbt_dev  # 로컬 머신의 디렉토리 경로
+          type: Directory
