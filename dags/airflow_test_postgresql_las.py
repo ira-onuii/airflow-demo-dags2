@@ -35,7 +35,7 @@ def las_save_to_s3_with_hook(data, bucket_name, folder_name, file_name):
 
 def las_save_results_to_s3(**context):
     query_results = context['ti'].xcom_pull(task_ids='las_run_select_query')
-    column_names = ["lecture_vt_no", "학생번호", "학교명", "희망전공", "학년", "주소", "지역", "희망성별", "신청_동기", "다른학교튜터가능", "신청 ipad 색상"]
+    column_names = ["submitted_at","lecture_vt_no", "학생번호", "학교명", "희망전공", "학년", "주소", "지역", "희망성별", "신청_동기", "다른학교튜터가능", "신청 ipad 색상"]
     df = pd.DataFrame(query_results, columns=column_names)
     las_save_to_s3_with_hook(df, 'onuii-data-pipeline', 'las', user_filename)
 
@@ -51,7 +51,7 @@ def las_insert_postgres_data(**context):
 
     for record in records:
         pg_cursor.execute(insert_query, (
-            record[0], record[1], record[2], record[3], record[4], record[5], record[6], record[7], record[8], record[9], record[10]
+            record[0], record[1], record[2], record[3], record[4], record[5], record[6], record[7], record[8], record[9], record[10], record[11]
         ))
 
     pg_conn.commit()

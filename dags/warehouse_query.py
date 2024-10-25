@@ -7,7 +7,7 @@ table_name = f'"{date}"'
 
 
 las_select_query = '''
-select lecture_vt_no, `학생번호`, `학교명`, `희망전공`, `학년`, `주소`, `지역`, `희망성별`, `신청_동기`, `다른학교튜터가능`, `신청 ipad 색상`
+select `제출 시점`, lecture_vt_no, `학생번호`, `학교명`, `희망전공`, `학년`, `주소`, `지역`, `희망성별`, `신청_동기`, `다른학교튜터가능`, `신청 ipad 색상`
 	from lecture_application_students las
 '''
 
@@ -176,8 +176,8 @@ school_insert_query = f'''
 '''
 
 las_insert_query = f'''
-	INSERT INTO raw_data.lecture_application_students (lecture_vt_no, "학생번호", "학교명", "희망전공", "학년", "주소", "지역", "희망성별", "신청_동기", "다른학교튜터가능", "신청 ipad 색상")
-	VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+	INSERT INTO raw_data.lecture_application_students (submitted_at, lecture_vt_no, "학생번호", "학교명", "희망전공", "학년", "주소", "지역", "희망성별", "신청_동기", "다른학교튜터가능", "신청 ipad 색상")
+	VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 '''
 
 teacher_insert_query = f'''
