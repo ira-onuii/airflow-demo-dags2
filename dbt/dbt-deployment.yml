@@ -22,5 +22,5 @@ spec:
       volumes:
       - name: dbt-dev
         hostPath:
-          path: /home/ubuntu/files/airflow-demo-dags2/dbt/dbt_dev  # 로컬 머신의 디렉토리 경로
+          path: /home/ubuntu/files/airflow-demo-dags2/dbt/dbt_dev/  # 로컬 머신의 디렉토리 경로
           type: Directory
