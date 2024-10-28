@@ -17,7 +17,7 @@ select lecture_vt_no,student_user_no,lecture_subject_id,student_type,tutoring_st
 '''
 
 user_select_query = '''
-select user_No, term_user_type, user_status, email_id, nickname, name, phone_number, device, school_seq, sex, birth_year, recent_login_datetime, join_datetime, login_version, login_device
+select user_No, term_user_type, user_status, email_id, nickname, name, phone_number, device, school_seq, sex, birth_year, recent_login_datetime, join_datetime, login_version, login_device, update_datetime
 	from user u
     where u.user_No >= 450000
 '''
@@ -115,8 +115,8 @@ lvt_insert_query = f'''
 
 
 user_insert_query = f'''
-	INSERT INTO raw_data."user" (user_No, term_user_type, user_status, email_id, nickname, name, phone_number, device, school_seq, sex, birth_year, recent_login_time, join_datetime, login_version, login_device)
-	VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+	INSERT INTO raw_data."user" (user_No, term_user_type, user_status, email_id, nickname, name, phone_number, device, school_seq, sex, birth_year, recent_login_time, join_datetime, login_version, login_device, update_datetime)
+	VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 '''
 
 ttn_insert_query = f'''

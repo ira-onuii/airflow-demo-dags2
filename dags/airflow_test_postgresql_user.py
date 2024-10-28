@@ -35,7 +35,7 @@ def user_save_to_s3_with_hook(data, bucket_name, folder_name, file_name):
 
 def user_save_results_to_s3(**context):
     query_results = context['ti'].xcom_pull(task_ids='user_run_select_query')
-    column_names = ["user_No", "term_user_type", "user_status", "email_id", "nickname", "name", "phone_number", "device", "school_seq", "sex", "birth_year", "recent_login_datetime", "join_datetime", "login_version", "login_device"]
+    column_names = ["user_No", "term_user_type", "user_status", "email_id", "nickname", "name", "phone_number", "device", "school_seq", "sex", "birth_year", "recent_login_datetime", "join_datetime", "login_version", "login_device", "update_datetime"]
     df = pd.DataFrame(query_results, columns=column_names)
     user_save_to_s3_with_hook(df, 'onuii-data-pipeline', 'user', user_filename)
 
@@ -51,7 +51,7 @@ def user_insert_postgres_data(**context):
 
     for record in records:
         pg_cursor.execute(insert_query, (
-            record[0], record[1], record[2], record[3], record[4], record[5], record[6], record[7], record[8], record[9], record[10], record[11], record[12], record[13], record[14]
+            record[0], record[1], record[2], record[3], record[4], record[5], record[6], record[7], record[8], record[9], record[10], record[11], record[12], record[13], record[14], record[15]
         ))
 
     pg_conn.commit()
