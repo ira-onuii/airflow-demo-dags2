@@ -115,7 +115,7 @@ lvt_insert_query = f'''
 
 
 user_insert_query = f'''
-	INSERT INTO raw_data."user" (user_No, term_user_type, user_status, email_id, nickname, name, phone_number, device, school_seq, sex, birth_year, recent_login_datetime, join_datetime, login_version, login_device)
+	INSERT INTO raw_data."user" (user_No, term_user_type, user_status, email_id, nickname, name, phone_number, device, school_seq, sex, birth_year, recent_login_time, join_datetime, login_version, login_device)
 	VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 '''
 
