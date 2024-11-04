@@ -51,7 +51,7 @@ def contract_teacher_insert_postgres_data(**context):
 
     for record in records:
         pg_cursor.execute(insert_query, (
-            record[0], record[1], record[2]
+            record[0], record[1], record[2], record[3], record[4], record[5], record[6], record[7], record[8], record[9], record[10]
         ))
 
     pg_conn.commit()
