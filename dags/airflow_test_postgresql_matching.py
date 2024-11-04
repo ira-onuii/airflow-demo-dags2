@@ -107,7 +107,7 @@ dag = DAG(
 
 
 #user
-matching_run_query = TrinoOperator(
+matching_run_query = SQLExecuteQueryOperator(
     task_id='matching_run_select_query',
     sql=warehouse_query.matching_select_query,
     conn_id='trino_conn',

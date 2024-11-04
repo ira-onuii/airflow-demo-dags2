@@ -80,7 +80,7 @@ dag = DAG(
 
 
 #user
-contract_teacher_run_query = TrinoOperator(
+contract_teacher_run_query = SQLExecuteQueryOperator(
     task_id='contract_teacher_run_select_query',
     sql=warehouse_query.contract_teacher_select_query,
     conn_id='trino_conn',
