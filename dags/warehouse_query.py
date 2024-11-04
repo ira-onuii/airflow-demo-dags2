@@ -106,6 +106,25 @@ select *
 	from school_university
 '''
 
+matching_select_query = '''
+select mlvt."_id", mlvt."type", mlvt.status as mlvt_status, mlvt.teachersuggestionstatus
+	, lectures[1][1] as lecture_vt_No, lectures[1][2][1] as student_id, lectures[1][2][2] as student_name, lectures[1][2][3] as student_year
+	, lectures[1][2][4] as student_grade, lectures[1][2][5] as student_gender
+	, subject[1] as subject_id, subject[2] as subject, mlvt."option", itemmonth
+	, mlvt.manager[1] as manager_No, mlvt.manager[2] as manager_name, application
+	, mlvt.createdat as mlvt_created_at, mlvt.updatedat as mlvt_updated_at, mlvt.memo, mlvt.note
+	, ms.status as ms_status, ms.tutor[1] as suggestion_teacher_id, ms.tutor[2] as suggestion_teacher_name
+	, ms.createdat as ms_created_at, ms.updatedat as ms_updated_at, ms.suggestedat, ms.refusedreason
+	from matching_mongodb.matching.matching_lvt mlvt
+	left join matching_mongodb.matching.matching_sugggestions ms on mlvt."_id" = ms.matchingid 
+'''
+
+contract_teacher_select_query = '''
+select tcm."no", user_No, contract_No, c.name as contract_name, contract_status, contract_send_status, tcm.update_datetime, tcm.create_datetime, sign_datetime, cancel_reason, send_datetime 
+	from contract_mysql.onuei.teacher_contract_management tcm
+	left join contract_mysql.onuei.contract c on tcm.contract_no = c."no" 
+'''
+
 
 
 lvt_insert_query = f'''
@@ -204,6 +223,43 @@ lt_insert_query = f'''
 account_insert_query = f'''
 	INSERT INTO raw_data.account ( user_No, cash, point)
 	VALUES (%s, %s, %s)
+'''
+
+matching_insert_query = f'''
+	INSERT INTO raw_data.matching (matching_id
+	, "type"
+	, mlvt_status 
+	, teachersuggestionstatus 
+	, lecture_vt_No 
+	, student_id 
+	, student_name 
+	, student_year 
+	, student_grade 
+	, student_gender 
+	, subject_id 
+	, subject 
+	, "option" 
+	, itemmonth 
+	, manager_No 
+	, manager_name 
+	, application 
+	, mlvt_created_at 
+	, mlvt_updated_at 
+	, memo 
+	, note 
+	, ms_status 
+	, suggestion_teacher_id 
+	, suggestion_teacher_name 
+	, ms_created_at 
+	, ms_updated_at 
+	, suggestedat 
+	, refusedreason)
+	VALUES (%s, %s, %s, %s,%s, %s, %s, %s,%s, %s, %s, %s,%s, %s, %s, %s,%s, %s, %s, %s,%s, %s, %s, %s,%s, %s, %s, %s)
+'''
+
+contract_teacher_insert_query = f'''
+	INSERT INTO raw_data.contract_teacher ("no","user_No","contract_No",contract_name,contract_status,contract_send_status,update_datetime,create_datetime,sign_datetime,cancel_reason,send_datetime)
+	VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 '''
 
 lvt_delete_query = '''
@@ -310,6 +366,18 @@ commit;
 
 account_delete_query = '''
 delete from raw_data."account";
+
+commit;
+'''
+
+matching_delete_query = '''
+delete from raw_data.matching;
+
+commit;
+'''
+
+contract_teacher_delete_query = '''
+delete from raw_data.contract_teacher;
 
 commit;
 '''
