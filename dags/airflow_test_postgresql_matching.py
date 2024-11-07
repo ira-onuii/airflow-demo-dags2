@@ -118,7 +118,7 @@ matching_run_query = SQLExecuteQueryOperator(
 matching_delete_row = SQLExecuteQueryOperator(
     task_id="matching_delete_row",
     conn_id='postgres_dev_conn',
-    sql=warehouse_query.account_delete_query
+    sql=warehouse_query.matching_delete_query
 )
 
 matching_insert_data = PythonOperator(
