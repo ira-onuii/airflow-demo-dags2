@@ -116,19 +116,19 @@ matching_run_query = SQLExecuteQueryOperator(
 )
 
 matching_delete_row = SQLExecuteQueryOperator(
-    task_id="account_delete_row",
+    task_id="matching_delete_row",
     conn_id='postgres_dev_conn',
     sql=warehouse_query.account_delete_query
 )
 
 matching_insert_data = PythonOperator(
-    task_id='insert_account_data',
+    task_id='matching_account_data',
     python_callable=matching_insert_postgres_data,
     provide_context=True,
 )
 
 matching_save_to_s3_task = PythonOperator(
-    task_id='account_save_to_s3',
+    task_id='matching_save_to_s3',
     python_callable=matching_save_results_to_s3,
     provide_context=True,
 )
