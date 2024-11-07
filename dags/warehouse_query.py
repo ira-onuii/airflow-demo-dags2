@@ -129,8 +129,8 @@ select tcm."no", user_No, contract_No, c.name as contract_name, contract_status,
 '''
 
 lvtsh_select_query = '''
-select "history_No","schedule_No","change_type","time_type","tutoring_datetime","reason","alert_count","create_datetime","last_tutoring_datetime"
-	from lecture_vt_schedules_history
+select history_No,schedule_No,change_type,time_type,tutoring_datetime,reason,alert_count,create_datetime,last_tutoring_datetime
+	from lecture_VT_schedules_history
     order by create_datetime desc
     limit 1000
 '''
