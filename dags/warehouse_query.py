@@ -128,6 +128,22 @@ select tcm."no", user_No, contract_No, c.name as contract_name, contract_status,
 	left join contract_mysql.onuei.contract c on tcm.contract_no = c."no" 
 '''
 
+lvtsh_select_query = '''
+select "history_No","schedule_No","change_type","time_type","tutoring_datetime","reason","alert_count","create_datetime","last_tutoring_datetime"
+	from lecture_vt_schedules_history
+    order by create_datetime desc
+    limit 1000
+'''
+
+
+sf_select_query = '''
+select follow_No, student_user_No, teacher_user_No
+	from student_follow
+    order by req_datetime desc
+    limit 1000
+'''
+
+
 
 
 lvt_insert_query = f'''
@@ -265,6 +281,16 @@ contract_teacher_insert_query = f'''
 	VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 '''
 
+lvtsh_insert_query = f'''
+	INSERT INTO raw_data.lecture_vt_schedules_history ("history_No","schedule_No","change_type","time_type","tutoring_datetime","reason","alert_count","create_datetime","last_tutoring_datetime")
+	VALUES (%s, %s,%s, %s,%s, %s,%s, %s, %s)
+'''
+
+sf_insert_query = f'''
+	INSERT INTO raw_data.student_follow (follow_No, student_user_No, teacher_user_No)
+	VALUES (%s, %s, %s)
+'''
+
 lvt_delete_query = '''
 delete from raw_data.lecture_video_tutoring;
 
@@ -381,6 +407,18 @@ commit;
 
 contract_teacher_delete_query = '''
 delete from raw_data.contract_teacher;
+
+commit;
+'''
+
+lvtsh_delete_query = '''
+delete from raw_data.lecture_vt_schedules_history;
+
+commit;
+'''
+
+sf_delete_query = '''
+delete from raw_data.student_follow;
 
 commit;
 '''
