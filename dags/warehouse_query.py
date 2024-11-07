@@ -117,6 +117,7 @@ select mlvt."_id", mlvt."type", mlvt.status as mlvt_status, mlvt.teachersuggesti
 	, ms.createdat as ms_created_at, ms.updatedat as ms_updated_at, ms.suggestedat, ms.refusedreason
 	from matching_mongodb.matching.matching_lvt mlvt
 	left join matching_mongodb.matching.matching_sugggestions ms on mlvt."_id" = ms.matchingid 
+    where mlvt.createdat > cast('2024-01-01 00:00:00' as timestamp)
 '''
 
 contract_teacher_select_query = '''
