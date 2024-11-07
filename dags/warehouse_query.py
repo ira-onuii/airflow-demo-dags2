@@ -118,6 +118,8 @@ select mlvt."_id", mlvt."type", mlvt.status as mlvt_status, mlvt.teachersuggesti
 	from matching_mongodb.matching.matching_lvt mlvt
 	left join matching_mongodb.matching.matching_sugggestions ms on mlvt."_id" = ms.matchingid 
     where mlvt.createdat > cast('2024-01-01 00:00:00' as timestamp)
+    order by mlvt.createdat desc
+    limit 1000
 '''
 
 contract_teacher_select_query = '''
