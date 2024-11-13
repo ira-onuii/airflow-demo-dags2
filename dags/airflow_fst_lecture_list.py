@@ -50,7 +50,7 @@ dag = DAG(
     'data-warehouse-test-tirno-AI',
     default_args=default_args,
     description='Run query and load result to S3',
-    start_date=datetime(2024, 11, 13, 17, 30),
+    start_date=datetime(2024, 11, 13, 6, 30),
     schedule='*/30 * * * *',
     catchup=False
 )
