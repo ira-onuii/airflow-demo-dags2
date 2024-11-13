@@ -3,12 +3,12 @@
 ) }}
 
 
-WITH join_teacher_list AS (
+WITH no_answer_education_not_progressed_teacher_list AS (
     select t.user_No
         from raw_data.teacher t
         left join raw_data.lecture_tutor lt on t.user_No = lt.user_No
-        where t.seoltab_state = 'GPASS'
+        where t.seoltab_state = 'NPASS'
         and lt.user_No is not null
 	 )
 SELECT *
-    FROM join_teacher_list
+    FROM no_answer_education_not_progressed_teacher_list

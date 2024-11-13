@@ -3,45 +3,56 @@
 ) }}
 
 
-WITH user_list AS (
-    select u.user_no, u.phone_number, u."name", u.sex, s.parent_name, s.parent_phone_number, u.email_id
-	, las.학교명, las.희망전공, las.학년, las.지역, las.matching_condition, u.user_status, las.주소, u.join_datetime
-	, p.fst_paydate, las.submitted_at, u.update_datetime, lvs.tutoring_datetime, lvt.total_count, lvt.active_count, lvt.last_done_datetime, p.total_amount
-	from raw_data."user" u 
+select row_number() over(order by lt.create_datetime asc) as id, t.user_no as teacher_id, u.phone_number, u."name", u.sex as gender, u.email_id as email
+	, su.schoolname as school, t.teacher_school_subject as major, (extract(year from now())-u.birth_year)+1 as "age", t.hakbun
+	, t.univ_graduate_type as university_state, s.schooltype as graduate_highschool_type, s.schoolname as highschool_name, s.region as highschool_region
+	, stc.tutoring_pr as introductuoin, t.seoltab_tutoring_on_off as matching_abailable,t.selected_subjects as abailable_subject, '' as status
+	, lt.rental_fee_type as device_state, '' as penalty, u.join_datetime as joined_at, lt.create_datetime as submitted_at
+	, t.seoltab_state_updateat as examined_at, t.seoltab_state_updateat as signed_at, t.seoltab_state_updateat as active_at, t.seoltab_state_updateat as done_at
+	, m.first_suggeste_at, m.last_suggeste_at, m.suggestion_count, m.accept_count, m.refugee_count
+	, cancel.total_lecture_count, cancel.changed_schedule_count, last_round_done_at
+	, a.point as total_point, a.cash as cashout_amount
+	from raw_data.teacher t 
+	inner join raw_data."user" u on t.user_no = u.user_no 
+	inner join raw_data.lecture_tutor lt on t.user_no = lt.user_no 
+	inner join raw_data.school_university su on u.school_seq = su.seq 
+	inner join raw_data.school s on t.graduate_highschool_seq = s.seq 
+	inner join raw_data.seoltab_teacher_config stc on t.user_no = stc.user_no 
+	inner join 
+		(select suggestion_teacher_id
+			, min(m.suggestedat) as first_suggeste_at, max(m.suggestedat) as last_suggeste_at
+			, count(*) as suggestion_count
+			, count(case when m.ms_status = 'MATCHED' then 1 else null end) as accept_count
+			, count(case when m.ms_status = 'REFUSED'then 1 else null end) as refugee_count
+			from raw_data.matching m
+			group by m.suggestion_teacher_id
+		) m on t.user_no = m.suggestion_teacher_id
 	left join 
-		(select *
-			from 
-				(select row_number() over(partition by las.학생번호 order by las.submitted_at desc) as rn, las.submitted_at
-					, las.학생번호, las.학교명, las.희망전공, las.학년, las.지역, concat(las.희망성별, chr(10), 신청_동기, chr(10), 다른학교튜터가능) as matching_condition, las."신청 ipad 색상", las.주소
-					from raw_data.lecture_application_students las 
-				) A
-			where A.rn = 1
-		) las on u.user_no = las.학생번호 
+		(select ltvt.teacher_user_no, sum(lvs.changed_schedule_count) as changed_schedule_count
+			, count(*) as total_lecture_count
+			, count(case when lvs.ct = 0 and ltvt.teacher_vt_status = 'UNASSIGN' then 1 else null end) as before_first_round_done_cancel_count
+			, count(case when ltvt.teacher_vt_status = 'ASSIGN' then 1 else null end) as active_lecture_count
+			, max(last_done_at) as last_round_done_at
+			from raw_data.lecture_teacher_vt ltvt
+			left join
+				(select lvs.lecture_vt_no, sf.teacher_user_No, count(case when lvs.schedule_state = 'DONE' then 1 else null end) as ct
+					, sum(lvtsh.ct) as changed_schedule_count
+					, max(case when lvs.schedule_state = 'DONE' then lvs.update_datetime else null end) as last_done_at
+					from raw_data.lecture_vt_schedules lvs 
+					inner join raw_data.student_follow sf on lvs.follow_no = sf.follow_No
+					left join 
+						(select lvtsh."schedule_No", count(*) as ct
+							from raw_data.lecture_vt_schedules_history lvtsh
+							where lvtsh.change_type = 'TEACHER'
+							group by lvtsh."schedule_No"	
+						) lvtsh on lvs.schedule_No = lvtsh."schedule_No"
+					-- where lvs.schedule_state = 'DONE'
+					group by lvs.lecture_vt_no, sf.teacher_user_No
+				) lvs on (ltvt.teacher_user_no = lvs.teacher_user_No and ltvt.lecture_vt_no = lvs.lecture_vt_No)
+			group by ltvt.teacher_user_no 
+		) cancel on t.user_no = cancel.teacher_user_No
 	left join 
-		(select *		
-			from
-				(select row_number() over(partition by lvt.student_user_no order by lvs.tutoring_datetime asc) as rn
-					, lvt.student_user_no, lvs.tutoring_datetime
-					from raw_data.lecture_vt_schedules lvs
-					inner join raw_data.lecture_video_tutoring lvt on lvs.lecture_vt_no = lvt.lecture_vt_no 
-					where lvs.schedule_state <> 'CANCEL'
-				) lvs
-			where lvs.rn = 1
-		) lvs on u.user_no = lvs.student_user_No
-	left join 
-		(select min(p.payment_regdate) as fst_paydate, sum(p.LGD_AMOUNT) as total_amount, p.user_No
-			from raw_data.payment p
-			where p.state = '결제완료'
-			group by p.user_No
-		) p on u.user_no = p.user_No
-	left join 
-		(select lvt2.student_user_No, count(*)total_count, count(case when lvt2.tutoring_state not in ('FINISH','AUTO_FINISH','DONE') then 1 else null end) as active_count
-			, max(lvt2.last_done_datetime) as last_done_datetime
-			from raw_data.lecture_video_tutoring lvt2
-			where lvt2.student_type in ('PAYED','PAYED_B')
-			group by lvt2.student_user_No
-		) lvt on u.user_no = lvt.student_user_no 
-	inner join raw_data.student s on u.user_no = s.user_no 
- )
-SELECT *
-    FROM user_list
+		(select a.user_No, sum(cash) as cash, sum(point) as point
+			from raw_data.account a
+			group by a.user_No
+		) a on t.user_no = a.user_No

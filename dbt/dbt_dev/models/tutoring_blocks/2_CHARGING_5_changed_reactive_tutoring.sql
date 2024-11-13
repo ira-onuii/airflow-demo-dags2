@@ -3,7 +3,7 @@
 ) }}
 
 
-WITH changed_first_tutoring_list AS (
+WITH changed_reactive_tutoring_list AS (
     select ft.*  
         from {{ ref('CHARGING_reactive_tutoring') }} ft
         inner join 
@@ -18,4 +18,4 @@ WITH changed_first_tutoring_list AS (
             ) sc on ft.lecture_vt_No = sc.lecture_vt_No
 )
 SELECT *
-    FROM changed_first_tutoring_list
+    FROM changed_reactive_tutoring_list

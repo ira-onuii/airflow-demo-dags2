@@ -3,7 +3,7 @@
 ) }}
 
 
-WITH join_teacher_list AS (
+WITH apply_resubmitted_teacher_list AS (
     select *
         from    
             (select row_number() over(partition by t.user_No order by lt.create_datetime) as rn, t.user_No
@@ -12,7 +12,7 @@ WITH join_teacher_list AS (
                 where t.seoltab_state = 'JOIN'
                 and lt.user_No is not null
             ) t
-        where t.rn = 1
+        where t.rn > 1
 	 )
 SELECT *
-    FROM join_teacher_list
+    FROM apply_resubmitted_teacher_list
