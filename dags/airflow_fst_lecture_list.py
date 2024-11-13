@@ -42,7 +42,6 @@ def fst_lecture_save_results_to_s3(**context):
 default_args = {
     'owner': 'Chad',
     'depends_on_past': False,
-    'start_date': days_ago(1),
     'email_on_failure': False,
     'email_on_retry': False,
 }
@@ -51,6 +50,7 @@ dag = DAG(
     'data-warehouse-test-tirno-AI',
     default_args=default_args,
     description='Run query and load result to S3',
+    start_date=datetime(2024, 11, 13, 17, 30),
     schedule='*/30 * * * *',
     catchup=False
 )
