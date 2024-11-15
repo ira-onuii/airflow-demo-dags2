@@ -14,6 +14,7 @@ import pandas as pd
 from io import StringIO
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 
+
 date = str(((datetime.now()) + timedelta(hours=9)).strftime("%Y-%m-%d"))
 
 user_filename = 'list.csv'

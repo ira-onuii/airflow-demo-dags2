@@ -26,13 +26,13 @@ with mlvt as (
 					from mysql.onuei.payment p
 				) p
 			where p.rn = 1
-			and p.payment_regdate >= cast('2024-11-01 00:00:00' as timestamp)
+			and p.payment_regdate >= cast('2024-11-15 00:00:00' as timestamp)
 		),
 	t as (
 		select t.user_No, t.seoltab_state_updateat, t.lecture_phone_number 
 			from mysql.onuei.teacher t
 			where t.seoltab_state = 'ACTIVE'
-			and t.seoltab_state_updateat >= cast('2024-11-01 00:00:00' as timestamp)
+			and t.seoltab_state_updateat >= cast('2024-11-15 00:00:00' as timestamp)
 		),
 	meta_data as (
 		select lvt.student_user_No ,lvt.lecture_vt_no, ttn.name as subject
@@ -50,7 +50,7 @@ select mlvt.lecture_vt_No, md.subject, md.student_user_No, mlvt.student_name
 			from mysql.onuei.lecture_vt_schedules lvs
 			inner join mysql.onuei.student_follow sf on lvs.follow_no = sf.follow_no 
 			inner join mysql.onuei.lecture_vt_cycles lvc on lvs.lecture_cycle_no = lvc.lecture_cycle_no 
-			where lvs.tutoring_datetime >= cast('2024-11-01 00:00:00' as timestamp)
+			where lvs.tutoring_datetime >= cast('2024-11-15 00:00:00' as timestamp)
 		) lvc on (mlvt.lecture_vt_No = lvc.lecture_vt_no and mlvt.teacher_user_No = lvc.teacher_user_No)
 	inner join p on mlvt.lecture_vt_No = p.lecture_vt_no 
 	inner join meta_data md on md.lecture_vt_No = mlvt.lecture_vt_No
