@@ -5,7 +5,7 @@
 
 WITH changed_pause_tutoring_list AS (
     select tad.lecture_vt_No
-        from {{  ref('PAUSE_pause_tutoring')  }} pt
+        from {{ ref('4_PAUSE_0_pause_tutoring') }} pt
         inner join
             (select lcf.lecture_vt_no 
                 from raw_data.lecture_change_form lcf 

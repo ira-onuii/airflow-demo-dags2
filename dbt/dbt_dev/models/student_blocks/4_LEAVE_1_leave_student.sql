@@ -9,7 +9,7 @@ WITH pause_student_list AS (
 	inner join raw_data.lecture_video_tutoring lvt on u.user_No = lvt.student_user_No
 	where u.user_No not in 
 		(select user_No 
-			from {{ ref('INPROGRESS_in_progress_tutoring') }}
+			from {{ ref('3_INPROGRESS_0_in_progress_tutoring') }}
 		)
 	and u.user_status = 'DELETE'
 	 )

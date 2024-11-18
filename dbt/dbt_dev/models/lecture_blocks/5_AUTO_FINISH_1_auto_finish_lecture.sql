@@ -5,7 +5,7 @@
 
 WITH auto_finish_lecture_list AS (
     select lvt.lecture_vt_no, lvt.student_user_No, ltv.teacher_user_No
-	from {{ ref('PAUSE_auto_finish_tutoring') }} lvt
+	from {{ ref('4_PAUSE_3_auto_finish_tutoring') }} lvt
 	inner join 
         (select lecture_vt_No, teacher_user_no
 	        from 

@@ -5,7 +5,7 @@
 
 WITH changed_first_tutoring_list AS (
     select ft.*  
-        from {{ ref('CHARGING_first_tutoring') }} ft
+        from {{ ref('2_CHARGING_1_first_tutoring') }} ft
         inner join 
             (select lvt.lecture_vt_no,A.student_user_No	
                     from 
