@@ -52,7 +52,7 @@ dag = DAG(
     default_args=default_args,
     description='Run query and load result to S3',
     start_date=datetime(2024, 11, 13, 6, 30),
-    schedule='*/30 * * * *',
+    schedule='*/10 * * * *',
     catchup=False
 )
 
