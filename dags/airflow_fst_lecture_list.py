@@ -69,7 +69,7 @@ fst_lecture_run_query = SQLExecuteQueryOperator(
 
 
 fst_lecture_save_to_s3_task = PythonOperator(
-    task_id='account_save_to_s3',
+    task_id='fst_lecture_list_save_to_s3',
     python_callable=fst_lecture_save_results_to_s3,
     provide_context=True,
 )
