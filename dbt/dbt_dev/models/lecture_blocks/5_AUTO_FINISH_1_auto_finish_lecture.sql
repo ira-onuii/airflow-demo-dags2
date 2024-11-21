@@ -1,10 +1,11 @@
 {{ config(
-    materialized='ephemeral'
+    materialized='table',
+    schema='block_lecture'
 ) }}
 
 
 WITH auto_finish_lecture_list AS (
-    select lvt.lecture_vt_no, lvt.student_user_No, ltv.teacher_user_No
+    select lvt.lecture_vt_no, lvt.student_user_No, ltv.teacher_user_No, now() as created_at
 	from {{ ref('4_PAUSE_3_auto_finish_tutoring') }} lvt
 	inner join 
         (select lecture_vt_No, teacher_user_no
@@ -18,4 +19,4 @@ WITH auto_finish_lecture_list AS (
 	    ) ltv on lvt.lecture_vt_no = ltv.lecture_vt_No
 )
 SELECT *
-    FROM WITH auto_finish_lecture_list
+    FROM auto_finish_lecture_list

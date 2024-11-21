@@ -1,12 +1,13 @@
 {{ config(
-    materialized='ephemeral'
+    materialized='table',
+    schema='block_lecture'
 ) }}
 
 
 WITH regular_lecture_list AS (
-    select *
+    select lecture_vt_no, student_user_No, tutoring_state, teacher_user_no, active_done_month, total_done_month, now() as created_at
         from {{ ref('lecture_DM') }}
-        where activec_done_month >= 4
+        where active_done_month >= 4
 )
 SELECT *
-    FROM WITH regular_lecture_list
+    FROM regular_lecture_list

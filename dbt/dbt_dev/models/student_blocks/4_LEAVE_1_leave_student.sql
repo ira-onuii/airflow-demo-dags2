@@ -1,10 +1,11 @@
 {{ config(
-    materialized='ephemeral'
+    materialized='table',
+	schema='block_student'
 ) }}
 
 
 WITH pause_student_list AS (
-    select u.user_No
+    select u.user_No, now() as created_at
 	from raw_data."user" u 
 	inner join raw_data.lecture_video_tutoring lvt on u.user_No = lvt.student_user_No
 	where u.user_No not in 
