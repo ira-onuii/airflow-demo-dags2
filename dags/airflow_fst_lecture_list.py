@@ -34,7 +34,7 @@ def fst_lecture_save_to_s3_with_hook(data, bucket_name, file_name):
 
 def fst_lecture_save_results_to_s3(**context):
     query_results = context['ti'].xcom_pull(task_ids='fst_lecture_run_select_query')
-    column_names = ["lecture_vt_No", "subject", "student_user_No", "student_name","teacher_user_No","teacher_name","rn","page_call_room_id"]
+    column_names = ["lecture_vt_No", "subject", "student_user_No", "student_name","teacher_user_No","teacher_name","rn","page_call_room_id","tutoring_datetime"]
     df = pd.DataFrame(query_results, columns=column_names)
     fst_lecture_save_to_s3_with_hook(df, 'seoltab-datasource', user_filename)
 

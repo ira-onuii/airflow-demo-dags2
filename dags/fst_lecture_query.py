@@ -42,11 +42,11 @@ with mlvt as (
 			and lvt.tutoring_state = 'ACTIVE'
 		)
 select mlvt.lecture_vt_No, md.subject, md.student_user_No, mlvt.student_name
-	, mlvt.teacher_user_No, mlvt.teacher_name, lvc.rn, lvc.page_call_room_id 
+	, mlvt.teacher_user_No, mlvt.teacher_name, lvc.rn, lvc.page_call_room_id, lvc.tutoring_datetime
 	from mlvt
 	left join
 		(select row_number() over(partition by lvs.lecture_vt_no order by lvs.tutoring_datetime asc) as rn
-			, lvs.lecture_vt_no, sf.teacher_user_no, lvc.page_call_room_id 
+			, lvs.lecture_vt_no, sf.teacher_user_no, lvc.page_call_room_id, lvs.tutoring_datetime 
 			from mysql.onuei.lecture_vt_schedules lvs
 			inner join mysql.onuei.student_follow sf on lvs.follow_no = sf.follow_no 
 			inner join mysql.onuei.lecture_vt_cycles lvc on lvs.lecture_cycle_no = lvc.lecture_cycle_no 
