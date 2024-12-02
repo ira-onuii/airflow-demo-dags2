@@ -54,7 +54,7 @@ select mlvt.lecture_vt_No, md.subject, md.student_user_No, mlvt.student_name
 			inner join mysql.onuei.student_follow sf on lvs.follow_no = sf.follow_no 
 			inner join mysql.onuei.lecture_vt_cycles lvc on lvs.lecture_cycle_no = lvc.lecture_cycle_no 
 			where lvc.req_datetime >= cast('2024-11-01 00:00:00' as timestamp)
-            and lvs.tutoring_datetime >= cast('2024-11-15 00:00:00' as timestamp)
+            and lvs.tutoring_datetime >= cast('2024-11-01 00:00:00' as timestamp)
 		) lvc on (mlvt.lecture_vt_No = lvc.lecture_vt_no and mlvt.teacher_user_No = lvc.teacher_user_No)
 	inner join p on mlvt.lecture_vt_No = p.lecture_vt_no 
 	left join meta_data md on md.lecture_vt_No = mlvt.lecture_vt_No
