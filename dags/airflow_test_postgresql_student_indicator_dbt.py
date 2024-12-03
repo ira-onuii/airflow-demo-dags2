@@ -92,7 +92,7 @@ dag = DAG(
 
 dbt_run = BashOperator(
     task_id='dbt_run',
-    bash_command='dbt run --profiles-dir /opt/dbt_project/.dbt --project-dir /opt/dbt_project --models /opt/dbt_project/models/KPIs/company/student_indicators.sql',
+    bash_command='dbt run --profiles-dir/opt/airflow/dags/repo/dbt/dbt_dev/.dbt --project-dir /opt/airflow/dags/repo/dbt/dbt_dev --models /opt/airflow/dags/repo/dbt/dbt_dev/models/KPIs/company/student_indicators.sql',
     dag=dag,
 )
 
