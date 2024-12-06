@@ -13,7 +13,6 @@ models:
     columns:
       - name: lecture_teacher_vt_No
         description: "수업의 고유값"
-        meta:
         tags: [PK]
         tests:
           - unique
