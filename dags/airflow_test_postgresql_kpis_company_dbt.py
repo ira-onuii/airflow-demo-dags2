@@ -84,7 +84,7 @@ default_args = {
 }
 
 dag = DAG(
-    'data-warehouse-test-postgresql-dbt',
+    'data-warehouse-test-postgresql-kpis-company-indicators-dbt',
     default_args=default_args,
     description='Run Trino query and load result to S3',
     schedule='0 16 * * *',
@@ -102,14 +102,6 @@ dbt_run_tutoring_indicator = BashOperator(
     dag=dag,
 )
 
-#--models /opt/airflow/dbt_project/models/pg_active_lecture/active_lecture.sql
-
-# save_to_s3_task = PythonOperator(
-#     task_id='save_to_s3',
-#     python_callable=upload_to_s3,
-#     provide_context=True,
-#     dag=dag,
-# )
 
 
 
