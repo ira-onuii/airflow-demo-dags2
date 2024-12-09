@@ -97,7 +97,7 @@ dbt_run_student_indicator = BashOperator(
 )
 
 dbt_run_tutoring_indicator = BashOperator(
-    task_id='dbt_run_student_indicator',
+    task_id='dbt_run_tutoring_indicator',
     bash_command='dbt run --profiles-dir /opt/airflow/dbt/dbt_project/.dbt --project-dir /opt/airflow/dbt/dbt_project --model --select ./models/KPIs/company/tutoring_indicators.sql',
     dag=dag,
 )
