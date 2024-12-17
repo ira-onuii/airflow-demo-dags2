@@ -14,8 +14,9 @@ select `제출 시점`, lecture_vt_no, `학생번호`, `학교명`, `희망전�
 lvt_select_query = '''
 select lecture_vt_no,student_user_no,lecture_subject_id,student_type,tutoring_state,payment_item,next_payment_item,current_schedule_no,stage_max_cycle_count,stage_free_cycle_count,stage_pre_offer_cycle_count,stage_offer_cycle_count,create_datetime,update_datetime,last_done_datetime,application_datetime,memo,total_subject_done_month,reactive_datetime
 	from lecture_video_tutoring lvt
+    where lvt.update_datetime >= cast(date(DATE_SUB(now(), interval 1 day),'%Y-%m-%d 00:00:00') as datetime)
 '''
-
+#-- cast(date_format(DATE_SUB(now(), interval 1 day), '%Y-%m-%d 00:00:00') as datetime)
 user_select_query = '''
 select user_No, term_user_type, user_status, email_id, nickname, name, phone_number, device, school_seq, sex, birth_year, recent_login_datetime, join_datetime, login_version, login_device, update_datetime
 	from user u
@@ -297,128 +298,3 @@ delete from raw_data.lecture_video_tutoring;
 commit;
 '''
 
-user_delete_query = '''
-delete from raw_data."user";
-
-commit;
-'''
-
-ttn_delete_query = '''
-delete from raw_data.term_taxonomy_name;
-
-commit;
-'''
-
-lvts_delete_query = '''
-delete from raw_data.lecture_vt_schedules;
-
-commit;
-'''
-
-th_delete_query = '''
-delete from raw_data.tteok_ham;
-
-commit;
-'''
-
-student_delete_query = '''
-delete from raw_data.student;
-
-commit;
-'''
-
-ltvt_delete_query = '''
-delete from raw_data.lecture_teacher_vt;
-
-commit;
-'''
-
-scs_delete_query = '''
-delete from raw_data.student_change_subject_v2;
-
-commit;
-'''
-
-lcf_delete_query = '''
-delete from raw_data.lecture_change_form;
-
-commit;
-'''
-
-payment_delete_query = '''
-delete from raw_data.payment;
-
-commit;
-'''
-
-scph_delete_query = '''
-delete from raw_data.student_change_pause_history;
-
-commit;
-'''
-
-school_university_delete_query = '''
-delete from raw_data."school_university";
-
-commit;
-'''
-
-las_delete_query = '''
-delete from raw_data."lecture_application_students";
-
-commit;
-'''
-
-teacher_delete_query = '''
-delete from raw_data."teacher";
-
-commit;
-'''
-
-school_delete_query = '''
-delete from raw_data."school";
-
-commit;
-'''
-
-stc_delete_query = '''
-delete from raw_data."seoltab_teacher_config";
-
-commit;
-'''
-
-lt_delete_query = '''
-delete from raw_data."lecture_tutor";
-
-commit;
-'''
-
-account_delete_query = '''
-delete from raw_data."account";
-
-commit;
-'''
-
-matching_delete_query = '''
-delete from raw_data.matching;
-
-commit;
-'''
-
-contract_teacher_delete_query = '''
-delete from raw_data.contract_teacher;
-
-commit;
-'''
-
-lvtsh_delete_query = '''
-delete from raw_data.lecture_vt_schedules_history;
-
-commit;
-'''
-
-sf_delete_query = '''
-delete from raw_data.student_follow;
-
-commit;
-'''
