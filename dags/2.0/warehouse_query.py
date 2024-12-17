@@ -14,7 +14,7 @@ select `제출 시점`, lecture_vt_no, `학생번호`, `학교명`, `희망전�
 lvt_select_query = '''
 select lecture_vt_no,student_user_no,lecture_subject_id,student_type,tutoring_state,payment_item,next_payment_item,current_schedule_no,stage_max_cycle_count,stage_free_cycle_count,stage_pre_offer_cycle_count,stage_offer_cycle_count,create_datetime,update_datetime,last_done_datetime,application_datetime,memo,total_subject_done_month,reactive_datetime
 	from lecture_video_tutoring lvt
-    where lvt.update_datetime >= cast(date(DATE_SUB(now(), interval 1 day),'%Y-%m-%d 00:00:00') as datetime)
+    where lvt.update_datetime >= cast(date(DATE_SUB(now(), interval 1 day)) as datetime)
 '''
 #-- cast(date_format(DATE_SUB(now(), interval 1 day), '%Y-%m-%d 00:00:00') as datetime)
 user_select_query = '''
