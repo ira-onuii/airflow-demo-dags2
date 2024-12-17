@@ -55,7 +55,7 @@ def incremental_extract(**kwargs):
     df_today = pd.read_sql(today_data, mysql_engine)
     df_union_all = pd.concat([df_before, df_today], ignore_index=True)
 
-    #df_union_all['update_datetime'] = pd.to_datetime(df_union_all['update_datetime'], errors='coerce')
+    df_union_all['update_datetime'] = pd.to_datetime(df_union_all['update_datetime'], errors='coerce')
 
 
     df_union_all['row_number'] = df_union_all.sort_values(by = ['update_datetime'], ascending = False).groupby(['lecture_vt_no']).cumcount()+1
