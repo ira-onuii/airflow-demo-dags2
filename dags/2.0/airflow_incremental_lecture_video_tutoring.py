@@ -101,7 +101,7 @@ default_args = {
 }
 
 dag = DAG(
-    'data-warehouse-test-postgresql-lvt',
+    'data-warehouse-test-postgresql-lvt-incremental',
     default_args=default_args,
     description='Run query and load result to S3',
     schedule='10 17 * * *',
