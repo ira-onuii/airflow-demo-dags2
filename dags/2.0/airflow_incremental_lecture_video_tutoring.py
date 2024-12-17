@@ -81,7 +81,7 @@ def read_s3_and_insert_db(**kwargs):
     pg_cursor = pg_conn.cursor()
     csv_reader = csv.reader(csv_data)
     header = next(csv_reader)  # 헤더 읽기
-    insert_query = f"INSERT INTO test ({', '.join(header)}) VALUES ({', '.join(['%s'] * len(header))})"
+    insert_query = f"INSERT INTO lecture_video_tutoring ({', '.join(header)}) VALUES ({', '.join(['%s'] * len(header))})"
 
     # 행 단위로 데이터 삽입
     for row in csv_reader:
