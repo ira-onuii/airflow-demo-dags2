@@ -112,25 +112,22 @@ incremental_extract_and_save_to_s3 = PythonOperator(
     task_id='incremental_extract_and_save_to_s3',
     python_callable=incremental_extract,
     provide_context=True,
+    dag=dag
 )
 
 delete_row = SQLExecuteQueryOperator(
     task_id="delete_row",
     conn_id='postgres_dev_conn',
-    sql=warehouse_query.lvt_delete_query
+    sql=warehouse_query.lvt_delete_query,
+    dag=dag
 )
 
 insert_data = PythonOperator(
     task_id='insert_lvt_data',
     python_callable=read_s3_and_insert_db,
-    provide_context=True
+    provide_context=True,
+    dag=dag
 )
-
-
-
-
-
-
 
 # dbt_run = BashOperator(
 #     task_id='dbt_run',
