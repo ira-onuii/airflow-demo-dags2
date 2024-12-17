@@ -40,8 +40,8 @@ def incremental_extract(**kwargs):
 
     load_dotenv()
     
-    pg_hook = PostgresHook(postgres_conn_id='postgres_conn_id')  # Airflow PostgreSQL Connection ID
-    mysql_hook = MySqlHook(mysql_conn_id='mysql_conn_id')        # Airflow MySQL Connection ID
+    pg_hook = PostgresHook(postgres_conn_id='postgres_dev_conn')  
+    mysql_hook = MySqlHook(mysql_conn_id='legacy_staging_conn')   
 
     # SQLAlchemy Engine 생성
     pg_engine = pg_hook.get_sqlalchemy_engine()
