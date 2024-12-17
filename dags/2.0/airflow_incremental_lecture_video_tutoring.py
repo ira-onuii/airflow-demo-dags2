@@ -25,7 +25,7 @@ def save_to_s3_with_hook(data, bucket_name, folder_name, file_name, **kwargs):
     s3_key = f"{folder_name}/{file_name}" 
     data.to_csv(csv_buffer, index=False)
     hook = S3Hook(aws_conn_id='conn_S3')
-    hook.load_string(csv_buffer.getvalue(), s3_key=s3_key, bucket_name=bucket_name, replace=True)
+    hook.load_string(csv_buffer.getvalue(), key=s3_key, bucket_name=bucket_name, replace=True)
     kwargs['ti'].xcom_push(key='bucket_name', value=bucket_name)
     kwargs['ti'].xcom_push(key='s3_key', value=s3_key)
 
