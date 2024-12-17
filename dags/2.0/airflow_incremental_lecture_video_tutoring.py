@@ -33,16 +33,19 @@ def save_to_s3_with_hook(data, bucket_name, folder_name, file_name, **kwargs):
 
 # 증분 추출 with row_number()
 def incremental_extract(**kwargs):
-    from sqlalchemy import create_engine
+    #from sqlalchemy import get_sqlalchemy_engine
     from dotenv import load_dotenv
+    from airflow.providers.postgres.hooks.postgres import PostgresHook
+    from airflow.providers.mysql.hooks.mysql import MySqlHook
 
     load_dotenv()
     
-    # PostgreSQL 연결
-    pg_engine = create_engine(f"postgresql+psycopg2://{os.getenv('PG_USER')}:{os.getenv('PG_PASSWORD')}@{os.getenv('PG_HOST')}:{os.getenv('PG_PORT')}/{os.getenv('PG_DATABASE')}")
+    pg_hook = PostgresHook(postgres_conn_id='postgres_conn_id')  # Airflow PostgreSQL Connection ID
+    mysql_hook = MySqlHook(mysql_conn_id='mysql_conn_id')        # Airflow MySQL Connection ID
 
-    # MySQL 연결
-    mysql_engine = create_engine(f"mysql+pymysql://{os.getenv('MY_USER')}:{os.getenv('MY_PASSWORD')}@{os.getenv('MY_HOST')}:{os.getenv('MY_PORT')}/{os.getenv('MY_DATABASE')}")
+    # SQLAlchemy Engine 생성
+    pg_engine = pg_hook.get_sqlalchemy_engine()
+    mysql_engine = mysql_hook.get_sqlalchemy_engine()
 
     before_data = 'select * from raw_data.lecture_video_tutoring'
     today_data = warehouse_query.lvt_select_query
