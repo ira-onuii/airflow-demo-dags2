@@ -60,6 +60,7 @@ def incremental_extract(**kwargs):
 
     df_union_all['row_number'] = df_union_all.sort_values(by = ['update_datetime'], ascending = False).groupby(['lecture_vt_no']).cumcount()+1
     df_union_all = df_union_all[df_union_all['row_number'] == 1]
+    df_union_all = df_union_all[df_union_all.columns.difference(['row_number'])]
 
     save_to_s3_with_hook(df_union_all, 'onuii-data-pipeline', 'lecture_video_tutoring', filename, **kwargs)
 
