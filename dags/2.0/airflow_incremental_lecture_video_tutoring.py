@@ -60,7 +60,7 @@ def incremental_extract(**kwargs):
 
     df_union_all['row_number'] = df_union_all.sort_values(by = ['update_datetime'], ascending = False).groupby(['lecture_vt_no']).cumcount()+1
     df_union_all = df_union_all[df_union_all['row_number'] == 1]
-    df_union_all = df_union_all['lecture_vt_no','student_user_no','lecture_subject_id','student_type','tutoring_state','payment_item','next_payment_item','current_schedule_no','stage_max_cycle_count','stage_free_cycle_count','stage_pre_offer_cycle_count','stage_offer_cycle_count','create_datetime','update_datetime','last_done_datetime','application_datetime','memo','total_subject_done_month','reactive_datetime']
+    df_union_all = df_union_all[['lecture_vt_no','student_user_no','lecture_subject_id','student_type','tutoring_state','payment_item','next_payment_item','current_schedule_no','stage_max_cycle_count','stage_free_cycle_count','stage_pre_offer_cycle_count','stage_offer_cycle_count','create_datetime','update_datetime','last_done_datetime','application_datetime','memo','total_subject_done_month','reactive_datetime']]
 
     save_to_s3_with_hook(df_union_all, 'onuii-data-pipeline', 'lecture_video_tutoring', filename, **kwargs)
 
