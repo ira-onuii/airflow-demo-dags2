@@ -34,12 +34,9 @@ def save_to_s3_with_hook(data, bucket_name, folder_name, file_name, **kwargs):
 
 # 증분 추출 with row_number()
 def incremental_extract(**kwargs):
-    #from sqlalchemy import get_sqlalchemy_engine
-    from dotenv import load_dotenv
     from airflow.providers.postgres.hooks.postgres import PostgresHook
     from airflow.providers.mysql.hooks.mysql import MySqlHook
 
-    load_dotenv()
     
     pg_hook = PostgresHook(postgres_conn_id='postgres_dev_conn')  
     mysql_hook = MySqlHook(mysql_conn_id='legacy_staging_conn')   
@@ -60,8 +57,9 @@ def incremental_extract(**kwargs):
 
     df_union_all['row_number'] = df_union_all.sort_values(by = ['update_datetime'], ascending = False).groupby(['lecture_vt_no']).cumcount()+1
     df_union_all = df_union_all[df_union_all['row_number'] == 1]
-    df_union_all = df_union_all.fillna(0).astype({'payment_item':'int64', 'next_payment_item':'int64', 'current_schedule_no':'int64'})
+    df_union_all = df_union_all.fillna(0).astype({'payment_item':'float64', 'next_payment_item':'float64', 'current_schedule_no':'float64'})
     df_union_all = df_union_all[['lecture_vt_no','student_user_no','lecture_subject_id','student_type','tutoring_state','payment_item','next_payment_item','current_schedule_no','stage_max_cycle_count','stage_free_cycle_count','stage_pre_offer_cycle_count','stage_offer_cycle_count','create_datetime','update_datetime','last_done_datetime','application_datetime','memo','total_subject_done_month','reactive_datetime']]
+    df_union_all = df_union_all.to_sql('lecture_video_tutoring', pg_engine, if_exists='replace', index=False)
 
     save_to_s3_with_hook(df_union_all, 'onuii-data-pipeline', 'lecture_video_tutoring', filename, **kwargs)
 
@@ -140,6 +138,6 @@ insert_data = PythonOperator(
 #     bash_command='dbt run --profiles-dir /opt/airflow/dbt_project/.dbt --project-dir /opt/airflow/dbt_project --models /opt/airflow/dbt_project/models/pg_active_lecture/active_lecture.sql',
 # )
 
-incremental_extract_and_save_to_s3 >> delete_row >> insert_data
+incremental_extract_and_save_to_s3
 
 
