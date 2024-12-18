@@ -44,9 +44,9 @@ def incremental_extract(**kwargs):
     from airflow.providers.mysql.hooks.mysql import MySqlHook
 
     # postgresql 연결
-    pg_hook = PostgresHook(postgres_conn_id='postgres_dev_conn')  
+    pg_hook = PostgresHook(postgres_conn_id='postgres_conn_3.0')  
     # mysql 연결
-    mysql_hook = MySqlHook(mysql_conn_id='legacy_staging_conn')   
+    mysql_hook = MySqlHook(mysql_conn_id='3.0_payment_live_conn')   
 
     # SQLAlchemy Engine 생성
     pg_engine = pg_hook.get_sqlalchemy_engine()
