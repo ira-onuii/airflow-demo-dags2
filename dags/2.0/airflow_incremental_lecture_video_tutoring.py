@@ -94,7 +94,7 @@ def incremental_extract(**kwargs):
 
     # 정제된 데이터 data_warehouse 테이블에 삽입
     df_incremental.to_sql(
-        name='lecture_video_tutoring',  # 삽입할 테이블 이름
+        name='raw_data.lecture_video_tutoring',  # 삽입할 테이블 이름
         con=pg_engine,  # PostgreSQL 연결 엔진
         if_exists='replace',  # 테이블이 있으면 삭제 후 재생성
         index=False  # DataFrame 인덱스는 삽입하지 않음
