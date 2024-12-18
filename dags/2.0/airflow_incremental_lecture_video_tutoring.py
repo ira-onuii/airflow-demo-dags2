@@ -19,17 +19,33 @@ filename = 'pg_lecture_video_tutoring_'+date + '.csv'
 
 
 
-# S3 버킷 지정
-def save_to_s3_with_hook(data, bucket_name, folder_name, file_name, **kwargs):
+
+
+
+# def save_to_s3_with_hook(data, bucket_name, folder_name, file_name, **kwargs):
+#     csv_buffer = StringIO()
+#     s3_key = f"{folder_name}/{file_name}" 
+#     data.to_csv(csv_buffer, index=False)
+#     hook = S3Hook(aws_conn_id='conn_S3')
+#     hook.load_string(csv_buffer.getvalue(), key=s3_key, bucket_name=bucket_name, replace=True)
+#     kwargs['ti'].xcom_push(key='bucket_name', value=bucket_name)
+#     kwargs['ti'].xcom_push(key='s3_key', value=s3_key)
+    
+
+
+def save_to_s3_with_hook(data, bucket_name, folder_name, file_name):
     csv_buffer = StringIO()
-    s3_key = f"{folder_name}/{file_name}" 
     data.to_csv(csv_buffer, index=False)
     hook = S3Hook(aws_conn_id='conn_S3')
-    hook.load_string(csv_buffer.getvalue(), key=s3_key, bucket_name=bucket_name, replace=True)
-    kwargs['ti'].xcom_push(key='bucket_name', value=bucket_name)
-    kwargs['ti'].xcom_push(key='s3_key', value=s3_key)
+    hook.load_string(csv_buffer.getvalue(), key=f"{folder_name}/{file_name}", bucket_name=bucket_name, replace=True)
 
 
+
+def save_results_to_s3(**context):
+    query_results = context['ti'].xcom_pull(task_ids='incremental_extract_and_load')
+    column_names = ['lecture_vt_no','student_user_no','lecture_subject_id','student_type','tutoring_state','payment_item','next_payment_item','current_schedule_no','stage_max_cycle_count','stage_free_cycle_count','stage_pre_offer_cycle_count','stage_offer_cycle_count','create_datetime','update_datetime','last_done_datetime','application_datetime','memo','total_subject_done_month','reactive_datetime']
+    df = pd.DataFrame(query_results, columns=column_names)
+    save_to_s3_with_hook(df, 'onuii-data-pipeline', 'lecture_video_tutoring', filename)
 
 
 # 증분 추출 with row_number()
@@ -56,6 +72,7 @@ def incremental_extract(**kwargs):
 
 
     df_union_all['row_number'] = df_union_all.sort_values(by = ['update_datetime'], ascending = False).groupby(['lecture_vt_no']).cumcount()+1
+    df_union_all = df_union_all[['lecture_vt_no','student_user_no','lecture_subject_id','student_type','tutoring_state','payment_item','next_payment_item','current_schedule_no','stage_max_cycle_count','stage_free_cycle_count','stage_pre_offer_cycle_count','stage_offer_cycle_count','create_datetime','update_datetime','last_done_datetime','application_datetime','memo','total_subject_done_month','reactive_datetime']]
     
     df_incremental = df_union_all[df_union_all['row_number'] == 1]
 
@@ -73,8 +90,9 @@ def incremental_extract(**kwargs):
         index=False  # DataFrame 인덱스는 삽입하지 않음
     )
 
+    return df_incremental
 
-    save_to_s3_with_hook(df_union_all, 'onuii-data-pipeline', 'lecture_video_tutoring', filename, **kwargs)
+    
 
     
 def read_s3_and_insert_db(**kwargs):
@@ -125,9 +143,16 @@ dag = DAG(
 )
 
 #lvt
-incremental_extract_and_save_to_s3 = PythonOperator(
-    task_id='incremental_extract_and_save_to_s3',
+incremental_extract_and_load = PythonOperator(
+    task_id='incremental_extract_and_load',
     python_callable=incremental_extract,
+    provide_context=True,
+    dag=dag
+)
+
+load_S3 = PythonOperator(
+    task_id='load_S3',
+    python_callable=save_results_to_s3,
     provide_context=True,
     dag=dag
 )
@@ -151,6 +176,6 @@ incremental_extract_and_save_to_s3 = PythonOperator(
 #     bash_command='dbt run --profiles-dir /opt/airflow/dbt_project/.dbt --project-dir /opt/airflow/dbt_project --models /opt/airflow/dbt_project/models/pg_active_lecture/active_lecture.sql',
 # )
 
-incremental_extract_and_save_to_s3
+incremental_extract_and_load >> load_S3
 
 
