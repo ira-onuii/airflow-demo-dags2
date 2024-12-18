@@ -6,7 +6,7 @@ table_name = f'"{date}"'
 
 
 
-aub_select_query = '''
+active_user_benefit_select_query = '''
 select id
 	,createdat
 	,updatedat
@@ -1793,162 +1793,347 @@ student_hope_major_insert_query = f'''
 	VALUES (%s, %s, %s)
 '''
 
-_insert_query = f'''
-	INSERT INTO raw_data. ()
-	VALUES (, %s)
+student_review_insert_query = f'''
+	INSERT INTO raw_data.student_review (id
+,is_change_teacher
+,net_promoter_score
+,created_at
+,ticket_id
+,updated_at
+,checks
+,negative_tags)
+	VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
 '''
 
-_insert_query = f'''
-	INSERT INTO raw_data. ()
-	VALUES (, %s)
+subject_insert_query = f'''
+	INSERT INTO raw_data.subject (id
+,tid
+,name
+,is_deleted
+,created_at
+,updated_at)
+	VALUES (%s, %s, %s, %s, %s, %s)
 '''
 
-_insert_query = f'''
-	INSERT INTO raw_data. ()
-	VALUES (, %s)
+subject_detail_insert_query = f'''
+	INSERT INTO raw_data.subject_detail (id
+,subject_id
+,code
+,tid
+,is_used_teacher
+,created_at
+,updated_at
+,name)
+	VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
 '''
 
-_insert_query = f'''
-	INSERT INTO raw_data. ()
-	VALUES (, %s)
+teacher_insert_query = f'''
+	INSERT INTO raw_data.teacher (id
+,user_id
+,university_information_id
+,university_email
+,seoltab_state
+,grade
+,introduction
+,penalty
+,hakbun
+,university_state
+,active_at
+,application_passed_at
+,created_at
+,updated_at
+,graduate_highschool_type
+,enrollment_type
+,matching_available
+,encrypt_jumin
+,is_deleted
+,highschool_id)
+	VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 '''
 
-_insert_query = f'''
-	INSERT INTO raw_data. ()
-	VALUES (, %s)
+teacher_progress_content_insert_query = f'''
+	INSERT INTO raw_data.teacher_progress_content (id
+,idx
+,created_at
+,round_id
+,ticket_id
+,updated_at
+,content_id
+,content_link
+,handwriting_data_id
+,content_type
+,handwriting_data_type)
+	VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+'''
+
+teacher_review_insert_query = f'''
+	INSERT INTO raw_data.teacher_review (id
+,created_at
+,ticket_id
+,updated_at
+,summary_note
+,negative_tags
+,positive_tags)
+	VALUES (%s, %s, %s, %s, %s, %s, %s)
+'''
+
+temp_matching_request_insert_query = f'''
+	INSERT INTO raw_data.temp_matching_request (id
+,created_at
+,lecture_id
+,matching_request_id
+,student_id
+,submitted_at
+,updated_at
+,uuid
+,data)
+	VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+'''
+
+template_content_insert_query = f'''
+	INSERT INTO raw_data.template_content (id
+,is_sync
+,created_at
+,template_content_group_id
+,updated_at
+,content_id
+,content_link
+,content_type)
+	VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+'''
+
+
+term_insert_query = f'''
+	INSERT INTO raw_data.term (id
+,title
+,content
+,version
+,effective_date
+,created_at
+,updated_at)
+	VALUES (%s, %s, %s, %s, %s, %s, %s)
+'''
+
+ticket_insert_query = f'''
+	INSERT INTO raw_data.ticket (id
+,idx
+,is_free
+,created_at
+,round_id
+,ticket_wallet_id
+,updated_at
+,user_id
+,status)
+	VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+'''
+
+ticket_for_student_insert_query = f'''
+	INSERT INTO raw_data.ticket_for_student (id
+,homework_is_submitted
+,created_at
+,homework_is_checked_by
+,updated_at)
+	VALUES (%s, %s, %s, %s, %s)
+'''
+
+
+ticket_for_teacher_insert_query = f'''
+	INSERT INTO raw_data.ticket_for_teacher (id
+,progress_is_submitted
+,created_at
+,updated_at)
+	VALUES (%s, %s, %s, %s)
+'''
+
+ticket_study_time_insert_query = f'''
+	INSERT INTO raw_data.ticket_study_time (id
+,created_at
+,in_date_time
+,out_date_time
+,ticket_id
+,updated_at)
+	VALUES (%s, %s, %s, %s, %s, %s)
+'''
+
+ticket_wallet_insert_query = f'''
+	INSERT INTO raw_data.ticket_wallet (id
+,is_active
+,total_tickets_of_free
+,total_tickets_of_pay
+,used_tickets_of_free
+,used_tickets_of_pay
+,created_at
+,latest_ticket_id
+,latest_ticket_wallet_payment_id
+,lecture_cycle_id
+,lecture_user_id
+,payed_at
+,updated_at
+,user_id)
+	VALUES (, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+'''
+
+
+ticket_wallet_payment_insert_query = f'''
+	INSERT INTO raw_data.ticket_wallet_payment (id
+,is_success
+,created_at
+,payment_block_id
+,ticket_wallet_id
+,updated_at)
+	VALUES (%s, %s, %s, %s, %s, %s)
+'''
+
+time_insert_query = f'''
+	INSERT INTO raw_data.time (id
+,month
+,week
+,minute
+,paymentitemid)
+	VALUES (%s, %s, %s, %s, %s)
+'''
+
+university_insert_query = f'''
+	INSERT INTO raw_data.university (id
+,name
+,email_suffix
+,region
+,type
+,created_at
+,updated_at
+,old_id)
+	VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+'''
+
+
+university_information_insert_query = f'''
+	INSERT INTO raw_data.university_information (id
+,department
+,major
+,division_id
+,university_id
+,seoltab_pass
+,created_at
+,updated_at)
+	VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+'''
+
+user_insert_query = f'''
+	INSERT INTO raw_data.user (id
+,name
+,code
+,email
+,password
+,phone_number
+,gender
+,status
+,actor
+,legacy_user_id
+,birth_date
+,ci
+,created_at
+,updated_at
+,delete_at
+,latest_login_at)
+	VALUES (, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+'''
+
+user_address_insert_query = f'''
+	INSERT INTO raw_data.user_address (id
+,user_id
+,post_code
+,address1
+,address2
+,created_at
+,updated_at)
+	VALUES (%s, %s, %s, %s, %s, %s, %s)
+'''
+
+user_contract_insert_query = f'''
+	INSERT INTO raw_data.user_contract (id
+,createdat
+,updatedat
+,deletedat
+,userid
+,paidat
+,isconfirmed
+,paymentid
+,deviceid
+,contractid)
+	VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+'''
+
+user_device_insert_query = f'''
+	INSERT INTO raw_data.user_device (id
+,user_id
+,device
+,token
+,created_at
+,updated_at)
+	VALUES (%s, %s, %s, %s, %s, %s)
+'''
+
+user_protector_insert_query = f'''
+	INSERT INTO raw_data.user_protector (id
+,user_id
+,name
+,phone_number)
+	VALUES (%s, %s, %s, %s)
+'''
+
+user_push_insert_query = f'''
+	INSERT INTO raw_data.user_push (id
+,user_id
+,type
+,is_opt_in
+,opt_in_date)
+	VALUES (%s, %s, %s, %s, %s)
+'''
+
+user_term_agreement_insert_query = f'''
+	INSERT INTO raw_data.user_term_agreement (id
+,user_id
+,term_id
+,agreement_date)
+	VALUES (%s, %s, %s, %s)
+'''
+
+user_time_line_insert_query = f'''
+	INSERT INTO raw_data.user_time_line (id
+,is_teacher
+,version
+,created_at
+,updated_at
+,user_id
+,available_time_ids
+,desired_time_ids)
+	VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+'''
+
+user_using_time_line_insert_query = f'''
+	INSERT INTO raw_data.user_using_time_line (id
+,created_at
+,lecture_id
+,updated_at
+,user_id
+,user_time_line_id
+,time_ids)
+	VALUES (%s, %s, %s, %s, %s, %s, %s)
+'''
+
+vbank_insert_query = f'''
+	INSERT INTO raw_data.vbank (id
+,createdat
+,name
+,code
+,accountnumber
+,duedate
+,iscancelled
+,paymentid)
+	VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
 '''
 
 
 
 
-lvt_delete_query = '''
-delete from raw_data.lecture_video_tutoring;
 
-commit;
-'''
-
-user_delete_query = '''
-delete from raw_data."user";
-
-commit;
-'''
-
-ttn_delete_query = '''
-delete from raw_data.term_taxonomy_name;
-
-commit;
-'''
-
-lvts_delete_query = '''
-delete from raw_data.lecture_vt_schedules;
-
-commit;
-'''
-
-th_delete_query = '''
-delete from raw_data.tteok_ham;
-
-commit;
-'''
-
-student_delete_query = '''
-delete from raw_data.student;
-
-commit;
-'''
-
-ltvt_delete_query = '''
-delete from raw_data.lecture_teacher_vt;
-
-commit;
-'''
-
-scs_delete_query = '''
-delete from raw_data.student_change_subject_v2;
-
-commit;
-'''
-
-lcf_delete_query = '''
-delete from raw_data.lecture_change_form;
-
-commit;
-'''
-
-payment_delete_query = '''
-delete from raw_data.payment;
-
-commit;
-'''
-
-scph_delete_query = '''
-delete from raw_data.student_change_pause_history;
-
-commit;
-'''
-
-school_university_delete_query = '''
-delete from raw_data."school_university";
-
-commit;
-'''
-
-las_delete_query = '''
-delete from raw_data."lecture_application_students";
-
-commit;
-'''
-
-teacher_delete_query = '''
-delete from raw_data."teacher";
-
-commit;
-'''
-
-school_delete_query = '''
-delete from raw_data."school";
-
-commit;
-'''
-
-stc_delete_query = '''
-delete from raw_data."seoltab_teacher_config";
-
-commit;
-'''
-
-lt_delete_query = '''
-delete from raw_data."lecture_tutor";
-
-commit;
-'''
-
-account_delete_query = '''
-delete from raw_data."account";
-
-commit;
-'''
-
-matching_delete_query = '''
-delete from raw_data.matching;
-
-commit;
-'''
-
-contract_teacher_delete_query = '''
-delete from raw_data.contract_teacher;
-
-commit;
-'''
-
-lvtsh_delete_query = '''
-delete from raw_data.lecture_vt_schedules_history;
-
-commit;
-'''
-
-sf_delete_query = '''
-delete from raw_data.student_follow;
-
-commit;
-'''
