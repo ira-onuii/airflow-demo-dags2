@@ -56,10 +56,23 @@ def incremental_extract(**kwargs):
 
 
     df_union_all['row_number'] = df_union_all.sort_values(by = ['update_datetime'], ascending = False).groupby(['lecture_vt_no']).cumcount()+1
-    df_union_all = df_union_all[df_union_all['row_number'] == 1]
-    df_union_all = df_union_all.fillna(0).astype({'payment_item':'float64', 'next_payment_item':'float64', 'current_schedule_no':'float64'})
-    df_union_all = df_union_all[['lecture_vt_no','student_user_no','lecture_subject_id','student_type','tutoring_state','payment_item','next_payment_item','current_schedule_no','stage_max_cycle_count','stage_free_cycle_count','stage_pre_offer_cycle_count','stage_offer_cycle_count','create_datetime','update_datetime','last_done_datetime','application_datetime','memo','total_subject_done_month','reactive_datetime']]
-    df_union_all = df_union_all.to_sql('lecture_video_tutoring', pg_engine, if_exists='replace', index=False)
+    
+    df_incremental = df_union_all[df_union_all['row_number'] == 1]
+
+    # 특정 컬럼만 NaN 처리 후 int로 변환
+    df_incremental[['payment_item', 'next_payment_item', 'current_schedule_no']] = (
+        df_incremental[['payment_item', 'next_payment_item', 'current_schedule_no']]
+        .fillna(0)  # NaN은 0으로 대체
+        .astype('int64')  # 정수형으로 변환
+    )
+
+    df_incremental.to_sql(
+        name='lecture_video_tutoring',  # 삽입할 테이블 이름
+        con=pg_engine,  # PostgreSQL 연결 엔진
+        if_exists='replace',  # 테이블이 있으면 삭제 후 재생성
+        index=False  # DataFrame 인덱스는 삽입하지 않음
+    )
+
 
     save_to_s3_with_hook(df_union_all, 'onuii-data-pipeline', 'lecture_video_tutoring', filename, **kwargs)
 
@@ -119,19 +132,19 @@ incremental_extract_and_save_to_s3 = PythonOperator(
     dag=dag
 )
 
-delete_row = SQLExecuteQueryOperator(
-    task_id="delete_row",
-    conn_id='postgres_dev_conn',
-    sql=warehouse_query.lvt_delete_query,
-    dag=dag
-)
+# delete_row = SQLExecuteQueryOperator(
+#     task_id="delete_row",
+#     conn_id='postgres_dev_conn',
+#     sql=warehouse_query.lvt_delete_query,
+#     dag=dag
+# )
 
-insert_data = PythonOperator(
-    task_id='insert_lvt_data',
-    python_callable=read_s3_and_insert_db,
-    provide_context=True,
-    dag=dag
-)
+# insert_data = PythonOperator(
+#     task_id='insert_lvt_data',
+#     python_callable=read_s3_and_insert_db,
+#     provide_context=True,
+#     dag=dag
+# )
 
 # dbt_run = BashOperator(
 #     task_id='dbt_run',
