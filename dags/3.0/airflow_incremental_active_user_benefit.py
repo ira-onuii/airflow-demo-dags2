@@ -15,6 +15,10 @@ from io import StringIO
 
 date = str(((datetime.now()) + timedelta(hours=9)).strftime("%Y-%m-%d"))
 
+database = 'payment_live_mysql'
+
+schema = 'payment'
+
 table_name = 'active_user_benefit'
 
 filename = table_name+date + '.csv'
@@ -23,11 +27,11 @@ filename = table_name+date + '.csv'
     
 
 # S3 버킷 및 디렉토리 지정
-def save_to_s3_with_hook(data, bucket_name, folder_name, file_name):
+def save_to_s3_with_hook(data, bucket_name, version, folder_name, file_name):
     csv_buffer = StringIO()
     data.to_csv(csv_buffer, index=False)
     hook = S3Hook(aws_conn_id='conn_S3')
-    hook.load_string(csv_buffer.getvalue(), key=f"{folder_name}/{file_name}", bucket_name=bucket_name, replace=True)
+    hook.load_string(csv_buffer.getvalue(), key=f"{version}/{folder_name}/{file_name}", bucket_name=bucket_name, replace=True)
 
 
 # incremental_extract 결과 받아와서 S3에 저장
@@ -35,32 +39,33 @@ def save_results_to_s3(**context):
     query_results = context['ti'].xcom_pull(task_ids='incremental_extract_and_load')
     column_names = ['id','createdat','updatedat','deletedat','userid','benefitid']
     df = pd.DataFrame(query_results, columns=column_names)
-    save_to_s3_with_hook(df, 'onuii-data-pipeline', table_name, filename)
+    save_to_s3_with_hook(df, 'onuii-data-pipeline-3.0', 'staging',table_name, filename)
 
 
 # 증분 추출 with row_number()
-def incremental_extract(**kwargs):
+def incremental_extract():
     from airflow.providers.postgres.hooks.postgres import PostgresHook
     from airflow.providers.mysql.hooks.mysql import MySqlHook
+    from airflow.providers.trino.hooks.trino import TrinoHook
 
     # postgresql 연결
     pg_hook = PostgresHook(postgres_conn_id='postgres_conn_3.0')  
     # mysql 연결
-    mysql_hook = MySqlHook(mysql_conn_id='3.0_payment_live_conn')   
+    trino_hook = TrinoHook(trino_conn_id='trino_conn')   
 
     # SQLAlchemy Engine 생성
     pg_engine = pg_hook.get_sqlalchemy_engine()
-    mysql_engine = mysql_hook.get_sqlalchemy_engine()
+    trino_engine = trino_hook.get_sqlalchemy_engine()
 
     # 기존 data warehouse에 있던 데이터 추출 쿼리
-    before_data = f'select * from raw_data.{table_name}'
+    before_data = f'select * from {database}.{schema}.{table_name}'
 
     # 최근 실행시점 이후 update된 데이터 추출 쿼리
     today_data = warehouse_query.active_user_benefit_select_query
 
     # 쿼리 실행 및 union all로 병합
     df_before = pd.read_sql(before_data, pg_engine)
-    df_today = pd.read_sql(today_data, mysql_engine)
+    df_today = pd.read_sql(today_data, trino_engine)
     df_union_all = pd.concat([df_before, df_today], ignore_index=True)
 
     # # date_type 변환
