@@ -1006,7 +1006,7 @@ id
 ,updated_at
 ,delete_at
 ,latest_login_at
-from user
+from 3.0_user_mysql.user.user
 ''' 
 
 user_address_select_query = '''
