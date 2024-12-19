@@ -6,14 +6,14 @@ table_name = f'"{date}"'
 
 
 
-active_user_benefit_select_query = '''
+active_user_benefit_select_query = f'''
 select id
 	,createdat
 	,updatedat
 	,deletedat
 	,userid
 	,benefitid
-from active_user_benefit
+from {trino_database}.{trino_schema}.active_user_benefit
 '''
 
 address_select_query = '''
