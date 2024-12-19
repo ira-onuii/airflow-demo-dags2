@@ -3,7 +3,7 @@ import os
 
 # 현재 파일이 있는 디렉토리를 sys.path에 추가
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-import warehouse_query
+import warehouse_query2
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator
@@ -40,7 +40,7 @@ def payment_insert_postgres_data(**context):
     from airflow.providers.postgres.hooks.postgres import PostgresHook
 
     records = context['ti'].xcom_pull(task_ids='payment_run_select_query')
-    insert_query = warehouse_query.payment_insert_query
+    insert_query = warehouse_query2.payment_insert_query
 
     pg_hook = PostgresHook(postgres_conn_id='postgres_dev_conn')
     pg_conn = pg_hook.get_conn()
@@ -76,7 +76,7 @@ dag = DAG(
 #payment
 payment_run_query = SQLExecuteQueryOperator(
     task_id='payment_run_select_query',
-    sql=warehouse_query.payment_select_query,
+    sql=warehouse_query2.payment_select_query,
     conn_id='legacy_staging_conn',
     do_xcom_push=True,
     dag=dag,
@@ -85,7 +85,7 @@ payment_run_query = SQLExecuteQueryOperator(
 payment_delete_row = SQLExecuteQueryOperator(
     task_id="payment_delete_row",
     conn_id='postgres_dev_conn',
-    sql=warehouse_query.payment_delete_query
+    sql=warehouse_query2.payment_delete_query
 )
 
 payment_insert_data = PythonOperator(

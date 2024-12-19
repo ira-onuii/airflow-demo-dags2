@@ -3,7 +3,7 @@ import os
 
 # 현재 파일이 있는 디렉토리를 sys.path에 추가
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-import warehouse_query
+import warehouse_query2
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator
@@ -43,7 +43,7 @@ def scph_insert_postgres_data(**context):
     from airflow.providers.postgres.hooks.postgres import PostgresHook
 
     records = context['ti'].xcom_pull(task_ids='scph_run_select_query')
-    insert_query = warehouse_query.scph_insert_query
+    insert_query = warehouse_query2.scph_insert_query
 
     pg_hook = PostgresHook(postgres_conn_id='postgres_dev_conn')
     pg_conn = pg_hook.get_conn()
@@ -82,7 +82,7 @@ dag = DAG(
 #user
 scph_run_query = SQLExecuteQueryOperator(
     task_id='scph_run_select_query',
-    sql=warehouse_query.scph_select_query,
+    sql=warehouse_query2.scph_select_query,
     conn_id='legacy_staging_conn',
     do_xcom_push=True,
     dag=dag,
@@ -91,7 +91,7 @@ scph_run_query = SQLExecuteQueryOperator(
 scph_delete_row = SQLExecuteQueryOperator(
     task_id="scph_delete_row",
     conn_id='postgres_dev_conn',
-    sql=warehouse_query.scph_delete_query
+    sql=warehouse_query2.scph_delete_query
 )
 
 scph_insert_data = PythonOperator(

@@ -3,7 +3,7 @@ import os
 
 # 현재 파일이 있는 디렉토리를 sys.path에 추가
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-import warehouse_query
+import warehouse_query3
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
@@ -15,9 +15,11 @@ from io import StringIO
 
 date = str(((datetime.now()) + timedelta(hours=9)).strftime("%Y-%m-%d"))
 
-database = 'payment_live_mysql'
+trino_database = 'payment_live_mysql'
 
-schema = 'payment'
+trino_schema = 'payment'
+
+pg_schema = 'raw_data'
 
 table_name = 'active_user_benefit'
 
@@ -58,10 +60,10 @@ def incremental_extract():
     trino_engine = trino_hook.get_sqlalchemy_engine()
 
     # 기존 data warehouse에 있던 데이터 추출 쿼리
-    before_data = f'select * from {database}.{schema}.{table_name}'
+    before_data = f'select * from {pg_schema}.{table_name}'
 
     # 최근 실행시점 이후 update된 데이터 추출 쿼리
-    today_data = warehouse_query.active_user_benefit_select_query
+    today_data = warehouse_query3.active_user_benefit_select_query
 
     # 쿼리 실행 및 union all로 병합
     df_before = pd.read_sql(before_data, pg_engine)

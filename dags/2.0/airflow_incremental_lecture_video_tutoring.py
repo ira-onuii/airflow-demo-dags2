@@ -3,7 +3,7 @@ import os
 
 # 현재 파일이 있는 디렉토리를 sys.path에 추가
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-import warehouse_query
+import warehouse_query2
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
@@ -66,7 +66,7 @@ def incremental_extract(**kwargs):
     before_data = 'select * from raw_data.lecture_video_tutoring'
 
     # 최근 실행시점 이후 update된 데이터 추출 쿼리
-    today_data = warehouse_query.lvt_select_query
+    today_data = warehouse_query2.lvt_select_query
 
     # 쿼리 실행 및 union all로 병합
     df_before = pd.read_sql(before_data, pg_engine)

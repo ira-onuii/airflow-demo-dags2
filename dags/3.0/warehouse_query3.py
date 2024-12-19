@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 
+
 date = str(((datetime.now()) + timedelta(hours=9)).strftime("%Y-%m-%d"))
 
 table_name = f'"{date}"'
@@ -13,7 +14,7 @@ select id
 	,deletedat
 	,userid
 	,benefitid
-from {trino_database}.{trino_schema}.active_user_benefit
+from payment_live_mysql.payment.active_user_benefit
 '''
 
 address_select_query = '''

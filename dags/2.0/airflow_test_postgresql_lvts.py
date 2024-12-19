@@ -3,7 +3,7 @@ import os
 
 # 현재 파일이 있는 디렉토리를 sys.path에 추가
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-import warehouse_query
+import warehouse_query2
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator
@@ -47,7 +47,7 @@ def lvts_insert_postgres_data(**context):
     from airflow.providers.postgres.hooks.postgres import PostgresHook
 
     records = context['ti'].xcom_pull(task_ids='lvts_run_select_query')
-    insert_query = warehouse_query.lvts_insert_query
+    insert_query = warehouse_query2.lvts_insert_query
 
     pg_hook = PostgresHook(postgres_conn_id='postgres_dev_conn')
     pg_conn = pg_hook.get_conn()
@@ -88,7 +88,7 @@ dag = DAG(
 #lvts
 lvts_run_query = SQLExecuteQueryOperator(
     task_id='lvts_run_select_query',
-    sql=warehouse_query.lvts_select_query,
+    sql=warehouse_query2.lvts_select_query,
     conn_id='legacy_staging_conn', #legacy_staging_conn #trino_stage #eks-trino
     do_xcom_push=True,
     dag=dag,
@@ -99,7 +99,7 @@ lvts_run_query = SQLExecuteQueryOperator(
 lvts_delete_row = SQLExecuteQueryOperator(
     task_id="lvts_delete_row",
     conn_id='postgres_dev_conn',
-    sql=warehouse_query.lvts_delete_query
+    sql=warehouse_query2.lvts_delete_query
 )
 
 lvts_insert_data = PythonOperator(
