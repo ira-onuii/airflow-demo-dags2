@@ -39,7 +39,7 @@ def save_to_s3_with_hook(data, bucket_name, version, folder_name, file_name):
 # incremental_extract 결과 받아와서 S3에 저장
 def save_results_to_s3(**context):
     query_results = context['ti'].xcom_pull(task_ids='incremental_extract_and_load')
-    column_names = ['id','name','code','email','password','phone_number','gender','status','actor','legacy_user_id','birth_date','ci','created_at','updated_at','delete_at','latest_login_at']
+    column_names = ['id','name','code','email','password','phone_number','gender','status','actor','legacy_user_id','birth_date','ci','created_at','updated_at','deleted_at','latest_login_at']
     df = pd.DataFrame(query_results, columns=column_names)
     save_to_s3_with_hook(df, 'onuii-data-pipeline-3.0', 'staging',table_name, filename)
 
@@ -80,7 +80,7 @@ def incremental_extract():
     df_incremental = df_union_all[df_union_all['row_number'] == 1]
     
     # row_number 컬럼 제거 및 컬럼 순서 정렬
-    df_incremental = df_incremental[['id','name','code','email','password','phone_number','gender','status','actor','legacy_user_id','birth_date','ci','created_at','updated_at','delete_at','latest_login_at']]
+    df_incremental = df_incremental[['id','name','code','email','password','phone_number','gender','status','actor','legacy_user_id','birth_date','ci','created_at','updated_at','deleted_at','latest_login_at']]
 
     # # 특정 컬럼만 NaN 처리 후 int로 변환
     # df_incremental[['payment_item', 'next_payment_item', 'current_schedule_no']] = (
