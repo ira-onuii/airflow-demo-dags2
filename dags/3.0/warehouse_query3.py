@@ -35,10 +35,7 @@ select
 from address
 '''
 
-user_select_query = '''
-select 
-from 
-'''
+
 
 benefit_select_query = '''
 select 
@@ -1007,6 +1004,7 @@ id
 ,deleted_at
 -- ,latest_login_at
 from "3.0_user_mysql"."user"."user"
+where updated_at > cast(date(now()) - interval '1' day as timestamp)
 ''' 
 
 user_address_select_query = '''

@@ -91,7 +91,7 @@ def incremental_extract():
 
     # 정제된 데이터 data_warehouse 테이블에 삽입
     df_incremental.to_sql(
-        name='raw_data.'+ table_name,  # 삽입할 테이블 이름
+        name=table_name,  # 삽입할 테이블 이름
         schema=pg_schema,
         con=pg_engine,  # PostgreSQL 연결 엔진
         if_exists='replace',  # 테이블이 있으면 삭제 후 재생성
@@ -121,7 +121,7 @@ dag = DAG(
     schedule='10 17 * * *',
 )
 
-#lvt
+
 incremental_extract_and_load = PythonOperator(
     task_id='incremental_extract_and_load',
     python_callable=incremental_extract,
