@@ -1005,7 +1005,7 @@ id
 ,created_at
 ,updated_at
 ,deleted_at
-,latest_login_at
+-- ,latest_login_at
 from "3.0_user_mysql"."user"."user"
 ''' 
 
