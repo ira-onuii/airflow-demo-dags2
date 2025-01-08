@@ -32,7 +32,7 @@ select
 	,userid
 	,isdefault
 	,isrecentlyused
-from address
+from payment_live_mysql.payment.address
 '''
 
 
