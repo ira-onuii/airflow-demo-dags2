@@ -115,10 +115,11 @@ default_args = {
 }
 
 dag = DAG(
-    f'data-warehouse-test-postgresql-{table_name}-incremental',
+    f'data-warehouse-test-postgresql-{table_name}-incremental_3.0',
     default_args=default_args,
     description='Run query and load result to S3',
     schedule='10 17 * * *',
+    tags=['3.0']
 )
 
 
