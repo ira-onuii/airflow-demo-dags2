@@ -119,7 +119,7 @@ dag = DAG(
     default_args=default_args,
     description='Run query and load result to S3',
     schedule='10 17 * * *',
-    tags=['3.0']
+    tags=['3.0','user']
 )
 
 
