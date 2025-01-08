@@ -72,10 +72,11 @@ default_args = {
 }
 
 dag = DAG(
-    'data-warehouse-test-postgresql-scs',
+    'data-warehouse-test-postgresql-scs_2.0',
     default_args=default_args,
     description='Run query and load result to S3',
     schedule='20 17 * * *',
+    tags=["2.0"]
 )
 
 

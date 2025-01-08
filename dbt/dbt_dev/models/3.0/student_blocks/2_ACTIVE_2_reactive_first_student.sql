@@ -1,6 +1,8 @@
 {{ config(
-    materialized='table',
-	schema='block_student'
+    materialized='incremental',
+	schema='block_student',
+    incremental_strategy='merge',
+    unique_key='student_user_No'
 ) }}
 
 
@@ -12,5 +14,11 @@ WITH reactive_first_student_list AS (
     and std.student_total_dm > 0
     and sad.student_state = 'ACTIVE'
 	 )
-SELECT *
-    FROM reactive_first_student_list
+SELECT 
+    student_user_No,
+    {{ get_created_at('rfsl', this, 'student_user_No', 'now()') }} as created_at
+FROM reactive_first_student_list rfsl
+
+{% if is_incremental() %}    
+    where nfsl.student_user_No not in (select student_user_No from {{ this }})
+{% endif %}

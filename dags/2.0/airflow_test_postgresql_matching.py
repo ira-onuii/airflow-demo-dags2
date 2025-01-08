@@ -98,10 +98,11 @@ default_args = {
 }
 
 dag = DAG(
-    'data-warehouse-test-postgresql-matching',
+    'data-warehouse-test-postgresql-matching_2.0',
     default_args=default_args,
     description='Run query and load result to S3',
     schedule='40 17 * * *',
+    tags=["2.0"]
 )
 
 

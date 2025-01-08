@@ -25,4 +25,4 @@ WITH settlement_fee_list AS (
         inner join  {{ ref('lecture_DM') }} ld on (lvs.lecture_vt_No = ld.lecture_vt_No and lvs.teacher_user_No = ld.teacher_user_No)
 )
 SELECT *
-    FROM WITH settlement_fee_list
+    FROM settlement_fee_list

@@ -84,10 +84,11 @@ default_args = {
 }
 
 dag = DAG(
-    'data-warehouse-test-postgresql-kpis-company-indicators-dbt',
+    'data-warehouse-test-postgresql-kpis-company-indicators-dbt_2.0',
     default_args=default_args,
     description='Run Trino query and load result to S3',
     schedule='0 16 * * *',
+    tags=["2.0"]
 )
 
 dbt_run_student_indicator = BashOperator(
