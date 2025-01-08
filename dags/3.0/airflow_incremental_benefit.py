@@ -80,7 +80,7 @@ def incremental_extract():
     df_incremental = df_union_all[df_union_all['row_number'] == 1]
     
     # row_number 컬럼 제거 및 컬럼 순서 정렬
-    df_incremental = df_incremental[['id','createdat','updatedat','deletedat','name','orderername','phonenumber','postcode','address','detailedaddress','userid','isdefault','isrecentlyused']]
+    df_incremental = df_incremental[['id','createdat','updatedat','deletedat','name','type','isavailable','version','detailedtype']]
 
     # # 특정 컬럼만 NaN 처리 후 int로 변환
     # df_incremental[['payment_item', 'next_payment_item', 'current_schedule_no']] = (
