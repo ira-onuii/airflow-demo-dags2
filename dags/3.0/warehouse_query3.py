@@ -66,7 +66,7 @@ id
 ,ismain
 ,type
 ,islegacy
-from billing_card
+from payment_live_mysql.payment.billing_card
 '''
 
 billing_card_key_select_query = '''
@@ -75,7 +75,7 @@ select
 ,uid
 ,pg
 ,billingcardid
-from billing_card_key
+from payment_live_mysql.payment.billing_card_key
 '''
 
 block_select_query = '''
@@ -88,7 +88,7 @@ id
 ,price
 ,defaultprice
 ,paymentitemid
-from block
+from payment_live_mysql.payment.block
 '''
 
 block_refund_select_query = '''
@@ -104,7 +104,7 @@ id
 ,detailid
 ,refundbankid
 ,refundmethod
-from block_refund
+from payment_live_mysql.payment.block_refund
 '''
 
 
@@ -118,7 +118,7 @@ id
 ,amount
 ,additionaltax
 ,paymentid
-from block_refund_detail
+from payment_live_mysql.payment.block_refund_detail
 '''
 
 
@@ -127,7 +127,7 @@ block_refund_reason_select_query = '''
 select 
 blockrefundid
 , refundreasonid
-from block_refund_reason
+from payment_live_mysql.payment.block_refund_reason
 '''
 
 book_select_query = '''
@@ -137,7 +137,7 @@ id
 ,blockid
 ,isbn10
 ,isbn13
-from book
+from payment_live_mysql.payment.book
 '''
 
 career_select_query = '''
@@ -196,7 +196,7 @@ id
 ,devicetype
 ,devicegeneration
 ,memo2
-from contract
+from payment_live_mysql.payment.contract
 '''
 
 course_select_query = '''
@@ -218,7 +218,7 @@ id
 ,value
 ,method
 ,benefitid
-from discount
+from payment_live_mysql.payment.discount
 '''
 
 division_select_query = '''
@@ -242,7 +242,7 @@ id
 ,lecturecontextid
 ,userid
 ,installmentperiod
-from
+from payment_live_mysql.payment.extended_lecture_payment_option
 '''
 
 grade_select_query = '''
@@ -261,7 +261,7 @@ id
 ,name
 ,freemonth
 ,pg
-from interest_free_installment
+from payment_live_mysql.payment.interest_free_installment
 '''
 
 
@@ -335,7 +335,7 @@ id
 ,deletedat
 ,lecturecontextid
 ,installmentperiod
-from lecture_payment_option
+from payment_live_mysql.payment.lecture_payment_option
 '''
 
 matching_condition_category_select_query = '''
@@ -446,7 +446,7 @@ id
 ,addressid
 ,failreason
 ,version
-from payment
+from payment_live_mysql.payment.payment
 '''
 
 payment_item_select_query = '''
@@ -469,7 +469,7 @@ id
 ,count
 ,isaddedtocart
 ,paymentid
-from payment_item
+from payment_live_mysql.payment.payment_item
 '''
 
 payment_item_benefit_select_query = '''
@@ -477,7 +477,7 @@ select
 paymentitemid
 ,benefitid
 ,value
-from payment_item_benefit
+from payment_live_mysql.payment.payment_item_benefit
 '''
 
 payment_item_discount_select_query = '''
@@ -488,7 +488,7 @@ id
 ,discountedvalue
 ,benefitid
 ,paymentitemid
-from payment_item_discount
+from payment_live_mysql.payment.payment_item_discount
 '''
 
 payment_item_extra_info_select_query = '''
@@ -499,7 +499,7 @@ id
 ,subjectid
 ,lvtid
 ,legacyitemid
-from payment_item_extra_info
+from payment_live_mysql.payment.payment_item_extra_info
 '''
 
 payment_settlement_select_query = '''
@@ -511,14 +511,14 @@ id
 ,type
 ,paymentid
 ,refunddetailid
-from payment_settlement
+from payment_live_mysql.payment.payment_settlement
 '''
 
 payment_used_billing_card_select_query = '''
 select 
 billingcardid
 ,paymentid
-from payment_used_billing_card
+from payment_live_mysql.payment.payment_used_billing_card
 '''
 
 refund_bank_select_query = '''
@@ -533,7 +533,7 @@ id
 ,accountnumber
 ,isavailable
 ,userid
-from refund_bank
+from payment_live_mysql.payment.refund_bank
 '''
 
 refund_reason_select_query = '''
@@ -546,7 +546,7 @@ id
 ,description
 ,isdisplayed
 ,isfreedeliveryfee
-from refund_reason
+from payment_live_mysql.payment.refund_reason
 '''
 
 register_path_select_query = '''
@@ -956,7 +956,7 @@ id
 ,week
 ,minute
 ,paymentitemid
-from time
+from payment_live_mysql.payment.time
 '''
 
 university_select_query = '''
@@ -1031,7 +1031,7 @@ id
 ,paymentid
 ,deviceid
 ,contractid
-from user_contract
+from payment_live_mysql.payment.user_contract
 '''
 
 user_device_select_query = '''
@@ -1108,7 +1108,7 @@ id
 ,duedate
 ,iscancelled
 ,paymentid
-from vbank
+from payment_live_mysql.payment.vbank
 '''
 
 
