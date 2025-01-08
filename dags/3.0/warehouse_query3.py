@@ -48,7 +48,7 @@ id
 ,isavailable
 ,version
 ,detailedtype
-from benefit
+from payment_live_mysql.payment.benefit
 '''
 
 billing_card_select_query = '''
