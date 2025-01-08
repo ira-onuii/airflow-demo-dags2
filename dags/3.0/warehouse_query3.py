@@ -15,6 +15,7 @@ select id
 	,userid
 	,benefitid
 from payment_live_mysql.payment.active_user_benefit
+-- where updatedat > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 address_select_query = '''
@@ -33,6 +34,7 @@ select
 	,isdefault
 	,isrecentlyused
 from payment_live_mysql.payment.address
+-- where updatedat > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 
@@ -49,6 +51,7 @@ id
 ,version
 ,detailedtype
 from payment_live_mysql.payment.benefit
+-- where updatedat > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 billing_card_select_query = '''
@@ -67,6 +70,7 @@ id
 ,type
 ,islegacy
 from payment_live_mysql.payment.billing_card
+-- where updatedat > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 billing_card_key_select_query = '''
@@ -105,6 +109,7 @@ id
 ,refundbankid
 ,refundmethod
 from payment_live_mysql.payment.block_refund
+-- where refundedat > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 
@@ -151,6 +156,7 @@ id
 ,created_at
 ,updated_at
 from career
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 cashout_history_select_query = '''
@@ -169,6 +175,7 @@ id
 ,income_tax_fee
 ,teacher_id
 from cashout_history
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 change_lecture_history_select_query = '''
@@ -180,6 +187,7 @@ changed_lecture_id
 ,prev_lecture_id
 ,updated_at
 from change_lecture_history
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 contract_select_query = '''
@@ -197,6 +205,7 @@ id
 ,devicegeneration
 ,memo2
 from payment_live_mysql.payment.contract
+-- where updatedat > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 course_select_query = '''
@@ -209,6 +218,7 @@ id
 ,updated_at
 ,subject_detail_id
 from course
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 discount_select_query = '''
@@ -231,6 +241,7 @@ id
 ,updated_at
 ,created_at
 from division
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 extended_lecture_payment_option_select_query = '''
@@ -243,6 +254,7 @@ id
 ,userid
 ,installmentperiod
 from payment_live_mysql.payment.extended_lecture_payment_option
+-- where updatedat > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 grade_select_query = '''
@@ -262,6 +274,7 @@ id
 ,freemonth
 ,pg
 from payment_live_mysql.payment.interest_free_installment
+-- where updatedat > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 
@@ -280,6 +293,7 @@ is_single
 ,status
 ,subject_codes
 from lecture
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 lecture_cycle_select_query = '''
@@ -298,6 +312,7 @@ idx
 ,updated_at
 ,fixed_package_id
 from lecture_cycle
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 lecture_cycle_schedule_select_query = '''
@@ -308,6 +323,7 @@ start_time_id
 ,lecture_cycle_id
 ,updated_at
 from lecture_cycle_schedule
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 lecture_cycle_user_select_query = '''
@@ -325,6 +341,7 @@ installment_period_of_next_payment
 ,updated_at
 ,user_id
 from lecture_cycle_user
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 lecture_payment_option_select_query = '''
@@ -336,6 +353,7 @@ id
 ,lecturecontextid
 ,installmentperiod
 from payment_live_mysql.payment.lecture_payment_option
+-- where updatedat > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 matching_condition_category_select_query = '''
@@ -346,6 +364,7 @@ created_at
 ,name
 ,value
 from matching_condition_category
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 matching_request_select_query = '''
@@ -367,6 +386,7 @@ version
 ,status
 ,subject_codes
 from matching_request
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 matching_request_condition_select_query = '''
@@ -378,6 +398,7 @@ id
 ,matching_condition_category_id
 ,matching_request_id
 from matching_request_condition
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 ''' 
 
 matching_request_lecture_select_query = '''
@@ -388,6 +409,7 @@ created_at
 ,matching_request_id
 ,updated_at
 from matching_request_lecture
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 matching_suggestion_select_query = '''
@@ -408,6 +430,7 @@ version
 ,status
 ,time_ids
 from matching_suggestion
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 parent_child_select_query = '''
@@ -447,6 +470,7 @@ id
 ,failreason
 ,version
 from payment_live_mysql.payment.payment
+-- where updatedat > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 payment_item_select_query = '''
@@ -470,6 +494,7 @@ id
 ,isaddedtocart
 ,paymentid
 from payment_live_mysql.payment.payment_item
+-- where updatedat > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 payment_item_benefit_select_query = '''
@@ -534,6 +559,7 @@ id
 ,isavailable
 ,userid
 from payment_live_mysql.payment.refund_bank
+-- where updatedat > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 refund_reason_select_query = '''
@@ -547,6 +573,7 @@ id
 ,isdisplayed
 ,isfreedeliveryfee
 from payment_live_mysql.payment.refund_reason
+-- where updatedat > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 register_path_select_query = '''
@@ -557,6 +584,7 @@ id
 ,device
 ,created_at
 from register_path
+-- where created_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 room_select_query = '''
@@ -569,6 +597,7 @@ created_at
 ,streaming_channel_id
 ,type
 from room
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 room_error_report_select_query = '''
 select 
@@ -580,6 +609,7 @@ created_at
 ,reason
 ,type
 from room_error_report
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 room_participant_select_query = '''
@@ -593,6 +623,7 @@ created_at
 ,member_id
 ,role
 from room_participant
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 round_select_query = '''
@@ -610,6 +641,7 @@ idx
 ,provider
 ,status 
 from round
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 round_study_time_select_query = '''
@@ -621,6 +653,7 @@ id
 ,start_date_time
 ,updated_at
 from round_study_time
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 school_select_query = '''
@@ -649,6 +682,7 @@ id
 ,content_type
 ,handwriting_data_type
 from seoltab_content
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 settlement_config_select_query = '''
@@ -663,6 +697,7 @@ id
 ,account_number
 ,owner
 from settlement_config
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 single_lecture_line_select_query = '''
@@ -676,6 +711,7 @@ id
 ,updated_at
 ,code
 from single_lecture_line
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 single_lecture_line_lecture_select_query = '''
@@ -686,6 +722,7 @@ id
 ,single_lecture_line_id
 ,updated_at
 from single_lecture_line_lecture
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 student_select_query = '''
@@ -700,6 +737,7 @@ id
 ,created_at
 ,updated_at
 from student
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 student_content_select_query = '''
@@ -716,6 +754,7 @@ id
 ,content_type
 ,handwriting_data_type
 from student_content
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 student_grade_select_query = '''
@@ -728,6 +767,7 @@ id
 ,created_at
 ,updated_at
 from student_grade
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 student_homework_content_select_query = '''
@@ -757,6 +797,7 @@ id
 ,checks
 ,negative_tags
 from student_review
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 subject_select_query = '''
@@ -768,6 +809,7 @@ id
 ,created_at
 ,updated_at
 from subject
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 subject_detail_select_query = '''
@@ -781,6 +823,7 @@ id
 ,updated_at
 ,name
 from subject_detail
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 teacher_select_query = '''
@@ -806,6 +849,7 @@ id
 ,is_deleted
 ,highschool_id
 from teacher
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 teacher_progress_content_select_query = '''
@@ -822,6 +866,7 @@ id
 ,content_type
 ,handwriting_data_type
 from teacher_progress_content
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 teacher_review_select_query = '''
@@ -834,6 +879,7 @@ id
 ,negative_tags
 ,positive_tags
 from teacher_review
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 temp_matching_request_select_query = '''
@@ -848,6 +894,7 @@ id
 ,uuid
 ,data
 from temp_matching_request
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 template_content_select_query = '''
@@ -861,6 +908,7 @@ id
 ,content_link
 ,content_type
 from template_content
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 term_select_query = '''
@@ -873,6 +921,7 @@ id
 ,created_at
 ,updated_at
 from term
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 ticket_select_query = '''
@@ -887,6 +936,7 @@ id
 ,user_id
 ,status
 from ticket
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 ticket_for_student_select_query = '''
@@ -897,6 +947,7 @@ id
 ,homework_is_checked_by
 ,updated_at
 from ticket_for_student
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 ticket_for_teacher_select_query = '''
@@ -906,6 +957,7 @@ id
 ,created_at
 ,updated_at
 from ticket_for_teacher
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 ticket_study_time_select_query = '''
@@ -917,6 +969,7 @@ id
 ,ticket_id
 ,updated_at
 from ticket_study_time
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 ticket_wallet_select_query = '''
@@ -936,6 +989,7 @@ id
 ,updated_at
 ,user_id
 from ticket_wallet
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 ticket_wallet_payment_select_query = '''
@@ -947,6 +1001,7 @@ id
 ,ticket_wallet_id
 ,updated_at
 from ticket_wallet_payment
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 time_select_query = '''
@@ -970,6 +1025,7 @@ id
 ,updated_at
 ,old_id
 from university
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 university_information_select_query = '''
@@ -983,6 +1039,7 @@ id
 ,created_at
 ,updated_at
 from university_information
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 user_select_query = '''
@@ -1004,7 +1061,7 @@ id
 ,deleted_at
 -- ,latest_login_at
 from "3.0_user_mysql"."user"."user"
-where updated_at > cast(date(now()) - interval '1' day as timestamp)
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 ''' 
 
 user_address_select_query = '''
@@ -1017,6 +1074,7 @@ id
 ,created_at
 ,updated_at
 from user_address
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 user_contract_select_query = '''
@@ -1032,6 +1090,7 @@ id
 ,deviceid
 ,contractid
 from payment_live_mysql.payment.user_contract
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 user_device_select_query = '''
@@ -1043,6 +1102,7 @@ id
 ,created_at
 ,updated_at
 from user_device
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 user_protector_select_query = '''
@@ -1084,6 +1144,7 @@ id
 ,available_time_ids
 ,desired_time_ids
 from user_time_line
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 user_using_time_line_select_query = '''
@@ -1096,6 +1157,7 @@ id
 ,user_time_line_id
 ,time_ids
 from user_using_time_line
+-- where updated_at > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 vbank_select_query = '''
@@ -1109,6 +1171,7 @@ id
 ,iscancelled
 ,paymentid
 from payment_live_mysql.payment.vbank
+-- where createdat > cast(date(now()) - interval '1' day as timestamp)
 '''
 
 
