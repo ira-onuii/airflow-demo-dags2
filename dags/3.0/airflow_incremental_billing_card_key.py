@@ -74,13 +74,13 @@ def incremental_extract():
     # df_union_all['update_datetime'] = pd.to_datetime(df_union_all['update_datetime'], errors='coerce')
 
     # PK 값 별 최근 행이 1이 오도록 row_number 설정
-    df_union_all['row_number'] = df_union_all.sort_values(by = ['updatedat'], ascending = False).groupby(['id']).cumcount()+1
+    #df_union_all['row_number'] = df_union_all.sort_values(by = ['updatedat'], ascending = False).groupby(['id']).cumcount()+1
     
     # PK 값 별 최근 행만 추출
-    df_incremental = df_union_all[df_union_all['row_number'] == 1]
+    #df_incremental = df_union_all[df_union_all['row_number'] == 1]
     
     # row_number 컬럼 제거 및 컬럼 순서 정렬
-    df_incremental = df_incremental[['id','uid','pg','billingcardid']]
+    df_incremental = df_union_all[['id','uid','pg','billingcardid']]
 
     # # 특정 컬럼만 NaN 처리 후 int로 변환
     # df_incremental[['payment_item', 'next_payment_item', 'current_schedule_no']] = (
