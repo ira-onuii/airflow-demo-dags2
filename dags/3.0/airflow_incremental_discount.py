@@ -63,7 +63,7 @@ def incremental_extract():
     before_data = f'select * from {pg_schema}.{table_name}'
 
     # 최근 실행시점 이후 update된 데이터 추출 쿼리
-    today_data = warehouse_query3.book_select_query
+    today_data = warehouse_query3.discount_select_query
 
     # 쿼리 실행 및 union all로 병합
     df_before = pd.read_sql(before_data, pg_engine)
