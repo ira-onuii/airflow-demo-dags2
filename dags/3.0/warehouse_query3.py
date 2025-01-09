@@ -75,7 +75,7 @@ from payment_live_mysql.payment.billing_card
 
 billing_card_key_select_query = '''
 select 
-,id
+id
 ,uid
 ,pg
 ,billingcardid
