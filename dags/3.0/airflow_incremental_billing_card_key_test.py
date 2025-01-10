@@ -21,7 +21,7 @@ trino_schema = 'payment'
 
 pg_schema = 'raw_data'
 
-table_name = 'discount'
+table_name = 'billing_card_key'
 
 filename = table_name+date + '.csv'
 
@@ -39,7 +39,7 @@ def save_to_s3_with_hook(data, bucket_name, version, folder_name, file_name):
 # incremental_extract 결과 받아와서 S3에 저장
 def save_results_to_s3(**context):
     query_results = context['ti'].xcom_pull(task_ids='incremental_extract_and_load')
-    column_names = ['id','type','value','method','benefitid']
+    column_names = ['id','uid','pg','billingcardid']
     df = pd.DataFrame(query_results, columns=column_names)
     save_to_s3_with_hook(df, 'onuii-data-pipeline-3.0', 'staging',table_name, filename)
 
@@ -60,27 +60,35 @@ def incremental_extract():
     trino_engine = trino_hook.get_sqlalchemy_engine()
 
     # 기존 data warehouse에 있던 데이터 추출 쿼리
-    before_data = f'select * from {pg_schema}.{trino_schema+'.'+table_name}'
+    before_data = f'select max(id) from {pg_schema}.{trino_schema+'.'+table_name}'
 
     # 최근 실행시점 이후 update된 데이터 추출 쿼리
-    today_data = warehouse_query3.discount_select_query
+    today_data = f'''
+    select 
+        id
+        ,uid
+        ,pg
+        ,billingcardid
+        from payment_live_mysql.payment.billing_card_key
+        where id > ({before_data})
+    '''
 
     # 쿼리 실행 및 union all로 병합
-    df_before = pd.read_sql(before_data, pg_engine)
+    #df_before = pd.read_sql(before_data, pg_engine)
     df_today = pd.read_sql(today_data, trino_engine)
-    df_union_all = pd.concat([df_before, df_today], ignore_index=True)
+    #df_union_all = pd.concat([df_before, df_today], ignore_index=True)
 
     # # date_type 변환
     # df_union_all['update_datetime'] = pd.to_datetime(df_union_all['update_datetime'], errors='coerce')
 
     # PK 값 별 최근 행이 1이 오도록 row_number 설정
-    #df_union_all['row_number'] = df_union_all.sort_values(by = ['refundedat'], ascending = False).groupby(['id']).cumcount()+1
+    #df_union_all['row_number'] = df_union_all.sort_values(by = ['updatedat'], ascending = False).groupby(['id']).cumcount()+1
     
     # PK 값 별 최근 행만 추출
     #df_incremental = df_union_all[df_union_all['row_number'] == 1]
     
     # row_number 컬럼 제거 및 컬럼 순서 정렬
-    df_incremental = df_union_all[['id','type','value','method','benefitid']]
+    df_incremental = df_today[['id','uid','pg','billingcardid']]
 
     # # 특정 컬럼만 NaN 처리 후 int로 변환
     # df_incremental[['payment_item', 'next_payment_item', 'current_schedule_no']] = (
@@ -91,10 +99,10 @@ def incremental_extract():
 
     # 정제된 데이터 data_warehouse 테이블에 삽입
     df_incremental.to_sql(
-        name=trino_schema+'.'+table_name,  # 삽입할 테이블 이름
-        schema=pg_schema,
+        name= trino_schema+'.'+table_name+'_test',  # 삽입할 테이블 이름
         con=pg_engine,  # PostgreSQL 연결 엔진
-        if_exists='replace',  # 테이블이 있으면 삭제 후 재생성
+        schema=pg_schema,
+        if_exists='append',  # 테이블이 있으면 삭제 후 재생성
         index=False  # DataFrame 인덱스는 삽입하지 않음
     )
 
@@ -122,7 +130,7 @@ dag = DAG(
     tags=['3.0','payment']
 )
 
-
+#lvt
 incremental_extract_and_load = PythonOperator(
     task_id='incremental_extract_and_load',
     python_callable=incremental_extract,
