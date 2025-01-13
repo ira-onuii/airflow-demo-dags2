@@ -75,7 +75,7 @@ def incremental_extract():
     select 
         'id','createdat','updatedat','deletedat','userid','benefitid'
         from payment_live_mysql.payment.{table_name}
-        where updatedat > if({max_updatedat} is NULL, cast('2019-01-01 00:00:00' as timestamp),{max_updatedat})
+        where updatedat > if(updatedat ='None', cast('2019-01-01 00:00:00' as timestamp),{max_updatedat})
     '''
 
 
