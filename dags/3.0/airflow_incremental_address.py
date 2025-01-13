@@ -88,6 +88,7 @@ def incremental_extract():
     print(f"today data Number of rows: {len(df_today)}")
     df_union_all = pd.concat([df_before, df_today], ignore_index=True)
     print(f"union all data Number of rows: {len(df_union_all)}")
+    print(df_union_all)
 
 
     # # date_type 변환
@@ -95,26 +96,13 @@ def incremental_extract():
 
     # PK 값 별 최근 행이 1이 오도록 row_number 설정
     df_union_all['row_number'] = df_union_all.sort_values(by = ['updatedat'], ascending = False).groupby(['id']).cumcount()+1
+    print(df_union_all['row_number'])
 
-
-    try:    
-        directory = './csv'
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-        file_path = os.path.join(directory, 'address' + ".csv")
-        #file_name = today + ".csv"
-        with open(file_path, 'w', newline='', encoding='utf-8') as file:
-            csv_writer = csv.writer(file)
-            # 컬럼 이름을 CSV 파일의 헤더로 작성
-            #csv_writer.writerow([i[0] for i in data.description])
-            # 쿼리 결과를 한 줄씩 작성
-            csv_writer.writerows(df_union_all)
-    except Exception as e:
-        raise
 
     # PK 값 별 최근 행만 추출
     df_incremental = df_union_all[df_union_all['row_number'] == 1]
     print(f"final data Number of rows: {len(df_incremental)}")
+    print(df_incremental)
     
     # row_number 컬럼 제거 및 컬럼 순서 정렬
     df_incremental = df_incremental[['id','createdat','updatedat','deletedat','name','orderername','phonenumber','postcode','address','detailedaddress','userid','isdefault','isrecentlyused']]
