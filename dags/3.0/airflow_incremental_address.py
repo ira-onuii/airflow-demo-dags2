@@ -60,6 +60,8 @@ def incremental_extract():
     pg_engine = pg_hook.get_sqlalchemy_engine()
     trino_engine = trino_hook.get_sqlalchemy_engine()
 
+    pd.set_option('display.max_columns', None)
+
     # 기존 data warehouse에 있던 데이터 추출 쿼리
     before_data = f'select * from {pg_schema}."{trino_schema}.{table_name}"'
 
@@ -87,7 +89,6 @@ def incremental_extract():
     df_today = pd.read_sql(today_data, trino_engine)
     print(f"today data Number of rows: {len(df_today)}")
     df_union_all = pd.concat([df_before, df_today], ignore_index=True)
-    pd.set_option('display.max_clumns',None)
     print(f"union all data Number of rows: {len(df_union_all)}")
     print(df_union_all)
 
