@@ -79,8 +79,11 @@ def incremental_extract():
 
     # 쿼리 실행 및 union all로 병합
     df_before = pd.read_sql(before_data, pg_engine)
+    print(f"before data Number of rows: {len(df_before)}")
     df_today = pd.read_sql(today_data, trino_engine)
+    print(f"today data Number of rows: {len(df_today)}")
     df_union_all = pd.concat([df_before, df_today], ignore_index=True)
+    print(f"union all data Number of rows: {len(df_union_all)}")
 
     # # date_type 변환
     # df_union_all['update_datetime'] = pd.to_datetime(df_union_all['update_datetime'], errors='coerce')
@@ -90,6 +93,7 @@ def incremental_extract():
     
     # PK 값 별 최근 행만 추출
     df_incremental = df_union_all[df_union_all['row_number'] == 1]
+    print(f"final data Number of rows: {len(df_incremental)}")
     
     # row_number 컬럼 제거 및 컬럼 순서 정렬
     df_incremental = df_incremental[['id','createdat','updatedat','deletedat','name','orderername','phonenumber','postcode','address','detailedaddress','userid','isdefault','isrecentlyused']]
