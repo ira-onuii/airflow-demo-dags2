@@ -61,6 +61,7 @@ def incremental_extract():
 
     # 기존 data warehouse에 있던 데이터 추출 쿼리
     before_data = f'select max(id) from {pg_schema}.{trino_schema}.{table_name}'
+    before_data_result =  pd.read_sql(before_data, pg_engine)
 
     # 최근 실행시점 이후 update된 데이터 추출 쿼리
     today_data = f'''
@@ -70,7 +71,7 @@ def incremental_extract():
         ,pg
         ,billingcardid
         from payment_live_mysql.payment.billing_card_key
-        where id > ({before_data})
+        where id > ({before_data_result})
     '''
 
     # 쿼리 실행 및 union all로 병합
