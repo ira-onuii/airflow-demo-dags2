@@ -66,6 +66,7 @@ def incremental_extract():
     max_updated_data = f'select max(updatedat) as max_updatedat from {pg_schema}."{trino_schema}.{table_name}"'
     max_updated_data_result =  pd.read_sql(max_updated_data, pg_engine)
     max_updatedat = max_updated_data_result['max_updatedat'].iloc[0]
+    max_updatedat = pd.to_datetime(max_updatedat).strftime('%Y-%m-%d %H:%M:%S')
     print(max_updatedat)
 
     # 최근 실행시점 이후 update된 데이터 추출 쿼리
