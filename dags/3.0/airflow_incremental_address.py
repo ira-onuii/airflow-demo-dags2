@@ -75,7 +75,7 @@ def incremental_extract():
     select 
         'id','createdat','updatedat','deletedat','name','orderername','phonenumber','postcode','address','detailedaddress','userid','isdefault','isrecentlyused'
         from payment_live_mysql.payment.{table_name}
-        where updatedat > if({max_updatedat} is None, cast('2019-01-01 00:00:00' as timestamp),{max_updatedat})
+        where updatedat > if({max_updatedat} is NULL, cast('2019-01-01 00:00:00' as timestamp),{max_updatedat})
     '''
 
     # 쿼리 실행 및 union all로 병합
@@ -93,7 +93,7 @@ def incremental_extract():
     # PK 값 별 최근 행이 1이 오도록 row_number 설정
     df_union_all['row_number'] = df_union_all.sort_values(by = ['updatedat'], ascending = False).groupby(['id']).cumcount()+1
 
-    
+
     try:    
         directory = '/Users/chad_mac/Documents/project/'
         if not os.path.exists(directory):
