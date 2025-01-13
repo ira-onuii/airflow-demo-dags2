@@ -60,10 +60,21 @@ def incremental_extract():
     trino_engine = trino_hook.get_sqlalchemy_engine()
 
     # 기존 data warehouse에 있던 데이터 추출 쿼리
-    before_data = f'select * from {pg_schema}.{trino_schema}.{table_name}'
+    before_data = f'select * from {pg_schema}."{trino_schema}.{table_name}"'
+
+    # 기존 data warehouse에 있던 마지막 updatedat
+    max_updated_data = f'select max(updatedat) as max_updatedat from {pg_schema}."{trino_schema}.{table_name}"'
+    max_updated_data_result =  pd.read_sql(max_updated_data, pg_engine)
+    max_updatedat = max_updated_data_result['max_updatedat'].iloc[0]
+    print(max_updatedat)
 
     # 최근 실행시점 이후 update된 데이터 추출 쿼리
-    today_data = warehouse_query3.address_select_query
+    today_data = f'''
+    select 
+        'id','createdat','updatedat','deletedat','name','orderername','phonenumber','postcode','address','detailedaddress','userid','isdefault','isrecentlyused'
+        from payment_live_mysql.payment.{table_name}
+        where updatedat > ({max_updatedat})
+    '''
 
     # 쿼리 실행 및 union all로 병합
     df_before = pd.read_sql(before_data, pg_engine)
