@@ -98,7 +98,7 @@ def incremental_extract():
 
 
     try:    
-        directory = '/Users/chad_mac/Documents/project/'
+        directory = './csv'
         if not os.path.exists(directory):
             os.makedirs(directory)
         file_path = os.path.join(directory, 'address' + ".csv")

@@ -69,9 +69,9 @@ def incremental_extract():
     max_updated_data_result =  pd.read_sql(max_updated_data, pg_engine)
     max_updatedat = max_updated_data_result['max_updatedat'].iloc[0]
     if max_updatedat is None:
-        max_updatedat = "cast('2019-01-01 00:00:00' as timestamp)"  # 기본값
+        max_updatedat = '2019-01-01 00:00:00'  # 기본값
     else:
-        'cast(' + f"'{max_updatedat}'" + 'as timestamp)'
+        max_updatedat
     print(max_updatedat)
 
     # 최근 실행시점 이후 update된 데이터 추출 쿼리
@@ -79,7 +79,7 @@ def incremental_extract():
     select 
         'id','createdat','updatedat','deletedat','userid','benefitid'
         from payment_live_mysql.payment.{table_name}
-        where updatedat > {max_updatedat}
+        where updatedat > cast('{max_updatedat}' as timestamp)
     '''
 
 
