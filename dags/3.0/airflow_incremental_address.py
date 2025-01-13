@@ -74,7 +74,7 @@ def incremental_extract():
     select 
         'id','createdat','updatedat','deletedat','name','orderername','phonenumber','postcode','address','detailedaddress','userid','isdefault','isrecentlyused'
         from payment_live_mysql.payment.{table_name}
-        where updatedat > ({max_updatedat})
+        where updatedat > {max_updatedat}
     '''
 
     # 쿼리 실행 및 union all로 병합
