@@ -71,7 +71,6 @@ def incremental_extract():
         max_updatedat = '2019-01-01 00:00:00'  # 기본값
     else:
         max_updatedat
-    max_updatedat = f"'cast(' + '{max_updatedat}' + ' as timestamp)'"
     print(max_updatedat)
 
     # 최근 실행시점 이후 update된 데이터 추출 쿼리
@@ -79,7 +78,7 @@ def incremental_extract():
     select 
         'id','createdat','updatedat','deletedat','name','orderername','phonenumber','postcode','address','detailedaddress','userid','isdefault','isrecentlyused'
         from payment_live_mysql.payment.{table_name}
-        where updatedat > {max_updatedat}
+        where updatedat > cast('{max_updatedat}' as timestamp)
     '''
 
     # 쿼리 실행 및 union all로 병합
