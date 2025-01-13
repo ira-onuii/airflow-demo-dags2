@@ -59,42 +59,33 @@ def incremental_extract():
     pg_engine = pg_hook.get_sqlalchemy_engine()
     trino_engine = trino_hook.get_sqlalchemy_engine()
 
-    # 기존 data warehouse에 있던 데이터 추출 쿼리
-    before_data = f'select * from {pg_schema}.{trino_schema}.{table_name}'
+    # 기존 data warehouse에 있던 max id
+    before_data = f'select max(id) as max_id from {pg_schema}."{trino_schema}.{table_name}"'
+    before_data_result =  pd.read_sql(before_data, pg_engine)
+    max_id = before_data_result['max_id'].iloc[0]
+    print(max_id)
 
     # 최근 실행시점 이후 update된 데이터 추출 쿼리
-    today_data = warehouse_query3.block_refund_detail_select_query
+    today_data = f'''
+    select 
+        'id','receipturl','pgtid','supplyvalue','amount','additionaltax','paymentid'
+        from payment_live_mysql.payment.{table_name}
+        where id > ({max_id})
+    '''
 
-    # 쿼리 실행 및 union all로 병합
-    df_before = pd.read_sql(before_data, pg_engine)
+    # 오늘 쿼리 실행
     df_today = pd.read_sql(today_data, trino_engine)
-    df_union_all = pd.concat([df_before, df_today], ignore_index=True)
-
-    # # date_type 변환
-    # df_union_all['update_datetime'] = pd.to_datetime(df_union_all['update_datetime'], errors='coerce')
-
-    # PK 값 별 최근 행이 1이 오도록 row_number 설정
-    #df_union_all['row_number'] = df_union_all.sort_values(by = ['refundedat'], ascending = False).groupby(['id']).cumcount()+1
     
-    # PK 값 별 최근 행만 추출
-    #df_incremental = df_union_all[df_union_all['row_number'] == 1]
-    
-    # row_number 컬럼 제거 및 컬럼 순서 정렬
-    df_incremental = df_union_all[['id','receipturl','pgtid','supplyvalue','amount','additionaltax','paymentid']]
+    # 컬럼 순서 정렬
+    df_incremental = df_today[['id','receipturl','pgtid','supplyvalue','amount','additionaltax','paymentid']]
 
-    # # 특정 컬럼만 NaN 처리 후 int로 변환
-    # df_incremental[['payment_item', 'next_payment_item', 'current_schedule_no']] = (
-    #     df_incremental[['payment_item', 'next_payment_item', 'current_schedule_no']]
-    #     .fillna(0)  # NaN은 0으로 대체
-    #     .astype('int64')  # 정수형으로 변환
-    # )
 
     # 정제된 데이터 data_warehouse 테이블에 삽입
     df_incremental.to_sql(
         name=trino_schema+'.'+table_name,  # 삽입할 테이블 이름
         schema=pg_schema,
         con=pg_engine,  # PostgreSQL 연결 엔진
-        if_exists='replace',  # 테이블이 있으면 삭제 후 재생성
+        if_exists='append',  # 테이블이 있으면 삭제 후 재생성
         index=False  # DataFrame 인덱스는 삽입하지 않음
     )
 
