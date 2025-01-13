@@ -60,7 +60,7 @@ def incremental_extract():
     trino_engine = trino_hook.get_sqlalchemy_engine()
 
     # 기존 data warehouse에 있던 데이터 추출 쿼리
-    before_data = f'select max(id) from {pg_schema}.{trino_schema}.{table_name}'
+    before_data = f'select max(id) from {pg_schema}."{trino_schema}.{table_name}"'
     before_data_result =  pd.read_sql(before_data, pg_engine)
 
     # 최근 실행시점 이후 update된 데이터 추출 쿼리
