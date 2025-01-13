@@ -68,6 +68,10 @@ def incremental_extract():
     max_updated_data = f'select max(updatedat) as max_updatedat from {pg_schema}."{trino_schema}.{table_name}"'
     max_updated_data_result =  pd.read_sql(max_updated_data, pg_engine)
     max_updatedat = max_updated_data_result['max_updatedat'].iloc[0]
+    if max_updatedat is None:
+        max_updatedat = '2025-01-01 00:00:00'  # 기본값
+    else:
+        max_updatedat
     print(max_updatedat)
 
     # 최근 실행시점 이후 update된 데이터 추출 쿼리
@@ -75,7 +79,7 @@ def incremental_extract():
     select 
         'id','createdat','updatedat','deletedat','userid','benefitid'
         from payment_live_mysql.payment.{table_name}
-        where updatedat > if(updatedat ='None', cast('2019-01-01 00:00:00' as timestamp),{max_updatedat})
+        where updatedat > {max_updatedat}
     '''
 
 
