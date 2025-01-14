@@ -194,7 +194,7 @@ def incremental_extract_2():
     # 최근 실행시점 이후 update된 데이터 추출 쿼리
     today_data = f'''
     select 
-        'id','createdat','updatedat','deletedat','name','orderername','phonenumber','postcode','address','detailedaddress','userid','isdefault','isrecentlyused'
+        "id","createdat","updatedat","deleteda","name","orderername","phonenumber","postcode","address","detailedaddress","userid","isdefault","isrecentlyused"
         from payment_live_mysql.payment.{table_name}
         where updatedat > cast('{max_updatedat}' as timestamp)
     '''
@@ -241,7 +241,7 @@ def incremental_extract_3():
     # 최근 실행시점 이후 update된 데이터 추출 쿼리
     today_data = f'''
     select 
-        'id','createdat','updatedat','deletedat','name','orderername','phonenumber','postcode','address','detailedaddress','userid','isdefault','isrecentlyused'
+        "id","createdat","updatedat","deleteda","name","orderername","phonenumber","postcode","address","detailedaddress","userid","isdefault","isrecentlyused"
         from payment_live_mysql.payment.{table_name}
         where updatedat > cast('{max_updatedat}' as timestamp)
     '''
