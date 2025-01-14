@@ -210,7 +210,7 @@ def incremental_extract_2():
     # df_union_all['update_datetime'] = pd.to_datetime(df_union_all['update_datetime'], errors='coerce')
 
     # PK 값 별 최근 행이 1이 오도록 row_number 설정
-    #df_union_all['row_number'] = df_union_all.sort_values(by = ['updatedat'], ascending = False).groupby(['id']).cumcount()+1
+    df_union_all['row_number'] = df_union_all.sort_values(by = ['updatedat'], ascending = False).groupby(['id']).cumcount()+1
 
 
     return df_union_all
