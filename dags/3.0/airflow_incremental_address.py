@@ -116,8 +116,8 @@ def incremental_extract():
     # 최근 실행시점 이후 update된 데이터 추출 쿼리
     today_data = f'''
     select 
-        'id','createdat','updatedat','deletedat','name','orderername','phonenumber','postcode','address','detailedaddress','userid','isdefault','isrecentlyused'
-        from payment_live_mysql.payment.{table_name}
+        "id","createdat","updatedat","deleteda","name","orderername","phonenumber","postcode","address","detailedaddress","userid","isdefault","isrecentlyused"
+        from {trino_database}.{trino_schema}.{table_name}
         where updatedat > cast('{max_updatedat}' as timestamp)
     '''
 
