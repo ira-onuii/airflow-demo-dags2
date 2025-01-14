@@ -196,7 +196,7 @@ def incremental_extract_2():
     select 
         "id","createdat","updatedat","deletedat","name","orderername","phonenumber","postcode","address","detailedaddress","userid","isdefault","isrecentlyused"
         from payment_live_mysql.payment.{table_name}
-        where updatedat > cast('{max_updatedat}' as timestamp)
+        where updatedat > cast('2025-01-08 15:09:54' as timestamp)
     '''
 
     # 쿼리 실행 및 union all로 병합
@@ -243,7 +243,7 @@ def incremental_extract_3():
     select 
         "id","createdat","updatedat","deletedat","name","orderername","phonenumber","postcode","address","detailedaddress","userid","isdefault","isrecentlyused"
         from payment_live_mysql.payment.{table_name}
-        where updatedat > cast('{max_updatedat}' as timestamp)
+        where updatedat > cast('2025-01-08 15:09:54' as timestamp)
     '''
 
     # 쿼리 실행 및 union all로 병합
