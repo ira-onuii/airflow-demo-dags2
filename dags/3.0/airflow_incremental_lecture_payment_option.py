@@ -62,22 +62,44 @@ def incremental_extract():
     # 기존 data warehouse에 있던 데이터 추출 쿼리
     before_data = f'select * from {pg_schema}.{trino_schema}.{table_name}'
 
+     # 기존 data warehouse에 있던 마지막 updatedat
+    max_updated_data = f'select max(updatedat) as max_updatedat from {pg_schema}."{trino_schema}.{table_name}"'
+    max_updated_data_result =  pd.read_sql(max_updated_data, pg_engine)
+    max_updatedat = max_updated_data_result['max_updatedat'].iloc[0]
+    if max_updatedat is None:
+        max_updatedat = '2019-01-01 00:00:00'  # 기본값
+    else:
+        max_updatedat
+    print(max_updatedat)
+
     # 최근 실행시점 이후 update된 데이터 추출 쿼리
-    today_data = warehouse_query3.lecture_payment_option_select_query
+    today_data = f'''
+    select 
+        "id","createdat","updatedat","deletedat","lecturecontextid","installmentperiod"
+        from {trino_database}.{trino_schema}.{table_name}
+        where updatedat > cast('{max_updatedat}' as timestamp)
+    '''
 
     # 쿼리 실행 및 union all로 병합
     df_before = pd.read_sql(before_data, pg_engine)
+    print(f"before data Number of rows: {len(df_before)}")
     df_today = pd.read_sql(today_data, trino_engine)
+    print(f"today data Number of rows: {len(df_today)}")
     df_union_all = pd.concat([df_before, df_today], ignore_index=True)
+    print(f"union all data Number of rows: {len(df_union_all)}")
+
 
     # # date_type 변환
     # df_union_all['update_datetime'] = pd.to_datetime(df_union_all['update_datetime'], errors='coerce')
 
     # PK 값 별 최근 행이 1이 오도록 row_number 설정
     df_union_all['row_number'] = df_union_all.sort_values(by = ['updatedat'], ascending = False).groupby(['id']).cumcount()+1
-    
+
+
     # PK 값 별 최근 행만 추출
     df_incremental = df_union_all[df_union_all['row_number'] == 1]
+    print(f"final data Number of rows: {len(df_incremental)}")
+    print(df_incremental)
     
     # row_number 컬럼 제거 및 컬럼 순서 정렬
     df_incremental = df_incremental[['id','createdat','updatedat','deletedat','lecturecontextid','installmentperiod']]

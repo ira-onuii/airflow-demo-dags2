@@ -26,9 +26,6 @@ table_name = 'address'
 
 filename = table_name+date + '.csv'
 
-filename2 = table_name+date+'_test' + '.csv'
-
-filename3 = table_name+date+'_today' + '.csv'
 
 
 
@@ -50,35 +47,6 @@ def save_results_to_s3(**context):
     df = pd.DataFrame(query_results, columns=column_names)
     save_to_s3_with_hook(df, 'onuii-data-pipeline-3.0', 'staging',table_name, filename)   
 
-
-# incremental_extract 결과 받아와서 S3에 저장
-def save_results_to_s3_2(**context):
-    query_results = context['ti'].xcom_pull(task_ids='incremental_extract_and_load2')
-    column_names = ['row_number','id','createdat','updatedat','deletedat','name','orderername','phonenumber','postcode','address','detailedaddress','userid','isdefault','isrecentlyused']
-    df = pd.DataFrame(query_results, columns=column_names)
-    save_to_s3_with_hook(df, 'onuii-data-pipeline-3.0', 'staging',table_name, filename2)
-
- # S3 버킷 및 디렉토리 지정
-def save_to_s3_with_hook_2(data, bucket_name, version, folder_name, file_name):
-    csv_buffer = StringIO()
-    data.to_csv(csv_buffer, index=False)
-    hook = S3Hook(aws_conn_id='conn_S3')
-    hook.load_string(csv_buffer.getvalue(), key=f"{version}/{folder_name}/{file_name}", bucket_name=bucket_name, replace=True)
-
-
-# incremental_extract 결과 받아와서 S3에 저장
-def save_results_to_s3_3(**context):
-    query_results = context['ti'].xcom_pull(task_ids='incremental_extract_and_load3')
-    column_names = ['row_number','id','createdat','updatedat','deletedat','name','orderername','phonenumber','postcode','address','detailedaddress','userid','isdefault','isrecentlyused']
-    df = pd.DataFrame(query_results, columns=column_names)
-    save_to_s3_with_hook(df, 'onuii-data-pipeline-3.0', 'staging',table_name, filename3)
-
- # S3 버킷 및 디렉토리 지정
-def save_to_s3_with_hook_3(data, bucket_name, version, folder_name, file_name):
-    csv_buffer = StringIO()
-    data.to_csv(csv_buffer, index=False)
-    hook = S3Hook(aws_conn_id='conn_S3')
-    hook.load_string(csv_buffer.getvalue(), key=f"{version}/{folder_name}/{file_name}", bucket_name=bucket_name, replace=True)
 
 
 
@@ -164,103 +132,6 @@ def incremental_extract():
     return df_incremental
 
 
-def incremental_extract_2():
-    from airflow.providers.postgres.hooks.postgres import PostgresHook
-    from airflow.providers.mysql.hooks.mysql import MySqlHook
-    from airflow.providers.trino.hooks.trino import TrinoHook
-
-    # postgresql 연결
-    pg_hook = PostgresHook(postgres_conn_id='postgres_conn_3.0')  
-    # mysql 연결
-    trino_hook = TrinoHook(trino_conn_id='trino_conn')   
-
-    # SQLAlchemy Engine 생성
-    pg_engine = pg_hook.get_sqlalchemy_engine()
-    trino_engine = trino_hook.get_sqlalchemy_engine()
-
-
-    # 기존 data warehouse에 있던 데이터 추출 쿼리
-    before_data = f'select * from {pg_schema}."{trino_schema}.{table_name}"'
-
-    # 기존 data warehouse에 있던 마지막 updatedat
-    max_updated_data = f'select max(updatedat) as max_updatedat from {pg_schema}."{trino_schema}.{table_name}"'
-    max_updated_data_result =  pd.read_sql(max_updated_data, pg_engine)
-    max_updatedat = max_updated_data_result['max_updatedat'].iloc[0]
-    if max_updatedat is None:
-        max_updatedat = '2019-01-01 00:00:00'  # 기본값
-    else:
-        max_updatedat
-
-    # 최근 실행시점 이후 update된 데이터 추출 쿼리
-    today_data = f'''
-    select 
-        "id","createdat","updatedat","deletedat","name","orderername","phonenumber","postcode","address","detailedaddress","userid","isdefault","isrecentlyused"
-        from payment_live_mysql.payment.{table_name}
-        where updatedat > cast('2025-01-08 15:09:54' as timestamp)
-    '''
-
-    # 쿼리 실행 및 union all로 병합
-    df_before = pd.read_sql(before_data, pg_engine)
-    df_today = pd.read_sql(today_data, trino_engine)
-    df_union_all = pd.concat([df_before, df_today], ignore_index=True)
-    print(f"union all data Number of rows: {len(df_union_all)}")
-
-
-    # # date_type 변환
-    # df_union_all['update_datetime'] = pd.to_datetime(df_union_all['update_datetime'], errors='coerce')
-
-    # PK 값 별 최근 행이 1이 오도록 row_number 설정
-    df_union_all['row_number'] = df_union_all.sort_values(by = ['updatedat'], ascending = False).groupby(['id']).cumcount()+1
-
-
-    return df_union_all
-
-
-def incremental_extract_3():
-    from airflow.providers.trino.hooks.trino import TrinoHook
-    from airflow.providers.postgres.hooks.postgres import PostgresHook
-
-    trino_hook = TrinoHook(trino_conn_id='trino_conn')   
-    pg_hook = PostgresHook(postgres_conn_id='postgres_conn_3.0')  
-
-    # SQLAlchemy Engine 생성
-    trino_engine = trino_hook.get_sqlalchemy_engine()
-    pg_engine = pg_hook.get_sqlalchemy_engine()
-
-
-
-    # 기존 data warehouse에 있던 마지막 updatedat
-    max_updated_data = f'select max(updatedat) as max_updatedat from {pg_schema}."{trino_schema}.{table_name}"'
-    max_updated_data_result =  pd.read_sql(max_updated_data, pg_engine)
-    max_updatedat = max_updated_data_result['max_updatedat'].iloc[0]
-    if max_updatedat is None:
-        max_updatedat = '2019-01-01 00:00:00'  # 기본값
-    else:
-        max_updatedat
-
-    # 최근 실행시점 이후 update된 데이터 추출 쿼리
-    today_data = f'''
-    select 
-        "id","createdat","updatedat","deletedat","name","orderername","phonenumber","postcode","address","detailedaddress","userid","isdefault","isrecentlyused"
-        from payment_live_mysql.payment.{table_name}
-        where updatedat > cast('2025-01-08 15:09:54' as timestamp)
-    '''
-
-    # 쿼리 실행 및 union all로 병합
-    df_today = pd.read_sql(today_data, trino_engine)
-    print(f"today data Number of rows: {len(df_today)}")
-   
-
-
-
-    # # date_type 변환
-    # df_union_all['update_datetime'] = pd.to_datetime(df_union_all['update_datetime'], errors='coerce')
-
-    # PK 값 별 최근 행이 1이 오도록 row_number 설정
-    #df_union_all['row_number'] = df_union_all.sort_values(by = ['updatedat'], ascending = False).groupby(['id']).cumcount()+1
-
-
-    return df_today
 
     
 
@@ -299,36 +170,9 @@ load_S3 = PythonOperator(
     dag=dag
 )
 
-incremental_extract_and_load2 = PythonOperator(
-    task_id='incremental_extract_and_load2',
-    python_callable=incremental_extract_2,
-    provide_context=True,
-    dag=dag
-)
-
-load_S3_2 = PythonOperator(
-    task_id='load_S3_2',
-    python_callable=save_results_to_s3_2,
-    provide_context=True,
-    dag=dag
-)
 
 
-incremental_extract_and_load3 = PythonOperator(
-    task_id='incremental_extract_and_load3',
-    python_callable=incremental_extract_3,
-    provide_context=True,
-    dag=dag
-)
 
-load_S3_3 = PythonOperator(
-    task_id='load_S3_3',
-    python_callable=save_results_to_s3_3,
-    provide_context=True,
-    dag=dag
-)
-
-
-incremental_extract_and_load >> load_S3 >> incremental_extract_and_load2 >> load_S3_2 >> incremental_extract_and_load3 >> load_S3_3
+incremental_extract_and_load >> load_S3 
 
 
