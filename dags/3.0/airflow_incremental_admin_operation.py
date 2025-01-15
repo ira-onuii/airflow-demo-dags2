@@ -80,7 +80,7 @@ def incremental_extract():
     
     
     # row_number 컬럼 제거 및 컬럼 순서 정렬
-    df_incremental = df_today[["id","createdat","adminUserid","name","departmentname","type","paymentid","blockrefundid"]]
+    df_incremental = df_today[["id","createdat","adminuserid","name","departmentname","type","paymentid","blockrefundid"]]
 
     
 
