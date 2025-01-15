@@ -71,7 +71,7 @@ def incremental_extract():
     select 
         "id","createdAt","adminUserId","name","departmentName","type","paymentId","blockRefundId"
         from {trino_database}.{trino_schema}.{table_name}
-        where createdat > cast('{max_id}' as timestamp)
+        where id > ({max_id})
     '''
 
     # 오늘 쿼리 실행
