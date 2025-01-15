@@ -68,8 +68,8 @@ def incremental_extract():
     # 최근 실행시점 이후 update된 데이터 추출 쿼리
     today_data = f'''
     select 
-        'id','createdat','name','discountedvalue','benefitid','paymentitemid'
-        from payment_live_mysql.payment.{table_name}
+        "id","createdat","name","discountedvalue","benefitid","paymentitemid"
+        from {trino_database}.{trino_schema}.{table_name}
         where id > ({max_id})
     '''
 
