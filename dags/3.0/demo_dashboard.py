@@ -27,9 +27,15 @@ def one_lst(indicator_table):
    
     pg_engine = pg_hook.get_sqlalchemy_engine()
 
+    # 빈 리스트 생성
+    random_id1 = []
+
+    # 값 추가
     for i in range(1000):
-        random_id1 = [random.randrange(1000000,2000000)]
-    data = pd.DataFrame(random_id1)
+        random_id1.append(random.randrange(1000000, 2000000))
+
+    # DataFrame 생성
+    data = pd.DataFrame(random_id1, columns=['id'])
     
     data.to_sql(
         name= indicator_table,  # 삽입할 테이블 이름
@@ -47,9 +53,12 @@ def two_lst(indicator_table):
    
     pg_engine = pg_hook.get_sqlalchemy_engine()
 
+    random_id2 = []
+
     for i in range(1000):
-        random_id2 = [random.randrange(1000000,2000000),random.randrange(300000,2000000)]
-    data = pd.DataFrame(random_id2)
+        random_id2.append([random.randrange(1000000,2000000),random.randrange(300000,2000000)])
+
+    data = pd.DataFrame(random_id2, columns=['id','amount'])
     
     data.to_sql(
         name= indicator_table,  # 삽입할 테이블 이름
@@ -69,10 +78,13 @@ def three_lst(indicator_table):
    
     pg_engine = pg_hook.get_sqlalchemy_engine()
 
-    for i in range(1000):
+    random_id3 = []
+
+    for i in range(10):
         type = ['payment','refund']
-        random_id3 = [random.randrange(1000000,2000000),random.randrange(1000000,2000000),random.choice(type)]
-    data = pd.DataFrame(random_id3)
+        random_id3.append([random.randrange(1000000,2000000),random.randrange(1000000,2000000),random.choice(type)])
+        
+    data = pd.DataFrame(random_id3, columns=['id','amount','type'])
     
     data.to_sql(
         name= indicator_table,  # 삽입할 테이블 이름
@@ -113,13 +125,13 @@ add_subject_payment = PythonOperator(
     dag=dag
 )
 
-# change_new_tutoring = PythonOperator(
-#     task_id='change_new_tutoring',
-#     python_callable=one_lst,
-#     op_kwargs={"indicator_table": "change_new_tutoring"},
-#     provide_context=True,
-#     dag=dag
-# )
+change_new_tutoring = PythonOperator(
+    task_id='change_new_tutoring',
+    python_callable=one_lst,
+    op_kwargs={"indicator_table": "change_new_tutoring"},
+    provide_context=True,
+    dag=dag
+)
 
 change_pause_tutoring = PythonOperator(
     task_id='change_pause_tutoring',
