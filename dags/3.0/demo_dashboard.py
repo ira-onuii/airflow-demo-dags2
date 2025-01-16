@@ -20,7 +20,7 @@ pg_schema = 'dashboard_demo'
 
 
 
-def one_lst(indicator_table):
+def one_lst(indicator_table,column_name1):
     from airflow.providers.postgres.hooks.postgres import PostgresHook
 
     pg_hook = PostgresHook(postgres_conn_id='postgres_conn_3.0')  
@@ -35,7 +35,7 @@ def one_lst(indicator_table):
         random_id1.append(random.randrange(1000000, 2000000))
 
     # DataFrame 생성
-    data = pd.DataFrame(random_id1, columns=['id'])
+    data = pd.DataFrame(random_id1, columns=[column_name1])
     
     data.to_sql(
         name= indicator_table,  # 삽입할 테이블 이름
@@ -46,7 +46,7 @@ def one_lst(indicator_table):
     )
 
 
-def two_lst(indicator_table):
+def two_lst(indicator_table,column_name1,column_name2):
     from airflow.providers.postgres.hooks.postgres import PostgresHook
 
     pg_hook = PostgresHook(postgres_conn_id='postgres_conn_3.0')  
@@ -58,7 +58,7 @@ def two_lst(indicator_table):
     for i in range(1000):
         random_id2.append([random.randrange(1000000,2000000),random.randrange(300000,2000000)])
 
-    data = pd.DataFrame(random_id2, columns=['id','amount'])
+    data = pd.DataFrame(random_id2, columns=[column_name1,column_name2])
     
     data.to_sql(
         name= indicator_table,  # 삽입할 테이블 이름
@@ -71,7 +71,7 @@ def two_lst(indicator_table):
     
     
 
-def three_lst(indicator_table):
+def three_lst(indicator_table,column_name1,column_name2,column_name3):
     from airflow.providers.postgres.hooks.postgres import PostgresHook
 
     pg_hook = PostgresHook(postgres_conn_id='postgres_conn_3.0')  
@@ -84,7 +84,7 @@ def three_lst(indicator_table):
         type = ['payment','refund']
         random_id3.append([random.randrange(1000000,2000000),random.randrange(1000000,2000000),random.choice(type)])
         
-    data = pd.DataFrame(random_id3, columns=['id','amount','type'])
+    data = pd.DataFrame(random_id3, columns=[column_name1,column_name2,column_name3])
     
     data.to_sql(
         name= indicator_table,  # 삽입할 테이블 이름
@@ -120,7 +120,7 @@ dag = DAG(
 add_subject_payment = PythonOperator(
     task_id='add_subject_payment',
     python_callable=two_lst,
-    op_kwargs={"indicator_table": "add_subject_payment"},
+    op_kwargs={"indicator_table": "add_subject_payment","column_name1": "payment_id","column_name2": "amount"},
     provide_context=True,
     dag=dag
 )
@@ -128,7 +128,7 @@ add_subject_payment = PythonOperator(
 change_new_tutoring = PythonOperator(
     task_id='change_new_tutoring',
     python_callable=one_lst,
-    op_kwargs={"indicator_table": "change_new_tutoring"},
+    op_kwargs={"indicator_table": "change_new_tutoring","column_name1": "tutoring_id"},
     provide_context=True,
     dag=dag
 )
@@ -136,7 +136,7 @@ change_new_tutoring = PythonOperator(
 change_pause_tutoring = PythonOperator(
     task_id='change_pause_tutoring',
     python_callable=one_lst,
-    op_kwargs={"indicator_table": "change_pause_tutoring"},
+    op_kwargs={"indicator_table": "change_pause_tutoring","column_name1": "tutoring_id"},
     provide_context=True,
     dag=dag
 )
@@ -144,7 +144,7 @@ change_pause_tutoring = PythonOperator(
 change_payment = PythonOperator(
     task_id='change_payment',
     python_callable=three_lst,
-    op_kwargs={"indicator_table": "change_payment"},
+    op_kwargs={"indicator_table": "change_payment","column_name1": "payment_id","column_name2": "amount","column_name3": "type"},
     provide_context=True,
     dag=dag
 )
@@ -152,7 +152,7 @@ change_payment = PythonOperator(
 exeperience_student = PythonOperator(
     task_id='exeperience_student',
     python_callable=one_lst,
-    op_kwargs={"indicator_table": "exeperience_student"},
+    op_kwargs={"indicator_table": "exeperience_student","column_name1": "student_id"},
     provide_context=True,
     dag=dag
 )
@@ -160,7 +160,7 @@ exeperience_student = PythonOperator(
 experience_tutoring = PythonOperator(
     task_id='experience_tutoring',
     python_callable=one_lst,
-    op_kwargs={"indicator_table": "experience_tutoring"},
+    op_kwargs={"indicator_table": "experience_tutoring","column_name1": "tutoring_id"},
     provide_context=True,
     dag=dag
 )
@@ -168,7 +168,7 @@ experience_tutoring = PythonOperator(
 extended_payment_after_4month = PythonOperator(
     task_id='extended_payment_after_4month',
     python_callable=two_lst,
-    op_kwargs={"indicator_table": "extended_payment_after_4month"},
+    op_kwargs={"indicator_table": "extended_payment_after_4month","column_name1": "payment_id","column_name2": "amount"},
     provide_context=True,
     dag=dag
 )
@@ -176,7 +176,7 @@ extended_payment_after_4month = PythonOperator(
 extended_payment_before_first_round = PythonOperator(
     task_id='extended_payment_before_first_round',
     python_callable=two_lst,
-    op_kwargs={"indicator_table": "extended_payment_before_first_round"},
+    op_kwargs={"indicator_table": "extended_payment_before_first_round","column_name1": "payment_id","column_name2": "amount"},
     provide_context=True,
     dag=dag
 )
@@ -184,7 +184,7 @@ extended_payment_before_first_round = PythonOperator(
 extended_payment_less_then_4month = PythonOperator(
     task_id='extended_payment_less_then_4month',
     python_callable=two_lst,
-    op_kwargs={"indicator_table": "extended_payment_less_then_4month"},
+    op_kwargs={"indicator_table": "extended_payment_less_then_4month","column_name1": "payment_id","column_name2": "amount"},
     provide_context=True,
     dag=dag
 )
@@ -192,7 +192,7 @@ extended_payment_less_then_4month = PythonOperator(
 first_payment = PythonOperator(
     task_id='first_payment',
     python_callable=two_lst,
-    op_kwargs={"indicator_table": "first_payment"},
+    op_kwargs={"indicator_table": "first_payment","column_name1": "payment_id","column_name2": "amount"},
     provide_context=True,
     dag=dag
 )
@@ -200,7 +200,7 @@ first_payment = PythonOperator(
 leave_student = PythonOperator(
     task_id='leave_student',
     python_callable=one_lst,
-    op_kwargs={"indicator_table": "leave_student"},
+    op_kwargs={"indicator_table": "leave_student","column_name1": "student_id"},
     provide_context=True,
     dag=dag
 )
@@ -208,7 +208,7 @@ leave_student = PythonOperator(
 new_student = PythonOperator(
     task_id='new_student',
     python_callable=one_lst,
-    op_kwargs={"indicator_table": "new_student"},
+    op_kwargs={"indicator_table": "new_student","column_name1": "student_id"},
     provide_context=True,
     dag=dag
 )
@@ -216,7 +216,7 @@ new_student = PythonOperator(
 new_tutoring = PythonOperator(
     task_id='new_tutoring',
     python_callable=one_lst,
-    op_kwargs={"indicator_table": "new_tutoring"},
+    op_kwargs={"indicator_table": "new_tutoring","column_name1": "tutoring_id"},
     provide_context=True,
     dag=dag
 )
@@ -224,7 +224,7 @@ new_tutoring = PythonOperator(
 pause_student = PythonOperator(
     task_id='pause_student',
     python_callable=one_lst,
-    op_kwargs={"indicator_table": "pause_student"},
+    op_kwargs={"indicator_table": "pause_student","column_name1": "student_id"},
     provide_context=True,
     dag=dag
 )
@@ -232,7 +232,7 @@ pause_student = PythonOperator(
 pause_tutoring = PythonOperator(
     task_id='pause_tutoring',
     python_callable=one_lst,
-    op_kwargs={"indicator_table": "pause_tutoring"},
+    op_kwargs={"indicator_table": "pause_tutoring","column_name1": "tutoring_id"},
     provide_context=True,
     dag=dag
 )
@@ -240,7 +240,7 @@ pause_tutoring = PythonOperator(
 reactive_payment = PythonOperator(
     task_id='reactive_payment',
     python_callable=two_lst,
-    op_kwargs={"indicator_table": "reactive_payment"},
+    op_kwargs={"indicator_table": "reactive_payment","column_name1": "payment_id","column_name2": "amount"},
     provide_context=True,
     dag=dag
 )
@@ -248,7 +248,7 @@ reactive_payment = PythonOperator(
 reactive_student = PythonOperator(
     task_id='reactive_student',
     python_callable=one_lst,
-    op_kwargs={"indicator_table": "reactive_student"},
+    op_kwargs={"indicator_table": "reactive_student","column_name1": "student_id"},
     provide_context=True,
     dag=dag
 )
@@ -256,7 +256,7 @@ reactive_student = PythonOperator(
 refund_after_4month = PythonOperator(
     task_id='refund_after_4month',
     python_callable=two_lst,
-    op_kwargs={"indicator_table": "refund_after_4month"},
+    op_kwargs={"indicator_table": "refund_after_4month","column_name1": "payment_id","column_name1": "amount"},
     provide_context=True,
     dag=dag
 )
@@ -264,7 +264,7 @@ refund_after_4month = PythonOperator(
 refund_before_first_round = PythonOperator(
     task_id='refund_before_first_round',
     python_callable=two_lst,
-    op_kwargs={"indicator_table": "refund_before_first_round"},
+    op_kwargs={"indicator_table": "refund_before_first_round","column_name1": "payment_id","column_name2": "amount"},
     provide_context=True,
     dag=dag
 )
@@ -272,7 +272,7 @@ refund_before_first_round = PythonOperator(
 refund_less_then_4month = PythonOperator(
     task_id='refund_less_then_4month',
     python_callable=two_lst,
-    op_kwargs={"indicator_table": "refund_less_then_4month"},
+    op_kwargs={"indicator_table": "refund_less_then_4month","column_name1": "payment_id","column_name2": "amount"},
     provide_context=True,
     dag=dag
 )
@@ -280,7 +280,7 @@ refund_less_then_4month = PythonOperator(
 regular_student = PythonOperator(
     task_id='regular_student',
     python_callable=one_lst,
-    op_kwargs={"indicator_table": "regular_student"},
+    op_kwargs={"indicator_table": "regular_student","column_name1": "student_id"},
     provide_context=True,
     dag=dag
 )
@@ -288,9 +288,9 @@ regular_student = PythonOperator(
 regular_tutoring = PythonOperator(
     task_id='regular_tutoring',
     python_callable=one_lst,
-    op_kwargs={"indicator_table": "regular_tutoring"},
+    op_kwargs={"indicator_table": "regular_tutoring","column_name1": "tutoring_id"},
     provide_context=True,
     dag=dag
 )
 
-add_subject_payment >> regular_tutoring >> regular_student >> refund_less_then_4month >> refund_before_first_round >> refund_after_4month >> reactive_student >> reactive_payment >> pause_tutoring >> pause_student >> new_tutoring >> new_student >> leave_student >> first_payment >> extended_payment_less_then_4month >> extended_payment_before_first_round >> extended_payment_after_4month >> experience_tutoring >> exeperience_student >> change_payment >> change_pause_tutoring >> change_new_tutoring 
+regular_tutoring >> regular_student >> refund_less_then_4month >> refund_before_first_round >> refund_after_4month >> reactive_student >> reactive_payment >> pause_tutoring >> pause_student >> new_tutoring >> new_student >> leave_student >> first_payment >> extended_payment_less_then_4month >> extended_payment_before_first_round >> extended_payment_after_4month >> experience_tutoring >> exeperience_student >> change_payment >> change_pause_tutoring >> change_new_tutoring >> add_subject_payment
