@@ -37,7 +37,7 @@ def one_lst(indicator_table,column_name1):
 
     # 값 추가
     for i in range(1000):
-        random_id1.append([random.randrange(1000000,2000000),random.randrange(300000,2000000), (start_date + timedelta(days=random.randint(0, (end_date - start_date).days)))])
+        random_id1.append([random.randrange(1000000,2000000), (start_date + timedelta(days=random.randint(0, (end_date - start_date).days)))])
 
     # DataFrame 생성
     data = pd.DataFrame(random_id1, columns=[column_name1,'created_at'])
