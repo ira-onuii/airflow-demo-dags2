@@ -52,3 +52,12 @@ for i in range(10):
 data = pd.DataFrame(random_id3, columns=['id','amount','type'])
 
 print(data)
+
+
+for i in range(1000):
+    random_id1.append(random.randrange(1000000, 2000000))
+
+# DataFrame 생성
+data = pd.DataFrame(random_id1, columns=['id'])
+
+print(data)
