@@ -280,3 +280,5 @@ regular_tutoring = PythonOperator(
     provide_context=True,
     dag=dag
 )
+
+add_subject_payment >> regular_tutoring >> regular_student >> refund_less_then_4month >> refund_before_first_round >> refund_after_4month >> reactive_student >> reactive_payment >> pause_tutoring >> pause_student >> new_tutoring >> new_student >> leave_student >> first_payment >> extended_payment_less_then_4month >> extended_payment_before_first_round >> extended_payment_after_4month >> experience_tutoring >> exeperience_student >> change_payment >> change_pause_tutoring >> change_new_tutoring >> add_subject_payment
