@@ -17,6 +17,9 @@ date = str(((datetime.now()) + timedelta(hours=9)).strftime("%Y-%m-%d"))
 pg_schema = 'dashboard_demo'
 
 
+start_date = datetime(2019, 1, 1)
+end_date = datetime(2025, 12, 31)
+
 
 
 
@@ -30,12 +33,14 @@ def one_lst(indicator_table,column_name1):
     # 빈 리스트 생성
     random_id1 = []
 
+
+
     # 값 추가
     for i in range(1000):
-        random_id1.append(random.randrange(1000000, 2000000))
+        random_id1.append([random.randrange(1000000,2000000),random.randrange(300000,2000000), (start_date + timedelta(days=random.randint(0, (end_date - start_date).days)))])
 
     # DataFrame 생성
-    data = pd.DataFrame(random_id1, columns=[column_name1])
+    data = pd.DataFrame(random_id1, columns=[column_name1,'created_at'])
     
     data.to_sql(
         name= indicator_table,  # 삽입할 테이블 이름
@@ -56,9 +61,9 @@ def two_lst(indicator_table,column_name1,column_name2):
     random_id2 = []
 
     for i in range(1000):
-        random_id2.append([random.randrange(1000000,2000000),random.randrange(300000,2000000)])
+        random_id2.append([random.randrange(1000000,2000000),random.randrange(300000,2000000), (start_date + timedelta(days=random.randint(0, (end_date - start_date).days)))])
 
-    data = pd.DataFrame(random_id2, columns=[column_name1,column_name2])
+    data = pd.DataFrame(random_id2, columns=[column_name1,column_name2,'created_at'])
     
     data.to_sql(
         name= indicator_table,  # 삽입할 테이블 이름
@@ -82,9 +87,9 @@ def three_lst(indicator_table,column_name1,column_name2,column_name3):
 
     for i in range(10):
         type = ['payment','refund']
-        random_id3.append([random.randrange(1000000,2000000),random.randrange(1000000,2000000),random.choice(type)])
+        random_id3.append([random.randrange(1000000,2000000),random.randrange(1000000,2000000),random.choice(type), (start_date + timedelta(days=random.randint(0, (end_date - start_date).days)))])
         
-    data = pd.DataFrame(random_id3, columns=[column_name1,column_name2,column_name3])
+    data = pd.DataFrame(random_id3, columns=[column_name1,column_name2,column_name3,'created_at'])
     
     data.to_sql(
         name= indicator_table,  # 삽입할 테이블 이름
@@ -149,10 +154,10 @@ change_payment = PythonOperator(
     dag=dag
 )
 
-exeperience_student = PythonOperator(
-    task_id='exeperience_student',
+experience_student = PythonOperator(
+    task_id='experience_student',
     python_callable=one_lst,
-    op_kwargs={"indicator_table": "exeperience_student","column_name1": "student_id"},
+    op_kwargs={"indicator_table": "experience_student","column_name1": "student_id"},
     provide_context=True,
     dag=dag
 )
@@ -256,7 +261,7 @@ reactive_student = PythonOperator(
 refund_after_4month = PythonOperator(
     task_id='refund_after_4month',
     python_callable=two_lst,
-    op_kwargs={"indicator_table": "refund_after_4month","column_name1": "payment_id","column_name1": "amount"},
+    op_kwargs={"indicator_table": "refund_after_4month","column_name1": "payment_id","column_name2": "amount"},
     provide_context=True,
     dag=dag
 )
@@ -293,4 +298,4 @@ regular_tutoring = PythonOperator(
     dag=dag
 )
 
-regular_tutoring >> regular_student >> refund_less_then_4month >> refund_before_first_round >> refund_after_4month >> reactive_student >> reactive_payment >> pause_tutoring >> pause_student >> new_tutoring >> new_student >> leave_student >> first_payment >> extended_payment_less_then_4month >> extended_payment_before_first_round >> extended_payment_after_4month >> experience_tutoring >> exeperience_student >> change_payment >> change_pause_tutoring >> change_new_tutoring >> add_subject_payment
+regular_tutoring >> regular_student >> refund_less_then_4month >> refund_before_first_round >> refund_after_4month >> reactive_student >> reactive_payment >> pause_tutoring >> pause_student >> new_tutoring >> new_student >> leave_student >> first_payment >> extended_payment_less_then_4month >> extended_payment_before_first_round >> extended_payment_after_4month >> experience_tutoring >> experience_student >> change_payment >> change_pause_tutoring >> change_new_tutoring >> add_subject_payment

@@ -1,5 +1,7 @@
 import random
 import pandas as pd
+import datetime 
+from datetime import datetime, timedelta
 
 # student_id = [random.randrange(1000000,2000000)]
 
@@ -19,6 +21,10 @@ import pandas as pd
 #     random_id = [random.randrange(1000000,2000000)]
 #     print(random_id)
 
+start_date = datetime(2019, 1, 1)
+end_date = datetime(2025, 12, 31)
+
+random_date = start_date + timedelta(days=random.randint(0, (end_date - start_date).days))
 
 # 빈 리스트 생성
 random_id1 = []
@@ -37,9 +43,9 @@ print(data)
 random_id2 = []
 
 for i in range(1000):
-    random_id2.append([random.randrange(1000000,2000000),random.randrange(300000,2000000)])
+    random_id2.append([random.randrange(1000000,2000000),random.randrange(300000,2000000), (start_date + timedelta(days=random.randint(0, (end_date - start_date).days)))])
 
-data = pd.DataFrame(random_id2, columns=['id','amount'])
+data = pd.DataFrame(random_id2, columns=['id','amount','datetime'])
 
 print(data)
 
