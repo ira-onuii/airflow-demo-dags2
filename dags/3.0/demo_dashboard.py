@@ -100,6 +100,27 @@ def three_lst(indicator_table,column_name1,column_name2,column_name3):
     )
 
 
+def dm_lst(indicator_table,column_name1,column_name2):
+    from airflow.providers.postgres.hooks.postgres import PostgresHook
+
+    pg_hook = PostgresHook(postgres_conn_id='postgres_conn_3.0')  
+   
+    pg_engine = pg_hook.get_sqlalchemy_engine()
+
+    random_id2 = []
+
+    for i in range(1000):
+        random_id2.append([random.randrange(1000000,2000000), (start_date + timedelta(days=random.randint(0, (end_date - start_date).days))),round(random.uniform(0, 24),3)])
+
+    data = pd.DataFrame(random_id2, columns=[column_name1,'created_at',column_name2])
+    
+    data.to_sql(
+        name= indicator_table,  # 삽입할 테이블 이름
+        con=pg_engine,  # PostgreSQL 연결 엔진
+        schema=pg_schema,
+        if_exists='replace',  # 테이블이 있으면 삭제 후 재생성
+        index=False  # DataFrame 인덱스는 삽입하지 않음
+    )
     
     
 
@@ -228,16 +249,16 @@ new_tutoring = PythonOperator(
 
 pause_student = PythonOperator(
     task_id='pause_student',
-    python_callable=one_lst,
-    op_kwargs={"indicator_table": "pause_student","column_name1": "student_id"},
+    python_callable=dm_lst,
+    op_kwargs={"indicator_table": "pause_student","column_name1": "student_id","column_name2": "main_done_month"},
     provide_context=True,
     dag=dag
 )
 
 pause_tutoring = PythonOperator(
     task_id='pause_tutoring',
-    python_callable=one_lst,
-    op_kwargs={"indicator_table": "pause_tutoring","column_name1": "tutoring_id"},
+    python_callable=dm_lst,
+    op_kwargs={"indicator_table": "pause_tutoring","column_name1": "tutoring_id","column_name2": "main_done_month"},
     provide_context=True,
     dag=dag
 )
@@ -298,4 +319,8 @@ regular_tutoring = PythonOperator(
     dag=dag
 )
 
-regular_tutoring >> regular_student >> refund_less_then_4month >> refund_before_first_round >> refund_after_4month >> reactive_student >> reactive_payment >> pause_tutoring >> pause_student >> new_tutoring >> new_student >> leave_student >> first_payment >> extended_payment_less_then_4month >> extended_payment_before_first_round >> extended_payment_after_4month >> experience_tutoring >> experience_student >> change_payment >> change_pause_tutoring >> change_new_tutoring >> add_subject_payment
+#regular_tutoring >> regular_student >> refund_less_then_4month >> refund_before_first_round >> refund_after_4month >> reactive_student >> reactive_payment >>
+
+pause_tutoring >> pause_student 
+
+#>> new_tutoring >> new_student >> leave_student >> first_payment >> extended_payment_less_then_4month >> extended_payment_before_first_round >> extended_payment_after_4month >> experience_tutoring >> experience_student >> change_payment >> change_pause_tutoring >> change_new_tutoring >> add_subject_payment

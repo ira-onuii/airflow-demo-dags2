@@ -67,3 +67,6 @@ for i in range(1000):
 data = pd.DataFrame(random_id1, columns=['id'])
 
 print(data)
+
+random_float = round(random.uniform(0, 12),3)
+print(random_float)
