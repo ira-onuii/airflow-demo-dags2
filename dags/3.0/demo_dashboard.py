@@ -113,13 +113,13 @@ add_subject_payment = PythonOperator(
     dag=dag
 )
 
-change_new_tutoring = PythonOperator(
-    task_id='change_new_tutoring',
-    python_callable=one_lst,
-    op_kwargs={"indicator_table": "change_new_tutoring"},
-    provide_context=True,
-    dag=dag
-)
+# change_new_tutoring = PythonOperator(
+#     task_id='change_new_tutoring',
+#     python_callable=one_lst,
+#     op_kwargs={"indicator_table": "change_new_tutoring"},
+#     provide_context=True,
+#     dag=dag
+# )
 
 change_pause_tutoring = PythonOperator(
     task_id='change_pause_tutoring',
@@ -281,4 +281,4 @@ regular_tutoring = PythonOperator(
     dag=dag
 )
 
-add_subject_payment >> regular_tutoring >> regular_student >> refund_less_then_4month >> refund_before_first_round >> refund_after_4month >> reactive_student >> reactive_payment >> pause_tutoring >> pause_student >> new_tutoring >> new_student >> leave_student >> first_payment >> extended_payment_less_then_4month >> extended_payment_before_first_round >> extended_payment_after_4month >> experience_tutoring >> exeperience_student >> change_payment >> change_pause_tutoring >> change_new_tutoring >> add_subject_payment
+add_subject_payment >> regular_tutoring >> regular_student >> refund_less_then_4month >> refund_before_first_round >> refund_after_4month >> reactive_student >> reactive_payment >> pause_tutoring >> pause_student >> new_tutoring >> new_student >> leave_student >> first_payment >> extended_payment_less_then_4month >> extended_payment_before_first_round >> extended_payment_after_4month >> experience_tutoring >> exeperience_student >> change_payment >> change_pause_tutoring >> add_subject_payment
