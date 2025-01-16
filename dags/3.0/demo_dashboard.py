@@ -46,7 +46,7 @@ def one_lst(indicator_table,column_name1):
         name= indicator_table,  # 삽입할 테이블 이름
         con=pg_engine,  # PostgreSQL 연결 엔진
         schema=pg_schema,
-        if_exists='append',  # 테이블이 있으면 삭제 후 재생성
+        if_exists='replace',  # 테이블이 있으면 삭제 후 재생성
         index=False  # DataFrame 인덱스는 삽입하지 않음
     )
 
@@ -69,7 +69,7 @@ def two_lst(indicator_table,column_name1,column_name2):
         name= indicator_table,  # 삽입할 테이블 이름
         con=pg_engine,  # PostgreSQL 연결 엔진
         schema=pg_schema,
-        if_exists='append',  # 테이블이 있으면 삭제 후 재생성
+        if_exists='replace',  # 테이블이 있으면 삭제 후 재생성
         index=False  # DataFrame 인덱스는 삽입하지 않음
     )
 
@@ -95,7 +95,7 @@ def three_lst(indicator_table,column_name1,column_name2,column_name3):
         name= indicator_table,  # 삽입할 테이블 이름
         con=pg_engine,  # PostgreSQL 연결 엔진
         schema=pg_schema,
-        if_exists='append',  # 테이블이 있으면 삭제 후 재생성
+        if_exists='replace',  # 테이블이 있으면 삭제 후 재생성
         index=False  # DataFrame 인덱스는 삽입하지 않음
     )
 
