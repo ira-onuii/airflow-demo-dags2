@@ -248,17 +248,17 @@ dag = DAG(
 # )
 
 pause_student = PythonOperator(
-    task_id='active_student',
+    task_id='pause_student',
     python_callable=dm_lst,
-    op_kwargs={"indicator_table": "pause_student","column_name1": "student_id","column_name2": "main_done_month"},
+    op_kwargs={"indicator_table": "active_student","column_name1": "student_id","column_name2": "main_done_month"},
     provide_context=True,
     dag=dag
 )
 
 pause_tutoring = PythonOperator(
-    task_id='active_tutoring',
+    task_id='pause_tutoring',
     python_callable=dm_lst,
-    op_kwargs={"indicator_table": "pause_tutoring","column_name1": "tutoring_id","column_name2": "main_done_month"},
+    op_kwargs={"indicator_table": "active_tutoring","column_name1": "tutoring_id","column_name2": "main_done_month"},
     provide_context=True,
     dag=dag
 )
