@@ -143,109 +143,109 @@ dag = DAG(
 )
 
 
-add_subject_payment = PythonOperator(
-    task_id='add_subject_payment',
-    python_callable=two_lst,
-    op_kwargs={"indicator_table": "add_subject_payment","column_name1": "payment_id","column_name2": "amount"},
-    provide_context=True,
-    dag=dag
-)
+# add_subject_payment = PythonOperator(
+#     task_id='add_subject_payment',
+#     python_callable=two_lst,
+#     op_kwargs={"indicator_table": "add_subject_payment","column_name1": "payment_id","column_name2": "amount"},
+#     provide_context=True,
+#     dag=dag
+# )
 
-change_new_tutoring = PythonOperator(
-    task_id='change_new_tutoring',
-    python_callable=one_lst,
-    op_kwargs={"indicator_table": "change_new_tutoring","column_name1": "tutoring_id"},
-    provide_context=True,
-    dag=dag
-)
+# change_new_tutoring = PythonOperator(
+#     task_id='change_new_tutoring',
+#     python_callable=one_lst,
+#     op_kwargs={"indicator_table": "change_new_tutoring","column_name1": "tutoring_id"},
+#     provide_context=True,
+#     dag=dag
+# )
 
-change_pause_tutoring = PythonOperator(
-    task_id='change_pause_tutoring',
-    python_callable=one_lst,
-    op_kwargs={"indicator_table": "change_pause_tutoring","column_name1": "tutoring_id"},
-    provide_context=True,
-    dag=dag
-)
+# change_pause_tutoring = PythonOperator(
+#     task_id='change_pause_tutoring',
+#     python_callable=one_lst,
+#     op_kwargs={"indicator_table": "change_pause_tutoring","column_name1": "tutoring_id"},
+#     provide_context=True,
+#     dag=dag
+# )
 
-change_payment = PythonOperator(
-    task_id='change_payment',
-    python_callable=three_lst,
-    op_kwargs={"indicator_table": "change_payment","column_name1": "payment_id","column_name2": "amount","column_name3": "type"},
-    provide_context=True,
-    dag=dag
-)
+# change_payment = PythonOperator(
+#     task_id='change_payment',
+#     python_callable=three_lst,
+#     op_kwargs={"indicator_table": "change_payment","column_name1": "payment_id","column_name2": "amount","column_name3": "type"},
+#     provide_context=True,
+#     dag=dag
+# )
 
-experience_student = PythonOperator(
-    task_id='experience_student',
-    python_callable=one_lst,
-    op_kwargs={"indicator_table": "experience_student","column_name1": "student_id"},
-    provide_context=True,
-    dag=dag
-)
+# experience_student = PythonOperator(
+#     task_id='experience_student',
+#     python_callable=one_lst,
+#     op_kwargs={"indicator_table": "experience_student","column_name1": "student_id"},
+#     provide_context=True,
+#     dag=dag
+# )
 
-experience_tutoring = PythonOperator(
-    task_id='experience_tutoring',
-    python_callable=one_lst,
-    op_kwargs={"indicator_table": "experience_tutoring","column_name1": "tutoring_id"},
-    provide_context=True,
-    dag=dag
-)
+# experience_tutoring = PythonOperator(
+#     task_id='experience_tutoring',
+#     python_callable=one_lst,
+#     op_kwargs={"indicator_table": "experience_tutoring","column_name1": "tutoring_id"},
+#     provide_context=True,
+#     dag=dag
+# )
 
-extended_payment_after_4month = PythonOperator(
-    task_id='extended_payment_after_4month',
-    python_callable=two_lst,
-    op_kwargs={"indicator_table": "extended_payment_after_4month","column_name1": "payment_id","column_name2": "amount"},
-    provide_context=True,
-    dag=dag
-)
+# extended_payment_after_4month = PythonOperator(
+#     task_id='extended_payment_after_4month',
+#     python_callable=two_lst,
+#     op_kwargs={"indicator_table": "extended_payment_after_4month","column_name1": "payment_id","column_name2": "amount"},
+#     provide_context=True,
+#     dag=dag
+# )
 
-extended_payment_before_first_round = PythonOperator(
-    task_id='extended_payment_before_first_round',
-    python_callable=two_lst,
-    op_kwargs={"indicator_table": "extended_payment_before_first_round","column_name1": "payment_id","column_name2": "amount"},
-    provide_context=True,
-    dag=dag
-)
+# extended_payment_before_first_round = PythonOperator(
+#     task_id='extended_payment_before_first_round',
+#     python_callable=two_lst,
+#     op_kwargs={"indicator_table": "extended_payment_before_first_round","column_name1": "payment_id","column_name2": "amount"},
+#     provide_context=True,
+#     dag=dag
+# )
 
-extended_payment_less_then_4month = PythonOperator(
-    task_id='extended_payment_less_then_4month',
-    python_callable=two_lst,
-    op_kwargs={"indicator_table": "extended_payment_less_then_4month","column_name1": "payment_id","column_name2": "amount"},
-    provide_context=True,
-    dag=dag
-)
+# extended_payment_less_then_4month = PythonOperator(
+#     task_id='extended_payment_less_then_4month',
+#     python_callable=two_lst,
+#     op_kwargs={"indicator_table": "extended_payment_less_then_4month","column_name1": "payment_id","column_name2": "amount"},
+#     provide_context=True,
+#     dag=dag
+# )
 
-first_payment = PythonOperator(
-    task_id='first_payment',
-    python_callable=two_lst,
-    op_kwargs={"indicator_table": "first_payment","column_name1": "payment_id","column_name2": "amount"},
-    provide_context=True,
-    dag=dag
-)
+# first_payment = PythonOperator(
+#     task_id='first_payment',
+#     python_callable=two_lst,
+#     op_kwargs={"indicator_table": "first_payment","column_name1": "payment_id","column_name2": "amount"},
+#     provide_context=True,
+#     dag=dag
+# )
 
-leave_student = PythonOperator(
-    task_id='leave_student',
-    python_callable=one_lst,
-    op_kwargs={"indicator_table": "leave_student","column_name1": "student_id"},
-    provide_context=True,
-    dag=dag
-)
+# leave_student = PythonOperator(
+#     task_id='leave_student',
+#     python_callable=one_lst,
+#     op_kwargs={"indicator_table": "leave_student","column_name1": "student_id"},
+#     provide_context=True,
+#     dag=dag
+# )
 
-new_student = PythonOperator(
-    task_id='new_student',
-    python_callable=one_lst,
-    op_kwargs={"indicator_table": "new_student","column_name1": "student_id"},
-    provide_context=True,
-    dag=dag
-)
+# new_student = PythonOperator(
+#     task_id='new_student',
+#     python_callable=one_lst,
+#     op_kwargs={"indicator_table": "new_student","column_name1": "student_id"},
+#     provide_context=True,
+#     dag=dag
+# )
 
-new_tutoring = PythonOperator(
-    task_id='new_tutoring',
-    python_callable=one_lst,
-    op_kwargs={"indicator_table": "new_tutoring","column_name1": "tutoring_id"},
-    provide_context=True,
-    dag=dag
-)
+# new_tutoring = PythonOperator(
+#     task_id='new_tutoring',
+#     python_callable=one_lst,
+#     op_kwargs={"indicator_table": "new_tutoring","column_name1": "tutoring_id"},
+#     provide_context=True,
+#     dag=dag
+# )
 
 pause_student = PythonOperator(
     task_id='pause_student',
@@ -263,61 +263,61 @@ pause_tutoring = PythonOperator(
     dag=dag
 )
 
-reactive_payment = PythonOperator(
-    task_id='reactive_payment',
-    python_callable=two_lst,
-    op_kwargs={"indicator_table": "reactive_payment","column_name1": "payment_id","column_name2": "amount"},
-    provide_context=True,
-    dag=dag
-)
+# reactive_payment = PythonOperator(
+#     task_id='reactive_payment',
+#     python_callable=two_lst,
+#     op_kwargs={"indicator_table": "reactive_payment","column_name1": "payment_id","column_name2": "amount"},
+#     provide_context=True,
+#     dag=dag
+# )
 
-reactive_student = PythonOperator(
-    task_id='reactive_student',
-    python_callable=one_lst,
-    op_kwargs={"indicator_table": "reactive_student","column_name1": "student_id"},
-    provide_context=True,
-    dag=dag
-)
+# reactive_student = PythonOperator(
+#     task_id='reactive_student',
+#     python_callable=one_lst,
+#     op_kwargs={"indicator_table": "reactive_student","column_name1": "student_id"},
+#     provide_context=True,
+#     dag=dag
+# )
 
-refund_after_4month = PythonOperator(
-    task_id='refund_after_4month',
-    python_callable=two_lst,
-    op_kwargs={"indicator_table": "refund_after_4month","column_name1": "payment_id","column_name2": "amount"},
-    provide_context=True,
-    dag=dag
-)
+# refund_after_4month = PythonOperator(
+#     task_id='refund_after_4month',
+#     python_callable=two_lst,
+#     op_kwargs={"indicator_table": "refund_after_4month","column_name1": "payment_id","column_name2": "amount"},
+#     provide_context=True,
+#     dag=dag
+# )
 
-refund_before_first_round = PythonOperator(
-    task_id='refund_before_first_round',
-    python_callable=two_lst,
-    op_kwargs={"indicator_table": "refund_before_first_round","column_name1": "payment_id","column_name2": "amount"},
-    provide_context=True,
-    dag=dag
-)
+# refund_before_first_round = PythonOperator(
+#     task_id='refund_before_first_round',
+#     python_callable=two_lst,
+#     op_kwargs={"indicator_table": "refund_before_first_round","column_name1": "payment_id","column_name2": "amount"},
+#     provide_context=True,
+#     dag=dag
+# )
 
-refund_less_then_4month = PythonOperator(
-    task_id='refund_less_then_4month',
-    python_callable=two_lst,
-    op_kwargs={"indicator_table": "refund_less_then_4month","column_name1": "payment_id","column_name2": "amount"},
-    provide_context=True,
-    dag=dag
-)
+# refund_less_then_4month = PythonOperator(
+#     task_id='refund_less_then_4month',
+#     python_callable=two_lst,
+#     op_kwargs={"indicator_table": "refund_less_then_4month","column_name1": "payment_id","column_name2": "amount"},
+#     provide_context=True,
+#     dag=dag
+# )
 
-regular_student = PythonOperator(
-    task_id='regular_student',
-    python_callable=one_lst,
-    op_kwargs={"indicator_table": "regular_student","column_name1": "student_id"},
-    provide_context=True,
-    dag=dag
-)
+# regular_student = PythonOperator(
+#     task_id='regular_student',
+#     python_callable=one_lst,
+#     op_kwargs={"indicator_table": "regular_student","column_name1": "student_id"},
+#     provide_context=True,
+#     dag=dag
+# )
 
-regular_tutoring = PythonOperator(
-    task_id='regular_tutoring',
-    python_callable=one_lst,
-    op_kwargs={"indicator_table": "regular_tutoring","column_name1": "tutoring_id"},
-    provide_context=True,
-    dag=dag
-)
+# regular_tutoring = PythonOperator(
+#     task_id='regular_tutoring',
+#     python_callable=one_lst,
+#     op_kwargs={"indicator_table": "regular_tutoring","column_name1": "tutoring_id"},
+#     provide_context=True,
+#     dag=dag
+# )
 
 #regular_tutoring >> regular_student >> refund_less_then_4month >> refund_before_first_round >> refund_after_4month >> reactive_student >> reactive_payment >>
 
