@@ -38,7 +38,7 @@ def join_lst():
     for i in range(1000):
         random_id2.append([random.randrange(2000000,2500000), (start_date + timedelta(days=random.randint(0, (end_date - start_date).days)))])
 
-    data = pd.DataFrame(random_id2, columns=['teacher_id','created_at','seq'])
+    data = pd.DataFrame(random_id2, columns=['teacher_id','created_at'])
 
     data['seq'] = data.sort_values(by = ['created_at'], ascending = False).groupby(['teacher_id']).cumcount()+1
 
@@ -68,13 +68,13 @@ def under_review_lst():
         type = ["submitted_application","passed_application","submitted_voice","not_submitted_voice","passed_voice","not_signed","signed","completed_education","not_completed_education"]
         random_id3.append([random.randrange(2000000,2500000),random.choice(type), (start_date + timedelta(days=random.randint(0, (end_date - start_date).days)))])
         
-    data = pd.DataFrame(random_id3, columns=['teacher_id','tag','created_at','seq'])
+    data = pd.DataFrame(random_id3, columns=['teacher_id','tag','created_at'])
 
     data['seq'] = data.sort_values(by = ['created_at'], ascending = False).groupby(['teacher_id','tag']).cumcount()+1
 
     under_review_list = data[['teacher_id','tag','created_at','seq']]
     
-    data.to_sql(
+    under_review_list.to_sql(
         name= 'under_review_teacher_demo',  # 삽입할 테이블 이름
         con=pg_engine,  # PostgreSQL 연결 엔진
         schema=pg_schema,
