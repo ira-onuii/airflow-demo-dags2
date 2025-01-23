@@ -64,7 +64,7 @@ def under_review_lst():
 
     random_id3 = []
 
-    for i in range(10):
+    for i in range(1000):
         type = ["submitted_application","passed_application","submitted_voice","not_submitted_voice","passed_voice","not_signed","signed","completed_education","not_completed_education"]
         random_id3.append([random.randrange(2000000,2500000),random.choice(type), (start_date + timedelta(days=random.randint(0, (end_date - start_date).days)))])
         
