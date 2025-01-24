@@ -36,7 +36,7 @@ def join_lst():
     random_id2 = []
 
     for i in range(1000):
-        random_id2.append([random.randrange(2000000,2500000), (start_date + timedelta(days=random.randint(0, (end_date - start_date).days)))])
+        random_id2.append([random.randrange(2000000,2001000), (start_date + timedelta(days=random.randint(0, (end_date - start_date).days)))])
 
     data = pd.DataFrame(random_id2, columns=['teacher_id','created_at'])
 
@@ -66,7 +66,7 @@ def under_review_lst():
 
     for i in range(1000):
         type = ["submitted_application","passed_application","submitted_voice","not_submitted_voice","passed_voice","not_signed","signed","completed_education","not_completed_education"]
-        random_id3.append([random.randrange(2000000,2500000),random.choice(type), (start_date + timedelta(days=random.randint(0, (end_date - start_date).days)))])
+        random_id3.append([random.randrange(2000000,2001000),random.choice(type), (start_date + timedelta(days=random.randint(0, (end_date - start_date).days)))])
         
     data = pd.DataFrame(random_id3, columns=['teacher_id','tag','created_at'])
 
@@ -76,6 +76,90 @@ def under_review_lst():
     
     under_review_list.to_sql(
         name= 'under_review_teacher_demo',  # 삽입할 테이블 이름
+        con=pg_engine,  # PostgreSQL 연결 엔진
+        schema=pg_schema,
+        if_exists='replace',  # 테이블이 있으면 삭제 후 재생성
+        index=False  # DataFrame 인덱스는 삽입하지 않음
+    )
+
+
+def drop_lst():
+    from airflow.providers.postgres.hooks.postgres import PostgresHook
+
+    pg_hook = PostgresHook(postgres_conn_id='postgres_conn_3.0')  
+   
+    pg_engine = pg_hook.get_sqlalchemy_engine()
+
+    random_id3 = []
+
+    for i in range(1000):
+        type = ["drop_at_application","drop_at_voice"]
+        random_id3.append([random.randrange(2000000,2001000),random.choice(type), (start_date + timedelta(days=random.randint(0, (end_date - start_date).days)))])
+        
+    data = pd.DataFrame(random_id3, columns=['teacher_id','tag','created_at'])
+
+    data['seq'] = data.sort_values(by = ['created_at'], ascending = False).groupby(['teacher_id','tag']).cumcount()+1
+
+    under_review_list = data[['teacher_id','tag','created_at','seq']]
+    
+    under_review_list.to_sql(
+        name= 'drop_teacher_demo',  # 삽입할 테이블 이름
+        con=pg_engine,  # PostgreSQL 연결 엔진
+        schema=pg_schema,
+        if_exists='replace',  # 테이블이 있으면 삭제 후 재생성
+        index=False  # DataFrame 인덱스는 삽입하지 않음
+    )
+
+
+def active_lst():
+    from airflow.providers.postgres.hooks.postgres import PostgresHook
+
+    pg_hook = PostgresHook(postgres_conn_id='postgres_conn_3.0')  
+   
+    pg_engine = pg_hook.get_sqlalchemy_engine()
+
+    random_id3 = []
+
+    for i in range(1000):
+        type = ["active","dormant"]
+        random_id3.append([random.randrange(2000000,2001000),random.choice(type), (start_date + timedelta(days=random.randint(0, (end_date - start_date).days)))])
+        
+    data = pd.DataFrame(random_id3, columns=['teacher_id','tag','created_at'])
+
+    data['seq'] = data.sort_values(by = ['created_at'], ascending = False).groupby(['teacher_id','tag']).cumcount()+1
+
+    under_review_list = data[['teacher_id','tag','created_at','seq']]
+    
+    under_review_list.to_sql(
+        name= 'active_teacher_demo',  # 삽입할 테이블 이름
+        con=pg_engine,  # PostgreSQL 연결 엔진
+        schema=pg_schema,
+        if_exists='replace',  # 테이블이 있으면 삭제 후 재생성
+        index=False  # DataFrame 인덱스는 삽입하지 않음
+    )
+
+
+def done_lst():
+    from airflow.providers.postgres.hooks.postgres import PostgresHook
+
+    pg_hook = PostgresHook(postgres_conn_id='postgres_conn_3.0')  
+   
+    pg_engine = pg_hook.get_sqlalchemy_engine()
+
+    random_id3 = []
+
+    for i in range(1000):
+        type = ["normal","penalty"]
+        random_id3.append([random.randrange(2000000,2001000),random.choice(type), (start_date + timedelta(days=random.randint(0, (end_date - start_date).days)))])
+        
+    data = pd.DataFrame(random_id3, columns=['teacher_id','tag','created_at'])
+
+    data['seq'] = data.sort_values(by = ['created_at'], ascending = False).groupby(['teacher_id','tag']).cumcount()+1
+
+    under_review_list = data[['teacher_id','tag','created_at','seq']]
+    
+    under_review_list.to_sql(
+        name= 'done_teacher_demo',  # 삽입할 테이블 이름
         con=pg_engine,  # PostgreSQL 연결 엔진
         schema=pg_schema,
         if_exists='replace',  # 테이블이 있으면 삭제 후 재생성
@@ -142,5 +226,29 @@ under_review_teacher = PythonOperator(
     dag=dag
 )
 
+drop_teacher = PythonOperator(
+    task_id='drop_teacher',
+    python_callable=drop_lst,
+    #op_kwargs={"indicator_table": "add_subject_payment","column_name1": "payment_id","column_name2": "amount"},
+    provide_context=True,
+    dag=dag
+)
+
+active_teacher = PythonOperator(
+    task_id='active_teacher',
+    python_callable=active_lst,
+    #op_kwargs={"indicator_table": "add_subject_payment","column_name1": "payment_id","column_name2": "amount"},
+    provide_context=True,
+    dag=dag
+)
+
+done_teacher = PythonOperator(
+    task_id='done_teacher',
+    python_callable=done_lst,
+    #op_kwargs={"indicator_table": "add_subject_payment","column_name1": "payment_id","column_name2": "amount"},
+    provide_context=True,
+    dag=dag
+)
 
 
+join_teacher >> under_review_teacher >> drop_teacher >> active_teacher >> done_teacher
