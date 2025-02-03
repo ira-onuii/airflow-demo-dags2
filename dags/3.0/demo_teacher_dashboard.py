@@ -203,7 +203,7 @@ def first_round_lst():
     random_id3 = []
 
     for i in range(1000):
-        type = ['tutoring','cancel','done']
+        type = ['tutoring','cancel','done','reservation']
         type2 = ['connecting','disconnect']
         type3 = ['changed','']
         random_id3.append([random.randrange(4000000,4111000),random.randrange(2000000,2001000),random.randrange(1000000,1001000),random.choice(type),random.choice(type2),random.choice(type3), (start_date + timedelta(days=random.randint(0, (end_date - start_date).days))),(start_date + timedelta(days=random.randint(0, (end_date - start_date).days)))])
@@ -231,7 +231,7 @@ def round_lst():
     random_id3 = []
 
     for i in range(1000):
-        type = ['tutoring','cancel','done']
+        type = ['tutoring','cancel','done','reservation']
         type3 = ['changed','']
         random_id3.append([random.randrange(4000000,4111000),random.randrange(2000000,2001000),random.randrange(1000000,1001000),random.choice(type),random.choice(type3), (start_date + timedelta(days=random.randint(0, (end_date - start_date).days))), (start_date + timedelta(days=random.randint(0, (end_date - start_date).days))),(start_date + timedelta(days=random.randint(0, (end_date - start_date).days)))])
         
