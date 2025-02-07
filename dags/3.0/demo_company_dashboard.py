@@ -108,7 +108,7 @@ def three_lst2(indicator_table,column_name1,column_name2,column_name3):
 
     random_id3 = []
 
-    for i in range(10):
+    for i in range(1000):
         type = ['first','add_subject','reactive','extended']
         random_id3.append([random.randrange(1000000,2000000),random.randrange(1000000,2000000),random.choice(type), (start_date + timedelta(days=random.randint(0, (end_date - start_date).days)))])
         
