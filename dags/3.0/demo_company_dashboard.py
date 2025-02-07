@@ -99,7 +99,7 @@ def three_lst(indicator_table,column_name1,column_name2,column_name3):
         index=False  # DataFrame 인덱스는 삽입하지 않음
     )
 
-def three_lst2(indicator_table,column_name1,column_name2,column_name3):
+def four_lst(indicator_table,column_name1,column_name2,column_name3):
     from airflow.providers.postgres.hooks.postgres import PostgresHook
 
     pg_hook = PostgresHook(postgres_conn_id='postgres_conn_3.0')  
@@ -320,7 +320,7 @@ dag = DAG(
 
 refund_after_4month = PythonOperator(
     task_id='refund_after_4month',
-    python_callable=three_lst2,
+    python_callable=four_lst,
     op_kwargs={"indicator_table": "refund_after_4month","column_name1": "payment_id","column_name2": "amount","column_name3": "type"},
     provide_context=True,
     dag=dag
@@ -328,7 +328,7 @@ refund_after_4month = PythonOperator(
 
 refund_before_first_round = PythonOperator(
     task_id='refund_before_first_round',
-    python_callable=three_lst2,
+    python_callable=four_lst,
     op_kwargs={"indicator_table": "refund_before_first_round","column_name1": "payment_id","column_name2": "amount","column_name3": "type"},
     provide_context=True,
     dag=dag
@@ -336,7 +336,7 @@ refund_before_first_round = PythonOperator(
 
 refund_less_then_4month = PythonOperator(
     task_id='refund_less_then_4month',
-    python_callable=three_lst2,
+    python_callable=four_lst,
     op_kwargs={"indicator_table": "refund_less_then_4month","column_name1": "payment_id","column_name2": "amount","column_name3": "type"},
     provide_context=True,
     dag=dag
@@ -344,7 +344,7 @@ refund_less_then_4month = PythonOperator(
 
 refund_less_then_1month = PythonOperator(
     task_id='refund_less_then_1month',
-    python_callable=three_lst2,
+    python_callable=four_lst,
     op_kwargs={"indicator_table": "refund_less_then_1month","column_name1": "payment_id","column_name2": "amount","column_name3": "type"},
     provide_context=True,
     dag=dag
