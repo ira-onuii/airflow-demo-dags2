@@ -342,6 +342,14 @@ refund_less_then_4month = PythonOperator(
     dag=dag
 )
 
+refund_less_then_1month = PythonOperator(
+    task_id='refund_less_then_1month',
+    python_callable=three_lst2,
+    op_kwargs={"indicator_table": "refund_less_then_1month","column_name1": "payment_id","column_name2": "amount","column_name3": "type"},
+    provide_context=True,
+    dag=dag
+)
+
 # regular_student = PythonOperator(
 #     task_id='regular_student',
 #     python_callable=one_lst,
@@ -358,4 +366,4 @@ refund_less_then_4month = PythonOperator(
 #     dag=dag
 # )
 
-refund_less_then_4month >> refund_before_first_round >> refund_after_4month 
+refund_less_then_4month >> refund_before_first_round >> refund_after_4month >> refund_less_then_1month
