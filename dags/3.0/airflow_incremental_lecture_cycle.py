@@ -79,9 +79,8 @@ def incremental_extract():
        select 
         "idx","minutes_per_round","next_total_month","total_rounds_of_free","total_rounds_of_pay","used_rounds_of_free","used_rounds_of_pay","created_at","id","latest_round_id","lecture_id","updated_at","fixed_package_id","timeblock"
         from {trino_database}.{trino_schema}.{table_name}
-        -- where updatedat > cast('{max_updatedat}' as timestamp)
     '''
-
+# where updatedat > cast('{max_updatedat}' as timestamp)
     # 쿼리 실행 및 union all로 병합
     #df_before = pd.read_sql(before_data, pg_engine)
     #print(f"before data Number of rows: {len(df_before)}")
