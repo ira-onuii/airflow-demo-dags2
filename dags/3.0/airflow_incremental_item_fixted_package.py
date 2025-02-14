@@ -76,10 +76,18 @@ def incremental_extract():
 
     # 최근 실행시점 이후 update된 데이터 추출 쿼리
     today_data = f'''
-        select 
-        "id","createdat","updatedat","deletedat","userid","benefitid"
-        from {trino_database}.{trino_schema}.{table_name}
-        where updatedat > cast('{max_updatedat}' as timestamp)
+        select createdat, updatedat, id, name, packageid, "type", price, taxtype
+			, max(case when block.k = 'SUBJECT' then v else null end) as subject
+			, max(case when block.k = 'LEARNING_RANGE' then v else null end) as grade
+			, max(case when block.k = 'COUNT_PER_WEEK' then substring(v,3,1) else null end) as count_per_week
+			, max(case when block.k = 'MONTH' then substring(v,1,1) else null end) as months
+			, max(case when block.k = 'MINUTE' then substring(v,1,2) else null end) as minutes
+			, max(case when block.k = 'TIMEBLOCK' then v else null end) as timeblock
+			from "3.0_item_mongodb_live".item.fixedpackage fp, unnest(fp.blocks) as block(k, v)
+			where fp.blocks is not null
+			and "type" = 'LECTURE'
+            and updatedat > cast('{max_updatedat}' as timestamp)
+			group by createdat, updatedat, id, name, packageid, "type", price, taxtype
     '''
 
     # 쿼리 실행 및 union all로 병합
