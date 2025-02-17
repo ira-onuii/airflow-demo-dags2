@@ -55,7 +55,7 @@ def incremental_extract():
     pg_hook = PostgresHook(postgres_conn_id='postgres_conn_3.0')  
     # mysql 연결
     #mysql_hook = MySqlHook(mysql_conn_id='lecture_conn')
-    trino_hook = TrinoHook(trino_conn_id='trino_minikube_conn')   
+    trino_hook = TrinoHook(trino_conn_id='trino_conn')   
 
     # SQLAlchemy Engine 생성
     pg_engine = pg_hook.get_sqlalchemy_engine()
