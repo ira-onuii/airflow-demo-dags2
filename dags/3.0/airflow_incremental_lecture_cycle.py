@@ -59,7 +59,7 @@ def incremental_extract():
 
     # SQLAlchemy Engine 생성
     pg_engine = pg_hook.get_sqlalchemy_engine()
-    mysql_engine = mysql_hook,get_sqlalchemy_engine()
+    mysql_engine = mysql_hook.get_sqlalchemy_engine()
     #trino_engine = trino_hook.get_sqlalchemy_engine()
 
 
