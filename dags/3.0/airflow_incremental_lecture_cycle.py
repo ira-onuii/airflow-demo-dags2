@@ -17,7 +17,7 @@ date = str(((datetime.now()) + timedelta(hours=9)).strftime("%Y-%m-%d"))
 
 trino_database = '"3.0_lecture_v2_staging_mysql"'
 
-trino_schema = 'lecture_v2'
+trino_schema = '"lecture_v2"'
 
 pg_schema = 'raw_data'
 
