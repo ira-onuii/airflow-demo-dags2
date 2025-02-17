@@ -5,7 +5,7 @@ import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import warehouse_query3
 from airflow import DAG
-from airflow.operators.python import PythonOperator
+from airflow.operators.python import PythonOperator 
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.utils.dates import days_ago
 from datetime import datetime, timedelta
@@ -50,14 +50,18 @@ def incremental_extract():
     from airflow.providers.mysql.hooks.mysql import MySqlHook
     from airflow.providers.trino.hooks.trino import TrinoHook
 
+
     # postgresql 연결
     pg_hook = PostgresHook(postgres_conn_id='postgres_conn_3.0')  
     # mysql 연결
-    trino_hook = TrinoHook(trino_conn_id='trino_minikube_conn')   
+    mysql_hook = MySqlHook(mysql_conn_id='elcture_conn')
+    #trino_hook = TrinoHook(trino_conn_id='trino_minikube_conn')   
 
     # SQLAlchemy Engine 생성
     pg_engine = pg_hook.get_sqlalchemy_engine()
-    trino_engine = trino_hook.get_sqlalchemy_engine()
+    mysql_engine = mysql_hook,get_sqlalchemy_engine()
+    #trino_engine = trino_hook.get_sqlalchemy_engine()
+
 
     
 
@@ -84,7 +88,7 @@ def incremental_extract():
     # 쿼리 실행 및 union all로 병합
     #df_before = pd.read_sql(before_data, pg_engine)
     #print(f"before data Number of rows: {len(df_before)}")
-    df_today = pd.read_sql(today_data, trino_engine)
+    df_today = pd.read_sql(today_data, mysql_engine)
     print(f"today data Number of rows: {len(df_today)}")
     #df_union_all = pd.concat([df_before, df_today], ignore_index=True)
     #print(f"union all data Number of rows: {len(df_union_all)}")
