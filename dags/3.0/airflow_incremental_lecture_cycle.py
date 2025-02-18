@@ -83,7 +83,7 @@ def incremental_extract():
        select 
         "idx","minutes_per_round","next_total_month","total_rounds_of_free","total_rounds_of_pay","used_rounds_of_free","used_rounds_of_pay","created_at","id","latest_round_id","lecture_id","updated_at","fixed_package_id"
         from "{trino_database}"."{trino_schema}".{table_name}
-        where updatedat > cast('{max_updatedat}' as timestamp)
+        where updated_at > cast('{max_updatedat}' as timestamp)
     '''
 
    
