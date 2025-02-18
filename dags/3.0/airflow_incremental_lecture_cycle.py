@@ -15,7 +15,7 @@ from io import StringIO
 
 date = str(((datetime.now()) + timedelta(hours=9)).strftime("%Y-%m-%d"))
 
-trino_database = '"3.0_lecture_v2_staging_mysql"'
+trino_database = '3.0_lecture_v2_staging_mysql'
 
 trino_schema = 'lecture_v2'
 
@@ -82,7 +82,7 @@ def incremental_extract():
     today_data = f'''
        select 
         "idx","minutes_per_round","next_total_month","total_rounds_of_free","total_rounds_of_pay","used_rounds_of_free","used_rounds_of_pay","created_at","id","latest_round_id","lecture_id","updated_at","fixed_package_id"
-        from {trino_database}.{trino_schema}.{table_name}
+        from "{trino_database}"."{trino_schema}".{table_name}
         where updatedat > cast('{max_updatedat}' as timestamp)
     '''
 
