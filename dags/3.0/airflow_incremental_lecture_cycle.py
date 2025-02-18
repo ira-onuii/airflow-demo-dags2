@@ -81,7 +81,7 @@ def incremental_extract():
     # 최근 실행시점 이후 update된 데이터 추출 쿼리
     today_data = f'''
        select 
-        "idx","minutes_per_round","next_total_month","total_rounds_of_free","total_rounds_of_pay","used_rounds_of_free","used_rounds_of_pay","created_at","id","latest_round_id","lecture_id","updated_at","fixed_package_id","timeblock"
+        "idx","minutes_per_round","next_total_month","total_rounds_of_free","total_rounds_of_pay","used_rounds_of_free","used_rounds_of_pay","created_at","id","latest_round_id","lecture_id","updated_at","fixed_package_id"
         from {trino_database}.{trino_schema}.{table_name}
     '''
 
@@ -110,7 +110,7 @@ def incremental_extract():
     #print(df_incremental)
     
     # row_number 컬럼 제거 및 컬럼 순서 정렬
-    df_incremental = df_today[['idx','minutes_per_round','next_total_month','total_rounds_of_free','total_rounds_of_pay','used_rounds_of_free','used_rounds_of_pay','created_at','id','latest_round_id','lecture_id','updated_at','fixed_package_id','timeblock']]
+    df_incremental = df_today[['idx','minutes_per_round','next_total_month','total_rounds_of_free','total_rounds_of_pay','used_rounds_of_free','used_rounds_of_pay','created_at','id','latest_round_id','lecture_id','updated_at','fixed_package_id']]
 
     # # 특정 컬럼만 NaN 처리 후 int로 변환
     # df_incremental[['payment_item', 'next_payment_item', 'current_schedule_no']] = (
