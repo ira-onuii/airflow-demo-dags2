@@ -69,7 +69,7 @@ def incremental_extract():
     before_data = f'select * from {pg_schema}."{trino_schema}.{table_name}"'
 
      # 기존 data warehouse에 있던 마지막 updatedat
-    max_updated_data = f'select max(updatedat) as max_updatedat from {pg_schema}."{trino_schema}.{table_name}"'
+    max_updated_data = f'select max(updated_at) as max_updatedat from {pg_schema}."{trino_schema}.{table_name}"'
     max_updated_data_result =  pd.read_sql(max_updated_data, pg_engine)
     max_updatedat = max_updated_data_result['max_updatedat'].iloc[0]
     if max_updatedat is None:
