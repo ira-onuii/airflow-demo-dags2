@@ -111,7 +111,7 @@ def incremental_extract():
     print(df_incremental)
     
     # row_number 컬럼 제거 및 컬럼 순서 정렬
-    df_incremental = df_union_all[['idx','minutes_per_round','next_total_month','total_rounds_of_free','total_rounds_of_pay','used_rounds_of_free','used_rounds_of_pay','created_at','id','latest_round_id','lecture_id','updated_at','fixed_package_id']]
+    df_incremental = df_incremental[['idx','minutes_per_round','next_total_month','total_rounds_of_free','total_rounds_of_pay','used_rounds_of_free','used_rounds_of_pay','created_at','id','latest_round_id','lecture_id','updated_at','fixed_package_id']]
 
     # # 특정 컬럼만 NaN 처리 후 int로 변환
     # df_incremental[['payment_item', 'next_payment_item', 'current_schedule_no']] = (
