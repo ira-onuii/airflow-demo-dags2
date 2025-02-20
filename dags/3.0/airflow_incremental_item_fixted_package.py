@@ -39,7 +39,7 @@ def save_to_s3_with_hook(data, bucket_name, version, folder_name, file_name):
 # incremental_extract 결과 받아와서 S3에 저장
 def save_results_to_s3(**context):
     query_results = context['ti'].xcom_pull(task_ids='incremental_extract_and_load')
-    column_names = ['createdat','updatedat','id','name','packageid','type','price','taxtype','subject','grade','count_per_week','months','minutes','timeblock']
+    column_names = ['createdat','updatedat','id','name','packageid','type','price','taxtype','grade','subject','count_per_week','minutes','months']
     df = pd.DataFrame(query_results, columns=column_names)
     save_to_s3_with_hook(df, 'onuii-data-pipeline-3.0', 'staging',table_name, filename)
 
@@ -62,58 +62,57 @@ def incremental_extract():
     
 
     # # 기존 data warehouse에 있던 데이터 추출 쿼리
-    before_data = f'select * from {pg_schema}."{trino_schema}.{table_name}"'
+    #before_data = f'select * from {pg_schema}."{trino_schema}.{table_name}"'
 
      # 기존 data warehouse에 있던 마지막 updatedat
-    max_updated_data = f'select max(updatedat) as max_updatedat from {pg_schema}."{trino_schema}.{table_name}"'
-    max_updated_data_result =  pd.read_sql(max_updated_data, pg_engine)
-    max_updatedat = max_updated_data_result['max_updatedat'].iloc[0]
-    if max_updatedat is None:
-        max_updatedat = '2019-01-01 00:00:00'  # 기본값
-    else:
-        max_updatedat
-    print(max_updatedat)
+    # max_updated_data = f'select max(updatedat) as max_updatedat from {pg_schema}."{trino_schema}.{table_name}"'
+    # max_updated_data_result =  pd.read_sql(max_updated_data, pg_engine)
+    # max_updatedat = max_updated_data_result['max_updatedat'].iloc[0]
+    # if max_updatedat is None:
+    #     max_updatedat = '2019-01-01 00:00:00'  # 기본값
+    # else:
+    #     max_updatedat
+    # print(max_updatedat)
 
     # 최근 실행시점 이후 update된 데이터 추출 쿼리
     today_data = f'''
         select createdat, updatedat, id, name, packageid, "type", price, taxtype
-			, max(case when block.k = 'SUBJECT' then v else null end) as subject
-			, max(case when block.k = 'LEARNING_RANGE' then v else null end) as grade
-			, max(case when block.k = 'COUNT_PER_WEEK' then substring(v,3,1) else null end) as count_per_week
-			, max(case when block.k = 'MONTH' then substring(v,1,1) else null end) as months
-			, max(case when block.k = 'MINUTE' then substring(v,1,2) else null end) as minutes
-			, max(case when block.k = 'TIMEBLOCK' then v else null end) as timeblock
-			from "3.0_item_mongodb_live".item.fixedpackage fp, unnest(fp.blocks) as block(k, v)
-			where fp.blocks is not null
-			and "type" = 'LECTURE'
+            , split(name, '|')[1] AS grade
+            , split(name, '|')[2] AS subject
+            , substring(split(name, '|')[3],4,1) AS count_per_week
+            , substring(split(name, '|')[4],2,2) AS minutes
+            , substring(split(name, '|')[5],2,1) AS months
+            from "3.0_item_mongodb_live".item.fixedpackage fp
+            where fp.blocks is not null
+            and "type" = 'LECTURE'
+            and name like '%|%'
             and updatedat > cast('{max_updatedat}' as timestamp)
-			group by createdat, updatedat, id, name, packageid, "type", price, taxtype
     '''
     #and updatedat > cast('{max_updatedat}' as timestamp)
 
     # 쿼리 실행 및 union all로 병합
-    df_before = pd.read_sql(before_data, pg_engine)
-    print(f"before data Number of rows: {len(df_before)}")
+    #df_before = pd.read_sql(before_data, pg_engine)
+    #print(f"before data Number of rows: {len(df_before)}")
     df_today = pd.read_sql(today_data, trino_engine)
     print(f"today data Number of rows: {len(df_today)}")
-    df_union_all = pd.concat([df_before, df_today], ignore_index=True)
-    print(f"union all data Number of rows: {len(df_union_all)}")
+    #df_union_all = pd.concat([df_before, df_today], ignore_index=True)
+    #print(f"union all data Number of rows: {len(df_union_all)}")
 
 
     # # date_type 변환
     # df_union_all['update_datetime'] = pd.to_datetime(df_union_all['update_datetime'], errors='coerce')
 
     # PK 값 별 최근 행이 1이 오도록 row_number 설정
-    df_union_all['row_number'] = df_union_all.sort_values(by = ['updatedat'], ascending = False).groupby(['id']).cumcount()+1
+    #df_union_all['row_number'] = df_union_all.sort_values(by = ['updatedat'], ascending = False).groupby(['id']).cumcount()+1
 
 
     # PK 값 별 최근 행만 추출
-    df_incremental = df_union_all[df_union_all['row_number'] == 1]
-    print(f"final data Number of rows: {len(df_incremental)}")
-    print(df_incremental)
+    #df_incremental = df_union_all[df_union_all['row_number'] == 1]
+    #print(f"final data Number of rows: {len(df_incremental)}")
+    #print(df_incremental)
     
     # row_number 컬럼 제거 및 컬럼 순서 정렬
-    df_incremental = df_incremental[['createdat','updatedat','id','name','packageid','type','price','taxtype','subject','grade','count_per_week','months','minutes','timeblock']]
+    df_incremental = df_today[['createdat','updatedat','id','name','packageid','type','price','taxtype','grade','subject','count_per_week','minutes','months']]
 
     # # 특정 컬럼만 NaN 처리 후 int로 변환
     # df_incremental[['payment_item', 'next_payment_item', 'current_schedule_no']] = (
