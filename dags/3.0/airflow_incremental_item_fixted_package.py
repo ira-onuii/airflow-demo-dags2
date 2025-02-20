@@ -86,7 +86,6 @@ def incremental_extract():
             where fp.blocks is not null
             and "type" = 'LECTURE'
             and name like '%|%'
-            and updatedat > cast('{max_updatedat}' as timestamp)
     '''
     #and updatedat > cast('{max_updatedat}' as timestamp)
 
