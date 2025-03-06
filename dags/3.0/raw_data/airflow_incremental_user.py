@@ -41,7 +41,7 @@ def save_results_to_s3(**context):
     query_results = context['ti'].xcom_pull(task_ids='incremental_extract_and_load')
     column_names = ['id','name','code','email','password','phone_number','gender','status','actor','legacy_user_id','birth_date','ci','created_at','updated_at','deleted_at','latest_login_at']
     df = pd.DataFrame(query_results, columns=column_names)
-    save_to_s3_with_hook(df, 'onuii-data-pipeline-3.0', 'staging',table_name, filename)
+    save_to_s3_with_hook(df, 'onuii-data-pipeline-3.0', 'live',table_name, filename)
 
 
 # 증분 추출 with row_number()
@@ -141,7 +141,7 @@ dag = DAG(
     default_args=default_args,
     description='Run query and load result to S3',
     schedule='10 17 * * *',
-    tags=['3.0','user']
+    tags=['3.0','user','raw']
 )
 
 
