@@ -39,9 +39,9 @@ def save_to_s3_with_hook(data, bucket_name, version, folder_name, file_name):
 # incremental_extract 결과 받아와서 S3에 저장
 def save_results_to_s3(**context):
     query_results = context['ti'].xcom_pull(task_ids='incremental_extract_and_load')
-    column_names = ['idx','minutes_per_round','next_total_month','total_rounds_of_free','total_rounds_of_pay','used_rounds_of_free','used_rounds_of_pay','created_at','id','latest_round_id','lecture_id','updated_at','fixed_package_id','timeblock']
+    column_names = ["idx","created_at","created_by","id","lecture_cycle_id","reserved_end_date_time","reserved_start_date_time","teacher_id","updated_at","flow","provider","status"]
     df = pd.DataFrame(query_results, columns=column_names)
-    save_to_s3_with_hook(df, 'onuii-data-pipeline-3.0', 'staging',table_name, filename)
+    save_to_s3_with_hook(df, 'onuii-data-pipeline-3.0', 'live',table_name, filename)
 
 
 # 증분 추출 with row_number()

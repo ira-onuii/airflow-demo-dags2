@@ -21,7 +21,7 @@ trino_schema = 'lecture_v2'
 
 pg_schema = 'raw_data'
 
-table_name = 'lecture_user'
+table_name = 'round'
 
 filename = table_name+date + '.csv'
 
@@ -39,7 +39,7 @@ def save_to_s3_with_hook(data, bucket_name, version, folder_name, file_name):
 # incremental_extract 결과 받아와서 S3에 저장
 def save_results_to_s3(**context):
     query_results = context['ti'].xcom_pull(task_ids='incremental_extract_and_load')
-    column_names = ["installment_period_of_next_payment","is_student","created_at","exit_date_time","id","join_date_time","latest_ticket_id","latest_ticket_wallet_id","latest_ticket_wallet_payment_id","lecture_id","updated_at","user_id"]
+    column_names = ["idx","created_at","created_by","id","lecture_cycle_id","reserved_end_date_time","reserved_start_date_time","teacher_id","updated_at","flow","provider","status"]
     df = pd.DataFrame(query_results, columns=column_names)
     save_to_s3_with_hook(df, 'onuii-data-pipeline-3.0', 'live',table_name, filename)
 
@@ -81,7 +81,7 @@ def incremental_extract():
     # 최근 실행시점 이후 update된 데이터 추출 쿼리
     today_data = f'''
        select 
-        "installment_period_of_next_payment","is_student","created_at","exit_date_time","id","join_date_time","latest_ticket_id","latest_ticket_wallet_id","latest_ticket_wallet_payment_id","lecture_id","updated_at","user_id"
+        "idx","created_at","created_by","id","lecture_cycle_id","reserved_end_date_time","reserved_start_date_time","teacher_id","updated_at","flow","provider","status"
         from "{trino_database}"."{trino_schema}".{table_name}
     '''
 #where updated_at > cast('{max_updatedat}' as timestamp)
@@ -110,7 +110,7 @@ def incremental_extract():
     # print(df_incremental)
     
     # row_number 컬럼 제거 및 컬럼 순서 정렬
-    df_incremental = df_today[["installment_period_of_next_payment","is_student","created_at","exit_date_time","id","join_date_time","latest_ticket_id","latest_ticket_wallet_id","latest_ticket_wallet_payment_id","lecture_id","updated_at","user_id"]]
+    df_incremental = df_today[["idx","created_at","created_by","id","lecture_cycle_id","reserved_end_date_time","reserved_start_date_time","teacher_id","updated_at","flow","provider","status"]]
 
     # # 특정 컬럼만 NaN 처리 후 int로 변환
     # df_incremental[['payment_item', 'next_payment_item', 'current_schedule_no']] = (

@@ -41,7 +41,7 @@ def save_results_to_s3(**context):
     query_results = context['ti'].xcom_pull(task_ids='incremental_extract_and_load')
     column_names = ["is_single","created_at","end_date_time","id","latest_lecture_cycle_id","latest_round_id","manager_id","start_date_time","updated_at","latest_fixed_package_id","status","subject_codes"]
     df = pd.DataFrame(query_results, columns=column_names)
-    save_to_s3_with_hook(df, 'onuii-data-pipeline-3.0', 'staging',table_name, filename)
+    save_to_s3_with_hook(df, 'onuii-data-pipeline-3.0', 'live',table_name, filename)
 
 
 # 증분 추출 with row_number()
