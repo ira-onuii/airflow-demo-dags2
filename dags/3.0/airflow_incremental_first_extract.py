@@ -21,7 +21,7 @@ trino_schema = 'lecture_v2'
 
 pg_schema = 'raw_data'
 
-table_name = 'lecture_cycle'
+table_name = 'lecture_user'
 
 filename = table_name+date + '.csv'
 
