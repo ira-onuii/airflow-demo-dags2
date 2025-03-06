@@ -20,13 +20,13 @@ dag = DAG(
     default_args=default_args,
     description=f'Run {block_name} dbt model',
     schedule='0 16 * * *',
-    tags=["3.0", "block",block_category]
+    tags=["3.0", "block", block_category]
 )
 
 dbt_run_student_indicator = BashOperator(
     task_id=f'dbt_run_{block_name}',
-    bash_command='dbt run --profiles-dir /opt/airflow/dbt/dbt_project/.dbt --project-dir /opt/airflow/dbt/dbt_project --model --select ./models/3.0/done_month/RAW_DM/round_DM.sql',
-    dag=dag,
+    bash_command='dbt run --profiles-dir /opt/airflow/dags/repo/dbt/dbt_dev/.dbt/profiles.yml --project-dir /opt/airflow/dags/repo/dbt/dbt_dev/dbt_project.yml --model --select /opt/airflow/dags/repo/dbt/dbt_dev/models/3.0/done_month/RAW_DM/round_DM.sql',
+    dag=dag
 )
 
 
