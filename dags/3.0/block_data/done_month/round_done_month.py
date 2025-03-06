@@ -20,7 +20,7 @@ dag = DAG(
     default_args=default_args,
     description=f'Run {block_name} dbt model',
     schedule='0 16 * * *',
-    tags=["3.0", block_category]
+    tags=["3.0", "block",block_category]
 )
 
 dbt_run_student_indicator = BashOperator(
