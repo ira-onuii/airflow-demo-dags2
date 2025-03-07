@@ -25,7 +25,7 @@ dag = DAG(
 
 dbt_run_student_indicator = BashOperator(
     task_id=f'dbt_run_{block_name}',
-    bash_command='dbt run --profiles-dir /opt/airflow/dbt/dbt_project/.dbt/profiles.yml --project-dir /opt/airflow/dbt/dbt_project/dbt_project.yml --model --select /opt/airflow/dbt/dbt_project/models/3.0/done_month/RAW_DM/round_DM.sql',
+    bash_command='dbt run --profiles-dir /opt/airflow/dbt/dbt_project/.dbt --project-dir /opt/airflow/dbt/dbt_project --model --select /opt/airflow/dbt/dbt_project/models/3.0/done_month/RAW_DM/round_DM.sql',
     dag=dag
 )
 
