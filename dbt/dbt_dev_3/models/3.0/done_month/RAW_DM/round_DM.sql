@@ -6,7 +6,7 @@
 
 with ifp as (
 select ifp.id, cast(ifp.count_per_week as int) * 4 as count_per_month, ifp.subject
-	from raw_data."item.fixed_package" ifp 
+	from raw_data."item.fixed_package" ifp
 ) 
 , r as (
 select lvr.lecture_cycle_id, lvr.updated_at, lvr.id as round_id
