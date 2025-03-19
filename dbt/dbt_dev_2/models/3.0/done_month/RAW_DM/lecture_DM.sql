@@ -2,7 +2,7 @@
 {{ config(
     materialized='table',
     schema='block_done-month',
-    unique_key='lecture_teacher_vt_No'
+    unique_key='lecture_id'
 ) }}
 
 
