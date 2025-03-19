@@ -4,6 +4,7 @@ from airflow.utils.dates import days_ago
 from airflow.operators.bash import BashOperator
 
 os.environ["DBT_LOG_PATH"] = "/tmp/dbt_logs"
+os.environ["DBT_TARGET_PATH"] = "/tmp/dbt_target"
 
 block_category = 'done_month'
 block_name = 'round_done_month'
