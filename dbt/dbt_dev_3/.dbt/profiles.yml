@@ -7,7 +7,7 @@ dbt_dev: # this needs to match the profile in your dbt_project.yml file
       user: "DS_Master"
       password: "Goodonuii1!"
       port: 5432
-      dbname: "data_warehouse" 
+      dbname: "data_warehouse_3.0" 
       schema: "public"
       threads: 1
 
