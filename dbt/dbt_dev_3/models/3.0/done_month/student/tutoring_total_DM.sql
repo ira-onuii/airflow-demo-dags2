@@ -5,7 +5,7 @@
 ) }}
 
 WITH source_data AS (
-    SELECT *, , concat(user_id, "subject") as user_subject FROM {{ ref('lecture_DM') }}
+    SELECT l.*, concat(user_id, "subject") as user_subject FROM {{ ref('lecture_DM') }} l
 ),
 
 update_existing AS (
@@ -32,6 +32,6 @@ insert_new AS (
 SELECT * FROM update_existing
 
 {% if is_incremental() %}
-UNION ALL
+UNION ALL 
 SELECT * FROM insert_new
 {% endif %}
