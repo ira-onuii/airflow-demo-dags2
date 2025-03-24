@@ -61,7 +61,7 @@ dag = DAG(
 
 #user
 fst_lecture_run_query = SQLExecuteQueryOperator(
-    task_id='fst_lecture_run_select_query',
+    task_id='fst_lecture_run_select_query_test',
     sql=fst_lecture_query.test_query,
     conn_id='trino_conn',
     do_xcom_push=True,
@@ -70,7 +70,7 @@ fst_lecture_run_query = SQLExecuteQueryOperator(
 
 
 fst_lecture_save_to_s3_task = PythonOperator(
-    task_id='fst_lecture_list_save_to_s3',
+    task_id='fst_lecture_list_save_to_s3_test',
     python_callable=fst_lecture_save_results_to_s3,
     provide_context=True,
 )
