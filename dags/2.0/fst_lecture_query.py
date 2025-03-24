@@ -4,6 +4,11 @@ date = str(((datetime.now()) + timedelta(hours=9)).strftime("%Y-%m-%d"))
 
 table_name = f'"{date}"'
 
+test_query = '''
+select lecture_vt_No
+	from mysql.onuei.lecture_video_tutoring
+    limit 100'''
+
 
 fst_lecture_query = '''
 with mlvt as (
