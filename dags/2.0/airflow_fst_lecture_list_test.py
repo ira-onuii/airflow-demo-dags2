@@ -60,7 +60,7 @@ dag = DAG(
     description='Run query and load result to S3',
     start_date=datetime(2024, 11, 13, 6, 25),
     tags=["2.0"],
-    schedule='*/25 * * * *',
+    schedule='10 17 * * *',
     catchup=False
 )
 
