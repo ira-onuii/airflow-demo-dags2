@@ -69,7 +69,7 @@ dag = DAG(
 #user
 fst_lecture_run_query = SQLExecuteQueryOperator(
     task_id='fst_lecture_run_select_query_test',
-    sql=f'''
+    sql='''
 with lvc as (
 select row_number() over(partition by lvs.lecture_vt_no order by lvs.tutoring_datetime asc) as rn
 	, lvs.lecture_vt_no, sf.teacher_user_no, lvc.page_call_room_id, lvs.tutoring_datetime 
@@ -77,9 +77,9 @@ select row_number() over(partition by lvs.lecture_vt_no order by lvs.tutoring_da
 	inner join mysql.onuei.student_follow sf on lvs.follow_no = sf.follow_no 
 	inner join mysql.onuei.lecture_vt_cycles lvc on lvs.lecture_cycle_no = lvc.lecture_cycle_no 
 	where lvc.req_datetime >= cast('{{ data_interval_start }}' as timestamp)
-	and lvc.req_datetime >= cast('{{ data_interval_end }}' as timestamp)
+	and lvc.req_datetime < cast('{{ data_interval_end }}' as timestamp)
     and lvs.tutoring_datetime >= cast('{{ data_interval_start }}' as timestamp)
-    and lvs.tutoring_datetime >= cast('{{ data_interval_end }}' as timestamp)
+    and lvs.tutoring_datetime < cast('{{ data_interval_end }}' as timestamp)
 ),
 mlvt as (
 	select mlvt.lecture_vt_No
