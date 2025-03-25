@@ -76,10 +76,10 @@ select row_number() over(partition by lvs.lecture_vt_no order by lvs.tutoring_da
 	from mysql.onuei.lecture_vt_schedules lvs
 	inner join mysql.onuei.student_follow sf on lvs.follow_no = sf.follow_no 
 	inner join mysql.onuei.lecture_vt_cycles lvc on lvs.lecture_cycle_no = lvc.lecture_cycle_no 
-	where lvc.req_datetime >= '{{ data_interval_start }}'
-	and lvc.req_datetime >= '{{ data_interval_end }}'
-    and lvs.tutoring_datetime >= '{{ data_interval_start }}'
-    and lvs.tutoring_datetime >= '{{ data_interval_end }}'
+	where lvc.req_datetime >= cast('{{ data_interval_start }}' as timestamp)
+	and lvc.req_datetime >= cast('{{ data_interval_end }}' as timestamp)
+    and lvs.tutoring_datetime >= cast('{{ data_interval_start }}' as timestamp)
+    and lvs.tutoring_datetime >= cast('{{ data_interval_end }}' as timestamp)
 ),
 mlvt as (
 	select mlvt.lecture_vt_No
