@@ -7,6 +7,7 @@ select lvs.lecture_vt_No, lvs.lecture_cycle_No, lvs.schedule_no, lvs.tutoring_da
 	inner join mysql.onuei.student_follow sf on lvs.follow_no = sf.follow_no 
 	where lvs.tutoring_datetime >= '{{ execution_date }}'
     -- and lvs.tutoring_datetime < '{{ data_interval_end }}'
+)
 select * from lvs
 '''
 
