@@ -6,7 +6,7 @@ select lvs.lecture_vt_No, lvs.lecture_cycle_No, lvs.schedule_no, lvs.tutoring_da
 	from mysql.onuei.lecture_vt_schedules lvs
 	inner join mysql.onuei.student_follow sf on lvs.follow_no = sf.follow_no 
 	where lvs.tutoring_datetime >= cast('2025-03-26 09:00:00' as timestamp)
-    -- and lvs.tutoring_datetime < cast('2025-03-26 09:30:00' as timestamp)
+    and lvs.tutoring_datetime < cast('2025-03-26 09:30:00' as timestamp)
 )
 select * from lvs
 '''
@@ -16,7 +16,7 @@ with lvc as (
 select lvc.lecture_cycle_No, lvc.lecture_vt_no, lvc.page_call_room_id
 	from mysql.onuei.lecture_vt_cycles lvc
 	where lvc.req_datetime >= cast('2025-03-26 09:00:00' as timestamp)
-	-- and lvc.req_datetime < cast('2025-03-26 09:30:00' as timestamp)
+	and lvc.req_datetime < cast('2025-03-26 09:30:00' as timestamp)
 )
 select * from lvc
 '''
