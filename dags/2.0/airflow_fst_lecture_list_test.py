@@ -78,7 +78,7 @@ def schedule_list_update():
 
 
 def fst_lecture_save_results_to_s3(**context):
-    column_names = ["lecture_vt_No", "subject", "student_user_No", "student_name","teacher_user_No","teacher_name","rn","page_call_room_id","tutoring_datetime"]
+    column_names = ["lecture_vt_No", "subject", "student_user_No", "student_name","teacher_user_No","teacher_name","page_call_room_id","tutoring_datetime"]
     hook = S3Hook(aws_conn_id='conn_S3')
     s3_obj = hook.get_key(key='list_test.csv', bucket_name='seoltab-datasource')
     content = s3_obj.get()['Body'].read().decode('utf-8')
@@ -94,6 +94,8 @@ def fst_lecture_save_results_to_s3(**context):
     query_results = pd.DataFrame(query_results, columns=column_names)
     updated_df = pd.concat([existing_df, query_results], ignore_index=True)
     updated_df = updated_df.drop_duplicates(subset=['page_call_room_id'], keep='last')
+    updated_df['schedule_rn'] = updated_df.sort_values(by = ['tutoring_datetime'], ascending = True).groupby(['lecture_vt_No']).cumcount()+1
+    updated_df["lecture_vt_No", "subject", "student_user_No", "student_name","teacher_user_No","teacher_name", 'schedule_rn',"page_call_room_id","tutoring_datetime"]
     fst_lecture_save_to_s3_with_hook(updated_df, 'seoltab-datasource', 'list_test.csv')
 
 
