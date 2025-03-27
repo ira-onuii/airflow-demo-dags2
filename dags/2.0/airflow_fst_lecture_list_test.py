@@ -94,7 +94,7 @@ def fst_lecture_save_results_to_s3(**context):
     query_results = context['ti'].xcom_pull(task_ids='fst_lecture_run_query_test')
     query_results = pd.DataFrame(query_results, columns=column_names)
     updated_df = pd.concat([existing_df, query_results], ignore_index=True)
-    updated_df = updated_df.drop_duplicates(subset=['page_call_room_id'], keep='last')
+    #updated_df = updated_df.drop_duplicates(subset=['page_call_room_id'], keep='last')
     updated_df['tutoring_datetime'] = pd.to_datetime(updated_df['tutoring_datetime'], errors='coerce')
     updated_df['schedule_rn'] = updated_df.sort_values(by = ['tutoring_datetime'], ascending = True).groupby(['lecture_vt_No']).cumcount()+1
     updated_df.sort_values(by=["lecture_vt_No",'tutoring_datetime'])
