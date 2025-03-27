@@ -53,12 +53,12 @@ def schedule_list_update(**context):
 
     # 쿼리 렌더링
     lvs_query = Template(test_query.lvs_query_template).render(
-        execution_date=start_str,
+        data_interval_start=start_str,
         data_interval_end=end_str
     )
 
     lvc_query = Template(test_query.lvc_query_template).render(
-        execution_date=start_str,
+        data_interval_start=start_str,
         data_interval_end=end_str
     )
 
