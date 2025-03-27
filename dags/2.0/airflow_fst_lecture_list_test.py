@@ -31,6 +31,8 @@ def fst_lecture_save_to_s3_with_hook(data, bucket_name, file_name):
     hook.load_string(csv_buffer.getvalue(), key=f"{file_name}", bucket_name=bucket_name, replace=True)
 
 
+
+
 def schedule_list_update():
     from airflow.providers.trino.hooks.trino import TrinoHook
 
@@ -82,7 +84,7 @@ def schedule_list_update():
 def fst_lecture_save_results_to_s3(**context):
     column_names = ["lecture_vt_No", "subject", "student_user_No", "student_name","teacher_user_No","teacher_name","rn","page_call_room_id","tutoring_datetime"]
     hook = S3Hook(aws_conn_id='conn_S3')
-    s3_obj = hook.get_key(key='list_test', bucket_name='seoltab-datasource')
+    s3_obj = hook.get_key(key='list_test.csv', bucket_name='seoltab-datasource')
     content = s3_obj.get()['Body'].read().decode('utf-8')
     print('S3 connected')
     try:
@@ -96,7 +98,7 @@ def fst_lecture_save_results_to_s3(**context):
     query_results = pd.DataFrame(query_results, columns=column_names)
     updated_df = pd.concat([existing_df, query_results], ignore_index=True)
     updated_df = updated_df.drop_duplicates(subset=['page_call_room_id'], keep='last')
-    fst_lecture_save_to_s3_with_hook(updated_df, 'seoltab-datasource', user_filename)
+    fst_lecture_save_to_s3_with_hook(updated_df, 'seoltab-datasource', 'list_test.csv')
 
 
 
@@ -126,6 +128,8 @@ fst_lecture_run_query = PythonOperator(
     task_id='fst_lecture_run_query_test',
     python_callable=schedule_list_update,
     provide_context=True,
+    retries=2,
+    retry_delay=timedelta(seconds=2),
     dag=dag,
 )
 
