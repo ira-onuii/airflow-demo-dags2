@@ -39,22 +39,25 @@ def schedule_list_update(**context):
     from airflow.providers.trino.hooks.trino import TrinoHook
 
     # 1. 시간 추출 + KST로 변환
-    utc = context['execution_date']
+    utc_start = context['execution_date']
     utc_end = context['data_interval_end']
-    
-    kst = utc.astimezone(pytz.timezone('Asia/Seoul'))
-    kst_end = utc_end.astimezone(pytz.timezone('Asia/Seoul'))
 
-    # 2. Trino-friendly 문자열로 포맷팅 (마이크로초, 타임존 제거)
-    start_str = kst.strftime('%Y-%m-%d %H:%M:%S')
-    end_str = kst_end.strftime('%Y-%m-%d %H:%M:%S')
+    # KST로 변환
+    kst = pytz.timezone('Asia/Seoul')
+    start_kst = utc_start.astimezone(kst)
+    end_kst = utc_end.astimezone(kst)
 
-    # 3. 템플릿 렌더링
-    lvc_query = Template(test_query.lvc_query_template).render(
+    # Trino friendly 포맷
+    start_str = start_kst.strftime('%Y-%m-%d %H:%M:%S')
+    end_str = end_kst.strftime('%Y-%m-%d %H:%M:%S')
+
+    # 쿼리 렌더링
+    lvs_query = Template(test_query.lvs_query_template).render(
         execution_date=start_str,
         data_interval_end=end_str
     )
-    lvs_query = Template(test_query.lvs_query_template).render(
+
+    lvc_query = Template(test_query.lvc_query_template).render(
         execution_date=start_str,
         data_interval_end=end_str
     )
