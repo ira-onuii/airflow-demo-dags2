@@ -1,6 +1,6 @@
 
 
-lvs_query_templete = '''
+lvs_query_template = '''
 with lvs as (
 select lvs.lecture_vt_No, lvs.lecture_cycle_No, lvs.schedule_no, lvs.tutoring_datetime, lvs.schedule_state, sf.student_user_no, sf.teacher_user_No
 	from mysql.onuei.lecture_vt_schedules lvs
@@ -11,7 +11,7 @@ select lvs.lecture_vt_No, lvs.lecture_cycle_No, lvs.schedule_no, lvs.tutoring_da
 select * from lvs
 '''
 
-lvc_query_templete = '''
+lvc_query_template = '''
 with lvc as (
 select lvc.lecture_cycle_No, lvc.lecture_vt_no, lvc.page_call_room_id
 	from mysql.onuei.lecture_vt_cycles lvc

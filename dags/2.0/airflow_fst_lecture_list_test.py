@@ -15,6 +15,7 @@ from io import StringIO
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 import test_query
 from jinja2 import Template
+from pytz
 
 
 date = str(((datetime.now()) + timedelta(hours=9)).strftime("%Y-%m-%d"))
@@ -37,18 +38,25 @@ def fst_lecture_save_to_s3_with_hook(data, bucket_name, file_name):
 def schedule_list_update(**context):
     from airflow.providers.trino.hooks.trino import TrinoHook
 
-    # Airflow context에서 시간 가져오기
-    execution_date = context['execution_date'].isoformat()
-    data_interval_end = context['data_interval_end'].isoformat()
+    # 1. 시간 추출 + KST로 변환
+    utc = context['execution_date']
+    utc_end = context['data_interval_end']
+    
+    kst = utc.astimezone(pytz.timezone('Asia/Seoul'))
+    kst_end = utc_end.astimezone(pytz.timezone('Asia/Seoul'))
 
-    # Jinja 템플릿 렌더링
-    lvc_query = Template(test_query.lvc_query_templete).render(
-        execution_date=execution_date,
-        data_interval_end=data_interval_end
+    # 2. Trino-friendly 문자열로 포맷팅 (마이크로초, 타임존 제거)
+    start_str = kst.strftime('%Y-%m-%d %H:%M:%S')
+    end_str = kst_end.strftime('%Y-%m-%d %H:%M:%S')
+
+    # 3. 템플릿 렌더링
+    lvc_query = Template(test_query.lvc_query_template).render(
+        execution_date=start_str,
+        data_interval_end=end_str
     )
-    lvs_query = Template(test_query.lvs_query_templete).render(
-        execution_date=execution_date,
-        data_interval_end=data_interval_end
+    lvs_query = Template(test_query.lvs_query_template).render(
+        execution_date=start_str,
+        data_interval_end=end_str
     )
 
 
