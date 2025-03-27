@@ -84,11 +84,14 @@ def fst_lecture_save_results_to_s3(**context):
     hook = S3Hook(aws_conn_id='conn_S3')
     s3_obj = hook.get_key(key='list_test', bucket_name='seoltab-datasource')
     content = s3_obj.get()['Body'].read().decode('utf-8')
+    print('S3 connected')
     try:
         existing_df = pd.read_csv(StringIO(content))
     except FileNotFoundError:
         print("파일이 존재하지 않습니다. 새로 생성합니다.")
         existing_df = pd.DataFrame()
+    
+    print(existing_df)
     query_results = context['ti'].xcom_pull(task_ids='fst_lecture_run_query_test')
     query_results = pd.DataFrame(query_results, columns=column_names)
     updated_df = pd.concat([existing_df, query_results], ignore_index=True)
