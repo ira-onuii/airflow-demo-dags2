@@ -43,13 +43,13 @@ def schedule_list_update(**context):
     utc_end = context['data_interval_end']
 
     # KST로 변환
-    kst = pytz.timezone('Asia/Seoul')
-    start_kst = utc_start.astimezone(kst)
-    end_kst = utc_end.astimezone(kst)
+    # kst = pytz.timezone('Asia/Seoul')
+    # start_kst = utc_start.astimezone(kst)
+    # end_kst = utc_end.astimezone(kst)
 
     # Trino friendly 포맷
-    start_str = start_kst.strftime('%Y-%m-%d %H:%M:%S')
-    end_str = end_kst.strftime('%Y-%m-%d %H:%M:%S')
+    start_str = utc_start.strftime('%Y-%m-%d %H:%M:%S')
+    end_str = utc_end.strftime('%Y-%m-%d %H:%M:%S')
 
     # 쿼리 렌더링
     lvs_query = Template(test_query.lvs_query_template).render(
