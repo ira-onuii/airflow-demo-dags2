@@ -5,8 +5,8 @@ with lvs as (
 select lvs.lecture_vt_No, lvs.lecture_cycle_No, lvs.schedule_no, lvs.tutoring_datetime, lvs.schedule_state, sf.student_user_no, sf.teacher_user_No
 	from mysql.onuei.lecture_vt_schedules lvs
 	inner join mysql.onuei.student_follow sf on lvs.follow_no = sf.follow_no 
-	where lvs.tutoring_datetime >= '{{ execution_date }}'
-    -- and lvs.tutoring_datetime < '{{ data_interval_end }}'
+	where lvs.tutoring_datetime >= timestamp '{{ execution_date }}'
+    -- and lvs.tutoring_datetime < timestamp '{{ data_interval_end }}'
 )
 select * from lvs
 '''
@@ -15,8 +15,8 @@ lvc_query_templete = '''
 with lvc as (
 select lvc.lecture_cycle_No, lvc.lecture_vt_no, lvc.page_call_room_id
 	from mysql.onuei.lecture_vt_cycles lvc
-	where lvc.req_datetime >= '{{ execution_date }}'
-	-- and lvc.req_datetime < '{{ data_interval_end }}'
+	where lvc.req_datetime >= timestamp '{{ execution_date }}'
+	-- and lvc.req_datetime < timestamp '{{ data_interval_end }}'
 )
 select * from lvc
 '''
