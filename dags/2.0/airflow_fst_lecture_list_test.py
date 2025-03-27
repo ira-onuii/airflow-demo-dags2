@@ -81,8 +81,11 @@ def schedule_list_update():
 
 def fst_lecture_save_results_to_s3(**context):
     column_names = ["lecture_vt_No", "subject", "student_user_No", "student_name","teacher_user_No","teacher_name","rn","page_call_room_id","tutoring_datetime"]
+    hook = S3Hook(aws_conn_id='conn_S3')
+    s3_obj = hook.get_key(key='list_test', bucket_name='seoltab-datasource')
+    content = s3_obj.get()['Body'].read().decode('utf-8')
     try:
-        existing_df = pd.read_csv("s3://seoltab-datasource/list_test.csv")
+        existing_df = pd.read_csv(StringIO(content))
     except FileNotFoundError:
         print("파일이 존재하지 않습니다. 새로 생성합니다.")
         existing_df = pd.DataFrame()
