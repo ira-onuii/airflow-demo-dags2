@@ -15,7 +15,7 @@ from io import StringIO
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 import test_query
 from jinja2 import Template
-from pytz
+import pytz
 
 
 date = str(((datetime.now()) + timedelta(hours=9)).strftime("%Y-%m-%d"))
