@@ -14,6 +14,7 @@ import pandas as pd
 from io import StringIO
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 import test_query
+from jinja2 import Template
 
 
 date = str(((datetime.now()) + timedelta(hours=9)).strftime("%Y-%m-%d"))
@@ -33,8 +34,23 @@ def fst_lecture_save_to_s3_with_hook(data, bucket_name, file_name):
 
 
 
-def schedule_list_update():
+def schedule_list_update(**context):
     from airflow.providers.trino.hooks.trino import TrinoHook
+
+    # Airflow context에서 시간 가져오기
+    execution_date = context['execution_date'].isoformat()
+    data_interval_end = context['data_interval_end'].isoformat()
+
+    # Jinja 템플릿 렌더링
+    lvc_query = Template(test_query.lvc_query_templete).render(
+        execution_date=execution_date,
+        data_interval_end=data_interval_end
+    )
+    lvs_query = Template(test_query.lvs_query_templete).render(
+        execution_date=execution_date,
+        data_interval_end=data_interval_end
+    )
+
 
     trino_hook = TrinoHook(trino_conn_id='trino_conn')   
 
@@ -43,13 +59,13 @@ def schedule_list_update():
 
 
     # raw_data 불러오기
-    lvs = pd.read_sql(test_query.lvs_query, trino_engine)
+    lvs = pd.read_sql(lvs_query, trino_engine)
     t = pd.read_sql(test_query.t_query, trino_engine)
     warmup1 = pd.read_sql('''SELECT 1 FROM mysql.onuei.payment WHERE false''', trino_engine)
     p = pd.read_sql(test_query.p_query, trino_engine)
     mlvt = pd.read_sql(test_query.mlvt_query, trino_engine)
     warmup2 = pd.read_sql('''SELECT 1 FROM mysql.onuei.lecture_vt_cycles WHERE false''', trino_engine)
-    lvc = pd.read_sql(test_query.lvc_query, trino_engine)
+    lvc = pd.read_sql(lvc_query, trino_engine)
 
     # lvt 별 최초 결제
     p['rn'] = p.sort_values(by = ['payment_regdate'], ascending = True).groupby(['lecture_vt_No']).cumcount()+1
