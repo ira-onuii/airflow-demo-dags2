@@ -94,8 +94,9 @@ def fst_lecture_save_results_to_s3(**context):
     query_results = pd.DataFrame(query_results, columns=column_names)
     updated_df = pd.concat([existing_df, query_results], ignore_index=True)
     updated_df = updated_df.drop_duplicates(subset=['page_call_room_id'], keep='last')
+    updated_df['tutoring_datetime'] = pd.to_datetime(updated_df['tutoring_datetime'], errors='coerce')
     updated_df['schedule_rn'] = updated_df.sort_values(by = ['tutoring_datetime'], ascending = True).groupby(['lecture_vt_No']).cumcount()+1
-    updated_df["lecture_vt_No", "subject", "student_user_No", "student_name","teacher_user_No","teacher_name", 'schedule_rn',"page_call_room_id","tutoring_datetime"]
+    updated_df["lecture_vt_No", "subject", "student_user_No", "student_name","teacher_user_No","teacher_name", 'schedule_rn',"page_call_room_id","tutoring_datetime"].sort_values(by=["lecture_vt_No",'tutoring_datetime'])
     fst_lecture_save_to_s3_with_hook(updated_df, 'seoltab-datasource', 'list_test.csv')
 
 
