@@ -45,9 +45,10 @@ def schedule_list_update():
     # raw_data 불러오기
     lvs = pd.read_sql(test_query.lvs_query, trino_engine)
     t = pd.read_sql(test_query.t_query, trino_engine)
+    warmup1 = pd.read_sql('''SELECT 1 FROM mysql.onuei.payment WHERE false''', trino_engine)
     p = pd.read_sql(test_query.p_query, trino_engine)
     mlvt = pd.read_sql(test_query.mlvt_query, trino_engine)
-    warmup = pd.read_sql('''SELECT 1 FROM mysql.onuei.lecture_vt_cycles WHERE false''', trino_engine)
+    warmup2 = pd.read_sql('''SELECT 1 FROM mysql.onuei.lecture_vt_cycles WHERE false''', trino_engine)
     lvc = pd.read_sql(test_query.lvc_query, trino_engine)
 
     # lvt 별 최초 결제
