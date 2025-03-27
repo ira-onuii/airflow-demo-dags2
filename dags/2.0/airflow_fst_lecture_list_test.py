@@ -39,7 +39,7 @@ def schedule_list_update(**context):
     from airflow.providers.trino.hooks.trino import TrinoHook
 
     # 1. 시간 추출 + KST로 변환
-    utc_start = context['execution_date']
+    utc_start = context['data_interval_start']
     utc_end = context['data_interval_end']
 
     # KST로 변환
