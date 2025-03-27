@@ -115,6 +115,7 @@ fst_lecture_run_query = PythonOperator(
     task_id='fst_lecture_run_query_test',
     python_callable=schedule_list_update,
     provide_context=True,
+    dag=dag,
 )
 
 
@@ -122,6 +123,7 @@ fst_lecture_save_to_s3_task = PythonOperator(
     task_id='fst_lecture_list_save_to_s3_test',
     python_callable=fst_lecture_save_results_to_s3,
     provide_context=True,
+    dag=dag,
 )
 
 
