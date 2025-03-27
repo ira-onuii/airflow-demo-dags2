@@ -47,11 +47,7 @@ def schedule_list_update():
     t = pd.read_sql(test_query.t_query, trino_engine)
     p = pd.read_sql(test_query.p_query, trino_engine)
     mlvt = pd.read_sql(test_query.mlvt_query, trino_engine)
-    warmup = pd.read_sql('''SELECT 1 
-                        FROM mysql.onuei.lecture_vt_cycles lvc 
-                         WHERE lvc.req_datetime >= DATE_TRUNC('day', CURRENT_DATE) 
-                         AND lvc.req_datetime < DATE_ADD('day', 1, DATE_TRUNC('day', CURRENT_DATE)) 
-                         LIMIT 1''', trino_engine)
+    warmup = pd.read_sql('''SELECT 1 FROM your_table WHERE false''', trino_engine)
     lvc = pd.read_sql(test_query.lvc_query, trino_engine)
 
     # lvt 별 최초 결제
