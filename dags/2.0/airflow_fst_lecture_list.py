@@ -153,7 +153,7 @@ fst_lecture_run_query = PythonOperator(
     task_id='fst_lecture_run_query_test',
     python_callable=schedule_list_update,
     provide_context=True,
-    retries=2,
+    retries=5,
     retry_delay=timedelta(seconds=2),
     dag=dag,
 )
