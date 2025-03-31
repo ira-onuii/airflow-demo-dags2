@@ -7,6 +7,8 @@ import fst_lecture_query
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
+from sqlalchemy.orm import Session
+from airflow.utils.session import provide_session   
 import pendulum
 from datetime import datetime, timedelta
 import pandas as pd
@@ -35,25 +37,25 @@ def fst_lecture_save_to_s3_with_hook(data, bucket_name, file_name):
 
 
 # 마지막 dag 성공시점 추출
-def get_latest_successful_interval(dag_id, current_execution_date):
+def get_latest_successful_interval(dag_id, current_execution_date, session: Session = None):
     from airflow.models import DagRun
     from airflow.utils.state import State
     # 현재 실행보다 이전에 성공한 DAG run을 찾기
-    previous_successful = (
-        DagRun.find(dag_id=dag_id, state=State.SUCCESS)
+    previous_success = (
+        session.query(DagRun)
+        .filter(
+            DagRun.dag_id == dag_id,
+            DagRun.execution_date < current_execution_date,
+            DagRun.state == State.SUCCESS
+        )
+        .order_by(DagRun.execution_date.desc())
+        .first()
     )
 
-    # 가장 최근 성공한 DAG run 찾기 (execution_date 기준)
-    previous_successful = [
-        dr for dr in previous_successful if dr.execution_date < current_execution_date
-    ]
-    
-    if not previous_successful:
+    if not previous_success:
         raise ValueError("No successful DAG run found before current execution")
 
-    # 최신 성공 run
-    latest = max(previous_successful, key=lambda dr: dr.execution_date)
-    return latest.data_interval_end  # 또는 latest.execution_date
+    return previous_success.data_interval_end
 
 
 
@@ -77,12 +79,14 @@ def schedule_list_update(**context):
     # timestamp 포멧 변환
     start_str = start_kst.strftime('%Y-%m-%d %H:%M:%S')
     end_str = end_kst.strftime('%Y-%m-%d %H:%M:%S')
+    print("▶️ Query interval:", start_str, "~", end_str)
 
     # 쿼리 렌더링 (쿼리에 실행시점 적용)
     lvs_query = Template(fst_lecture_query.lvs_query_template).render(
         data_interval_start=start_str,
         data_interval_end=end_str
     )
+    print("▶️ Used in SQL:", lvs_query)
 
     lvc_query = Template(fst_lecture_query.lvc_query_template).render(
         data_interval_start=start_str,
