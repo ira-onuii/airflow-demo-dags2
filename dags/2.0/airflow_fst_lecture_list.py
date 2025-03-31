@@ -37,6 +37,7 @@ def fst_lecture_save_to_s3_with_hook(data, bucket_name, file_name):
 
 
 # 마지막 dag 성공시점 추출
+@provide_session
 def get_latest_successful_interval(dag_id, current_execution_date, session: Session = None):
     from airflow.models import DagRun
     from airflow.utils.state import State
