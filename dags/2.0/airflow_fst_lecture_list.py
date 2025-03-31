@@ -4,12 +4,9 @@ import os
 # 현재 파일이 있는 디렉토리를 sys.path에 추가
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import fst_lecture_query
-
 from airflow import DAG
-from airflow.models import DagRun
 from airflow.operators.python import PythonOperator
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
-from airflow.utils.state import State
 import pendulum
 from datetime import datetime, timedelta
 import pandas as pd
@@ -38,7 +35,9 @@ def fst_lecture_save_to_s3_with_hook(data, bucket_name, file_name):
 
 
 # 마지막 dag 성공시점 추출
-def get_latest_successful_interval(dag_id, utc_start):
+def get_latest_successful_interval(dag_id, current_execution_date):
+    from airflow.models import DagRun
+    from airflow.utils.state import State
     # 현재 실행보다 이전에 성공한 DAG run을 찾기
     previous_successful = (
         DagRun.find(dag_id=dag_id, state=State.SUCCESS)
@@ -65,14 +64,14 @@ def schedule_list_update(**context):
     # 시간 추출
     dag_id = context['dag'].dag_id
 
-    utc_start = context['data_interval_start']
+    current_execution_date = context['execution_date']
     utc_end = context['data_interval_end']
 
-    last_success_end = get_latest_successful_interval(dag_id, utc_start)
+    last_success_end = get_latest_successful_interval(dag_id, current_execution_date)
 
     # KST로 변환
     kst = pytz.timezone('Asia/Seoul')
-    start_kst = last_success_end(kst)
+    start_kst = last_success_end.astimezone(kst)
     end_kst = utc_end.astimezone(kst)
 
     # timestamp 포멧 변환
