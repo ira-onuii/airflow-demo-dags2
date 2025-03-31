@@ -6,9 +6,11 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import fst_lecture_query
 
 from airflow import DAG
+from airflow.models import DagRun
 from airflow.operators.python import PythonOperator
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
-from airflow.utils.dates import days_ago
+from airflow.utils.state import State
+import pendulum
 from datetime import datetime, timedelta
 import pandas as pd
 from io import StringIO
@@ -18,13 +20,14 @@ import pytz
 
 
 
+
 date = str(((datetime.now()) + timedelta(hours=9)).strftime("%Y-%m-%d"))
 
 user_filename = 'list.csv'
 
 
 
-
+# S3 연결 및 csv 파일 저장
 def fst_lecture_save_to_s3_with_hook(data, bucket_name, file_name):
     csv_buffer = StringIO()
     data.to_csv(csv_buffer, index=False)
@@ -34,24 +37,49 @@ def fst_lecture_save_to_s3_with_hook(data, bucket_name, file_name):
 
 
 
+# 마지막 dag 성공시점 추출
+def get_latest_successful_interval(dag_id, utc_start):
+    # 현재 실행보다 이전에 성공한 DAG run을 찾기
+    previous_successful = (
+        DagRun.find(dag_id=dag_id, state=State.SUCCESS)
+    )
 
+    # 가장 최근 성공한 DAG run 찾기 (execution_date 기준)
+    previous_successful = [
+        dr for dr in previous_successful if dr.execution_date < current_execution_date
+    ]
+    
+    if not previous_successful:
+        raise ValueError("No successful DAG run found before current execution")
+
+    # 최신 성공 run
+    latest = max(previous_successful, key=lambda dr: dr.execution_date)
+    return latest.data_interval_end  # 또는 latest.execution_date
+
+
+
+# 리스트 추출
 def schedule_list_update(**context):
     from airflow.providers.trino.hooks.trino import TrinoHook
 
-    # 1. 시간 추출 + KST로 변환
+    # 시간 추출
+    dag_id = context['dag'].dag_id
+
     utc_start = context['data_interval_start']
     utc_end = context['data_interval_end']
 
+    last_success_end = get_latest_successful_interval(dag_id, utc_start)
+
     # KST로 변환
     kst = pytz.timezone('Asia/Seoul')
-    start_kst = utc_start.astimezone(kst)
+    start_kst = last_success_end(kst)
     end_kst = utc_end.astimezone(kst)
 
-    # Trino friendly 포맷
+    # timestamp 포멧 변환
     start_str = start_kst.strftime('%Y-%m-%d %H:%M:%S')
     end_str = end_kst.strftime('%Y-%m-%d %H:%M:%S')
 
-    # 쿼리 렌더링
+    # 쿼리 렌더링 (쿼리에 실행시점 적용)
     lvs_query = Template(fst_lecture_query.lvs_query_template).render(
         data_interval_start=start_str,
         data_interval_end=end_str
@@ -62,7 +90,7 @@ def schedule_list_update(**context):
         data_interval_end=end_str
     )
 
-
+    # Trino 연결
     trino_hook = TrinoHook(trino_conn_id='trino_conn')   
 
     # SQLAlchemy Engine 생성
@@ -91,7 +119,7 @@ def schedule_list_update(**context):
     # schedule & cycle  Inner Join
     schedule_list = pd.merge(lvs, lvc, on='lecture_cycle_No', how='inner')
 
-    # 최근 결과
+    # raw data 병합
     df = mlvt_result.merge(schedule_list, on=["lecture_vt_No", "teacher_user_No"], how="inner") \
             .merge(p_result, on="lecture_vt_No", how="inner") \
             .merge(t, left_on="teacher_user_No", right_on='user_No', how="inner") \
@@ -104,10 +132,12 @@ def schedule_list_update(**context):
     return df_meta
 
 
-
+# 결과 정제 및 S3 저장
 def fst_lecture_save_results_to_s3(**context):
+    # 컬럼 정렬
     column_names = ["lecture_vt_No", "subject", "student_user_No", "student_name","teacher_user_No","teacher_name", 'schedule_rn',"page_call_room_id","tutoring_datetime"]
     hook = S3Hook(aws_conn_id='conn_S3')
+    # S3에 있는 기존 파일 불러오기
     s3_obj = hook.get_key(key=user_filename, bucket_name='seoltab-datasource')
     content = s3_obj.get()['Body'].read().decode('utf-8')
     print('S3 connected')
@@ -118,11 +148,15 @@ def fst_lecture_save_results_to_s3(**context):
         existing_df = pd.DataFrame()
     
     print(existing_df)
+    # 최근 결과 (쿼리 결과) 가져오기
     query_results = context['ti'].xcom_pull(task_ids='fst_lecture_run_query_test')
     query_results = pd.DataFrame(query_results, columns=column_names)
+    # 기존 파일, 최근 결과 병합
     updated_df = pd.concat([existing_df, query_results], ignore_index=True)
     #updated_df = updated_df.drop_duplicates(subset=['page_call_room_id'], keep='last')
+    # 날짜 타입으로 변환 (안 되는 값은 NaT 처리)
     updated_df['tutoring_datetime'] = pd.to_datetime(updated_df['tutoring_datetime'], errors='coerce')
+    # 회차열 생성 및 정렬
     updated_df['schedule_rn'] = updated_df.sort_values(by = ['tutoring_datetime'], ascending = True).groupby(['lecture_vt_No']).cumcount()+1
     updated_df.sort_values(by=["lecture_vt_No",'schedule_rn'], ascending=[True, True])
     fst_lecture_save_to_s3_with_hook(updated_df, 'seoltab-datasource', user_filename)
