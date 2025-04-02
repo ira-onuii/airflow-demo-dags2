@@ -132,7 +132,7 @@ def schedule_list_update(**context):
 
     df_meta = df.merge(meta_data, on='lecture_vt_No', how='left') \
         .sort_values(by=["lecture_vt_No"])
-    
+    df_meta = df_meta[["lecture_vt_No", "subject", "student_user_No", "student_name","teacher_user_No","teacher_name","page_call_room_id","tutoring_datetime"]]
     return df_meta
 
 
@@ -163,6 +163,7 @@ def fst_lecture_save_results_to_s3(**context):
     updated_df = updated_df.drop_duplicates(subset=['page_call_room_id'], keep='last')
     # 회차열 생성 및 정렬
     updated_df['schedule_rn'] = updated_df.sort_values(by = ['tutoring_datetime'], ascending = True).groupby(['lecture_vt_No']).cumcount()+1
+    updated_df = updated_df[["lecture_vt_No", "subject", "student_user_No", "student_name","teacher_user_No","teacher_name", 'schedule_rn',"page_call_room_id","tutoring_datetime"]]
     updated_df.sort_values(by=["lecture_vt_No",'schedule_rn'], ascending=[True, True])
     fst_lecture_save_to_s3_with_hook(updated_df, 'seoltab-datasource', user_filename)
 
