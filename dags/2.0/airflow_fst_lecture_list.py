@@ -160,6 +160,7 @@ def fst_lecture_save_results_to_s3(**context):
     #updated_df = updated_df.drop_duplicates(subset=['page_call_room_id'], keep='last')
     # 날짜 타입으로 변환 (안 되는 값은 NaT 처리)
     updated_df['tutoring_datetime'] = pd.to_datetime(updated_df['tutoring_datetime'], errors='coerce')
+    updated_df = updated_df.drop_duplicates(subset=['page_call_room_id'], keep='last')
     # 회차열 생성 및 정렬
     updated_df['schedule_rn'] = updated_df.sort_values(by = ['tutoring_datetime'], ascending = True).groupby(['lecture_vt_No']).cumcount()+1
     updated_df.sort_values(by=["lecture_vt_No",'schedule_rn'], ascending=[True, True])
