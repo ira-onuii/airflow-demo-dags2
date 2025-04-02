@@ -152,6 +152,7 @@ def fst_lecture_save_results_to_s3(**context):
         print("파일이 존재하지 않습니다. 새로 생성합니다.")
         existing_df = pd.DataFrame()
     
+    existing_df = existing_df.drop_duplicates(subset=['page_call_room_id'], keep='first')    
     print(existing_df)
     # 최근 결과 (쿼리 결과) 가져오기
     query_results = context['ti'].xcom_pull(task_ids='fst_lecture_run_query_test')
@@ -159,7 +160,6 @@ def fst_lecture_save_results_to_s3(**context):
     query_results['student_name'] = query_results['student_name_y']
     # 기존 파일, 최근 결과 병합
     updated_df = pd.concat([existing_df, query_results], ignore_index=True)
-    #updated_df = updated_df.drop_duplicates(subset=['page_call_room_id'], keep='last')
     # 날짜 타입으로 변환 (안 되는 값은 NaT 처리)
     updated_df['tutoring_datetime'] = pd.to_datetime(updated_df['tutoring_datetime'], errors='coerce')
     updated_df = updated_df.drop_duplicates(subset=['page_call_room_id'], keep='last')
