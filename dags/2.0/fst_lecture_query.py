@@ -23,8 +23,8 @@ lvc_query_template = '''
 with lvc as (
 select lvc.lecture_cycle_No, lvc.lecture_vt_no, lvc.page_call_room_id
 	from mysql.onuei.lecture_vt_cycles lvc
-    where lvs.req_datetime >= timestamp '2025-03-27 00:00:00'
-    and lvs.req_datetime < timestamp '2025-04-02 11:24:59'
+    where lvc.req_datetime >= timestamp '2025-03-27 00:00:00'
+    and lvc.req_datetime < timestamp '2025-04-02 11:24:59'
     -- where lvc.req_datetime >= timestamp '{{ data_interval_start }}'
 	-- and lvc.req_datetime < timestamp '{{ data_interval_end }}'
 )
