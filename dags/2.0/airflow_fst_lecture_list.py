@@ -93,7 +93,7 @@ def schedule_list_update(**context):
         data_interval_start=start_str,
         data_interval_end=end_str
     )
-
+    print("▶️ Used in SQL:", lvc_query)
     # Trino 연결
     trino_hook = TrinoHook(trino_conn_id='trino_conn')   
 
