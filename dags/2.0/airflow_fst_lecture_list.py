@@ -156,6 +156,7 @@ def fst_lecture_save_results_to_s3(**context):
     # 최근 결과 (쿼리 결과) 가져오기
     query_results = context['ti'].xcom_pull(task_ids='fst_lecture_run_query_test')
     query_results = pd.DataFrame(query_results, columns=column_names)
+    query_results['student_name'] = query_results['student_name_y']
     # 기존 파일, 최근 결과 병합
     updated_df = pd.concat([existing_df, query_results], ignore_index=True)
     #updated_df = updated_df.drop_duplicates(subset=['page_call_room_id'], keep='last')
@@ -164,7 +165,7 @@ def fst_lecture_save_results_to_s3(**context):
     updated_df = updated_df.drop_duplicates(subset=['page_call_room_id'], keep='last')
     # 회차열 생성 및 정렬
     updated_df['schedule_rn'] = updated_df.sort_values(by = ['tutoring_datetime'], ascending = True).groupby(['lecture_vt_No']).cumcount()+1
-    updated_df = updated_df[["lecture_vt_No", "subject", "student_user_No", "student_name_y","teacher_user_No","teacher_name", 'schedule_rn',"page_call_room_id","tutoring_datetime"]]
+    updated_df = updated_df[["lecture_vt_No", "subject", "student_user_No", "student_name","teacher_user_No","teacher_name", 'schedule_rn',"page_call_room_id","tutoring_datetime"]]
     updated_df.sort_values(by=["lecture_vt_No",'schedule_rn'], ascending=[True, True])
     fst_lecture_save_to_s3_with_hook(updated_df, 'seoltab-datasource', user_filename)
 
