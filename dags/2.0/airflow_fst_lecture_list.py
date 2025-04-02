@@ -151,8 +151,7 @@ def fst_lecture_save_results_to_s3(**context):
     except FileNotFoundError:
         print("파일이 존재하지 않습니다. 새로 생성합니다.")
         existing_df = pd.DataFrame()
-    
-    existing_df = existing_df.drop_duplicates(subset=['page_call_room_id'], keep='first')    
+     
     print(existing_df)
     # 최근 결과 (쿼리 결과) 가져오기
     query_results = context['ti'].xcom_pull(task_ids='fst_lecture_run_query_test')
@@ -162,6 +161,7 @@ def fst_lecture_save_results_to_s3(**context):
     updated_df = pd.concat([existing_df, query_results], ignore_index=True)
     # 날짜 타입으로 변환 (안 되는 값은 NaT 처리)
     updated_df['tutoring_datetime'] = pd.to_datetime(updated_df['tutoring_datetime'], errors='coerce')
+    updated_df['page_call_room_id'] = updated_df['page_call_room_id'].str.strip()
     updated_df = updated_df.drop_duplicates(subset=['page_call_room_id'], keep='last')
     # 회차열 생성 및 정렬
     updated_df['rn'] = updated_df.sort_values(by = ['tutoring_datetime'], ascending = True).groupby(['lecture_vt_No']).cumcount()+1
