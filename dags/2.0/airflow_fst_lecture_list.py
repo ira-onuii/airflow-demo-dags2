@@ -111,13 +111,13 @@ def schedule_list_update(**context):
     lvc = pd.read_sql(lvc_query, trino_engine)
 
     # lvt 별 최초 결제
-    p['rn'] = p.sort_values(by = ['payment_regdate'], ascending = True).groupby(['lecture_vt_No']).cumcount()+1
-    p_1 = p[p['rn'] == 1]
+    p['prn'] = p.sort_values(by = ['payment_regdate'], ascending = True).groupby(['lecture_vt_No']).cumcount()+1
+    p_1 = p[p['prn'] == 1]
     p_result = p_1[p_1['payment_regdate'] >= '2024-11-01 00:00:00']
 
     # lvt 별 최초 매칭
-    mlvt['rn'] = mlvt.sort_values(by = ['matchedat'], ascending = True).groupby(['lecture_vt_No']).cumcount()+1
-    mlvt_result = mlvt[mlvt['rn'] == 1]
+    mlvt['mrn'] = mlvt.sort_values(by = ['matchedat'], ascending = True).groupby(['lecture_vt_No']).cumcount()+1
+    mlvt_result = mlvt[mlvt['mrn'] == 1]
 
 
     # schedule & cycle  Inner Join
@@ -140,7 +140,7 @@ def schedule_list_update(**context):
 # 결과 정제 및 S3 저장
 def fst_lecture_save_results_to_s3(**context):
     # 컬럼 정렬
-    column_names = ["lecture_vt_No", "subject", "student_user_No", "student_name_y","teacher_user_No","teacher_name", 'schedule_rn',"page_call_room_id","tutoring_datetime"]
+    column_names = ["lecture_vt_No", "subject", "student_user_No", "student_name_y","teacher_user_No","teacher_name", 'rn',"page_call_room_id","tutoring_datetime"]
     hook = S3Hook(aws_conn_id='conn_S3')
     # S3에 있는 기존 파일 불러오기
     s3_obj = hook.get_key(key=user_filename, bucket_name='seoltab-datasource')
@@ -164,9 +164,9 @@ def fst_lecture_save_results_to_s3(**context):
     updated_df['tutoring_datetime'] = pd.to_datetime(updated_df['tutoring_datetime'], errors='coerce')
     updated_df = updated_df.drop_duplicates(subset=['page_call_room_id'], keep='last')
     # 회차열 생성 및 정렬
-    updated_df['schedule_rn'] = updated_df.sort_values(by = ['tutoring_datetime'], ascending = True).groupby(['lecture_vt_No']).cumcount()+1
-    updated_df = updated_df[["lecture_vt_No", "subject", "student_user_No", "student_name","teacher_user_No","teacher_name", 'schedule_rn',"page_call_room_id","tutoring_datetime"]]
-    updated_df.sort_values(by=["lecture_vt_No",'schedule_rn'], ascending=[True, True])
+    updated_df['rn'] = updated_df.sort_values(by = ['tutoring_datetime'], ascending = True).groupby(['lecture_vt_No']).cumcount()+1
+    updated_df = updated_df[["lecture_vt_No", "subject", "student_user_No", "student_name","teacher_user_No","teacher_name", 'rn',"page_call_room_id","tutoring_datetime"]]
+    updated_df.sort_values(by=["lecture_vt_No",'rn'], ascending=[True, True])
     fst_lecture_save_to_s3_with_hook(updated_df, 'seoltab-datasource', user_filename)
 
 
