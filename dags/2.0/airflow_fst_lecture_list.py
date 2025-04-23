@@ -122,6 +122,7 @@ def schedule_list_update(**context):
 
     # schedule & cycle  Inner Join
     schedule_list = pd.merge(lvs, lvc, on='lecture_cycle_No', how='inner')
+    print(schedule_list)
 
     # raw data 병합
     df = mlvt_result.merge(schedule_list, on=["lecture_vt_No", "teacher_user_No"], how="inner") \
@@ -134,6 +135,7 @@ def schedule_list_update(**context):
         .sort_values(by=["lecture_vt_No"])
     print(df_meta.columns)
     df_meta = df_meta[["lecture_vt_No", "subject", "student_user_No", "student_name_y","teacher_user_No","teacher_name","page_call_room_id","tutoring_datetime", "tteok_ham_type", "durations"]]
+    print(df_meta)
     return df_meta
 
 
