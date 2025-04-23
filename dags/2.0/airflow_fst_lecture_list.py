@@ -134,7 +134,7 @@ def schedule_list_update(**context):
     df_meta = df.merge(meta_data, on='lecture_vt_No', how='left') \
         .sort_values(by=["lecture_vt_No"])
     print(df_meta.columns)
-    df_meta = df_meta[["lecture_vt_No", "subject", "student_user_No", "student_name_y","teacher_user_No","teacher_name","page_call_room_id","tutoring_datetime"]]
+    df_meta = df_meta[["lecture_vt_No", "subject", "student_user_No", "student_name_y","teacher_user_No","teacher_name","page_call_room_id","tutoring_datetime", "tteok_ham_type"]]
     return df_meta
 
 
