@@ -181,7 +181,7 @@ default_args = {
 }
 
 dag = DAG(
-    'data-warehouse-tirno-AI_2.0',
+    'data-warehouse-test-tirno-AI_2.0',
     default_args=default_args,
     description='Run query and load result to S3',
     start_date=datetime(2024, 11, 13, 6, 25),
