@@ -133,14 +133,14 @@ def schedule_list_update(**context):
     df_meta = df.merge(meta_data, on='lecture_vt_No', how='left') \
         .sort_values(by=["lecture_vt_No"])
     print(df_meta.columns)
-    df_meta = df_meta[["lecture_vt_No", "subject", "student_user_No", "student_name_y","teacher_user_No","teacher_name","page_call_room_id","tutoring_datetime"]]
+    df_meta = df_meta[["lecture_vt_No", "subject", "student_user_No", "student_name_y","teacher_user_No","teacher_name","page_call_room_id","tutoring_datetime", "tteokham_type", "durations"]]
     return df_meta
 
 
 # 결과 정제 및 S3 저장
 def fst_lecture_save_results_to_s3(**context):
     # 컬럼 정렬
-    column_names = ["lecture_vt_No", "subject", "student_user_No", "student_name_y","teacher_user_No","teacher_name", 'rn',"page_call_room_id","tutoring_datetime"]
+    column_names = ["lecture_vt_No", "subject", "student_user_No", "student_name_y","teacher_user_No","teacher_name", 'rn',"page_call_room_id","tutoring_datetime", "tteokham_type", "durations"]
     hook = S3Hook(aws_conn_id='conn_S3')
     # S3에 있는 기존 파일 불러오기
     s3_obj = hook.get_key(key=user_filename, bucket_name='seoltab-datasource')
@@ -154,7 +154,7 @@ def fst_lecture_save_results_to_s3(**context):
      
     print(existing_df)
     # 최근 결과 (쿼리 결과) 가져오기
-    query_results = context['ti'].xcom_pull(task_ids='fst_lecture_run_query_test')
+    query_results = context['ti'].xcom_pull(task_ids='fst_lecture_run_query')
     query_results = pd.DataFrame(query_results, columns=column_names)
     query_results['student_name'] = query_results['student_name_y']
     # 기존 파일, 최근 결과 병합
@@ -181,7 +181,7 @@ default_args = {
 }
 
 dag = DAG(
-    'data-warehouse-test-tirno-AI_2.0',
+    'data-warehouse-tirno-AI_2.0',
     default_args=default_args,
     description='Run query and load result to S3',
     start_date=datetime(2024, 11, 13, 6, 25),
@@ -193,7 +193,7 @@ dag = DAG(
 
 
 fst_lecture_run_query = PythonOperator(
-    task_id='fst_lecture_run_query_test',
+    task_id='fst_lecture_run_query',
     python_callable=schedule_list_update,
     provide_context=True,
     retries=5,
@@ -203,7 +203,7 @@ fst_lecture_run_query = PythonOperator(
 
 
 fst_lecture_save_to_s3_task = PythonOperator(
-    task_id='fst_lecture_list_save_to_s3_test',
+    task_id='fst_lecture_list_save_to_s3',
     python_callable=fst_lecture_save_results_to_s3,
     provide_context=True,
     dag=dag,
