@@ -17,14 +17,18 @@ def authorize_gspread():
     client = gspread.authorize(creds)
     return client
 
-# 쿼리 결과를 시트에 업로드
-def update_google_sheet(sheet_name, range_start_cell, dataframe):
+
+def google_conn(sheet_name):
     client = authorize_gspread()
     sheet = client.open_by_key('1LJd8uXrXabjPhUNwBrs43N79Z6-QtTu3Wq3CksiWEnI').worksheet(sheet_name)
+    return sheet
 
-    # 기존 데이터 모두 삭제
-    sheet.clear()
+# 쿼리 결과를 시트에 업로드
+def update_google_sheet(delete_range,range_start_cell, dataframe):
+    sheet = google_conn(sheet_name='재고RAW')
 
+    
+    sheet.batch_clear([delete_range])
     # Pandas DF를 시트에 쓰기 위해 리스트 변환
     values = [dataframe.columns.tolist()] + dataframe.values.tolist()
     sheet.update(range_start_cell, values)
@@ -44,11 +48,11 @@ def upload_daily_data():
     # Trino 연결
     # 실제 쿼리 → Pandas DF 처리
     df = run_query()
-    update_google_sheet(sheet_name='재고RAW', range_start_cell='C31', dataframe=df)
+    update_google_sheet(delete_range='C1:P40', range_start_cell='C1', dataframe=df)
 
 def upload_monthly_data():
     df = run_query()
-    update_google_sheet(sheet_name='재고RAW', range_start_cell='C60', dataframe=df)
+    update_google_sheet(delete_range='C41:P80', range_start_cell='C41', dataframe=df)
 
 # DAG 정의
 default_args = {
