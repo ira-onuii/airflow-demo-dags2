@@ -60,7 +60,7 @@ def upload_monthly_data():
 # DAG 정의
 default_args = {
     'owner': 'airflow',
-    'start_date': datetime(2024, 1, 1),
+    'start_date': datetime(2024, 1, 1, tzinfo=KST),
     'retries': 1,
     #'retry_delay': timedelta(minutes=5),
 }
@@ -71,7 +71,6 @@ with DAG(
     schedule_interval='0 7 * * *',  # 매일 오전 7시
     catchup=False,
     tags=['2.0', 'operation', 'stock_count'],
-    timezone=KST,
 ) as dag:
 
     upload_daily = PythonOperator(
