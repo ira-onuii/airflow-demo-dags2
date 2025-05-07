@@ -12,7 +12,7 @@ def authorize_gspread():
         'https://www.googleapis.com/auth/drive'
     ]
     creds = ServiceAccountCredentials.from_json_keyfile_name(
-        '/opt/airflow/gcp/pj_appscrit.json', scope
+        '/opt/airflow/gcp/pj_appscript.json', scope
     )
     client = gspread.authorize(creds)
     return client
