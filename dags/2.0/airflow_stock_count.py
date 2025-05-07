@@ -4,6 +4,9 @@ from datetime import datetime, timedelta
 import gspread
 import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
+from pendulum import timezone
+
+KST = timezone("Asia/Seoul")
 
 # 구글 인증 설정
 def authorize_gspread():
@@ -48,11 +51,11 @@ def upload_daily_data():
     # Trino 연결
     # 실제 쿼리 → Pandas DF 처리
     df = run_query()
-    update_google_sheet(delete_range='C1:P40', range_start_cell='C1', dataframe=df)
+    update_google_sheet(delete_range='C2:P40', range_start_cell='C2', dataframe=df)
 
 def upload_monthly_data():
     df = run_query()
-    update_google_sheet(delete_range='C41:P80', range_start_cell='C41', dataframe=df)
+    update_google_sheet(delete_range='C42:P80', range_start_cell='C42', dataframe=df)
 
 # DAG 정의
 default_args = {
@@ -68,6 +71,7 @@ with DAG(
     schedule_interval='0 7 * * *',  # 매일 오전 7시
     catchup=False,
     tags=['2.0', 'operation', 'stock_count'],
+    timezone=KST,
 ) as dag:
 
     upload_daily = PythonOperator(
