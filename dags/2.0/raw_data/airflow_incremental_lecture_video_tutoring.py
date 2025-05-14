@@ -38,7 +38,7 @@ def save_to_s3_with_hook(data, bucket_name, version, folder_name, file_name):
 # incremental_extract 결과 받아와서 S3에 저장
 def save_results_to_s3(**context):
     query_results = context['ti'].xcom_pull(task_ids='incremental_extract_and_load')
-    column_names = ["update_datetime","tutoring_state","tutor_gender","total_subject_done_month","student_user_No","student_type","start_date","stage_pre_offer_cycle_count","stage_offer_cycle_count","stage_max_cycle_count","stage_free_cycle_count","stage_end_datetime","reactive_datetime","pre_matching_tutor_No","payment_item","next_payment_item","memo","matching_guide","lecture_vt_No","lecture_subject_Id","last_done_datetime","is_holding","current_schedule_No","current_payment_No","current_payment_item_No","create_datetime","content_end_datetime","card_quota","application_datetime"]
+    column_names = ["lecture_vt_No","student_user_No","lecture_subject_Id","student_type","tutoring_state","payment_item","next_payment_item","card_quota","current_schedule_No","current_payment_No","content_end_datetime","stage_end_datetime","stage_max_cycle_count","stage_free_cycle_count","stage_pre_offer_cycle_count","stage_offer_cycle_count","create_datetime","update_datetime","last_done_datetime","tutor_gender","start_date","application_datetime","memo","matching_guide","pre_matching_tutor_No","total_subject_done_month","is_holding","reactive_datetime","current_payment_item_No"]
     df = pd.DataFrame(query_results, columns=column_names)
     save_to_s3_with_hook(df, 'onuii-data-pipeline-2.0', 'staging',table_name, filename)
 
@@ -59,70 +59,64 @@ def incremental_extract():
     trino_engine = trino_hook.get_sqlalchemy_engine()
 
 
+    # 1. 테이블 존재 여부 확인
+    table_check_query = f"""
+    SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = '{pg_schema}' 
+        AND table_name = '{trino_schema}.{table_name}'
+    ) AS table_exists;
+    """
     
+    table_exists_result = pd.read_sql(table_check_query, pg_engine)
+    table_exists = table_exists_result['table_exists'].iloc[0]
 
-    # # 기존 data warehouse에 있던 데이터 추출 쿼리
-    before_data = f'select * from {pg_schema}."{trino_schema}.{table_name}"'
+    # 2. 분기 처리
+    if table_exists:
+        before_data_query = f'SELECT * FROM {pg_schema}."{trino_schema}.{table_name}"'
+        max_updated_query = f'SELECT MAX(update_datetime) AS max_updatedat FROM {pg_schema}."{trino_schema}.{table_name}"'
+        
+        max_updated_result = pd.read_sql(max_updated_query, pg_engine)
+        max_updatedat = max_updated_result['max_updatedat'].iloc[0]
+        if max_updatedat is None:
+            max_updatedat = '2019-01-01 00:00:00'
+        
+        df_before = pd.read_sql(before_data_query, pg_engine)
 
-     # 기존 data warehouse에 있던 마지막 updatedat
-    max_updated_data = f'select max(update_datetime) as max_updatedat from {pg_schema}."{trino_schema}.{table_name}"'
-    max_updated_data_result =  pd.read_sql(max_updated_data, pg_engine)
-    max_updatedat = max_updated_data_result['max_updatedat'].iloc[0]
-    if max_updatedat is None:
-     max_updatedat = '2019-01-01 00:00:00'  # 기본값
     else:
-     max_updatedat
-    print(max_updatedat)
+        max_updatedat = '2019-01-01 00:00:00'
+        df_before = pd.DataFrame(columns=["lecture_vt_No","student_user_No","lecture_subject_Id","student_type","tutoring_state","payment_item","next_payment_item","card_quota","current_schedule_No","current_payment_No","content_end_datetime","stage_end_datetime","stage_max_cycle_count","stage_free_cycle_count","stage_pre_offer_cycle_count","stage_offer_cycle_count","create_datetime","update_datetime","last_done_datetime","tutor_gender","start_date","application_datetime","memo","matching_guide","pre_matching_tutor_No","total_subject_done_month","is_holding","reactive_datetime","current_payment_item_No"])  # 필요한 컬럼으로 빈 df 생성
+
+    print(f"기준 시각: {max_updatedat}")
 
     # 최근 실행시점 이후 update된 데이터 추출 쿼리
-    today_data = f'''
+    today_data_query = f'''
        select 
         *
         from "{trino_database}"."{trino_schema}".{table_name}
         where update_datetime > cast('{max_updatedat}' as timestamp)
     '''
 
-
-   
+  
  
-    # 쿼리 실행 및 union all로 병합
-    df_before = pd.read_sql(before_data, pg_engine)
-    print(f"before data Number of rows: {len(df_before)}")
-    df_today = pd.read_sql(today_data, trino_engine)
-    print(f"today data Number of rows: {len(df_today)}")
+    df_today = pd.read_sql(today_data_query, trino_engine)
+
+    # 4. 병합 및 최신 row 추출
     df_union_all = pd.concat([df_before, df_today], ignore_index=True)
-    print(f"union all data Number of rows: {len(df_union_all)}")
 
+    df_union_all['row_number'] = df_union_all.sort_values(
+        by=['update_datetime'], ascending=False
+    ).groupby(['lecture_vt_no']).cumcount() + 1
 
-    # # date_type 변환
-    #df_union_all['update_datetime'] = pd.to_datetime(df_union_all['update_datetime'], errors='coerce')
-
-    # PK 값 별 최근 행이 1이 오도록 row_number 설정
-    df_union_all['row_number'] = df_union_all.sort_values(by = ['update_datetime'], ascending = False).groupby(['lecture_vt_no']).cumcount()+1
-
-
-    # PK 값 별 최근 행만 추출
     df_incremental = df_union_all[df_union_all['row_number'] == 1]
-    print(f"final data Number of rows: {len(df_incremental)}")
-    print(df_incremental)
-    
-    # row_number 컬럼 제거 및 컬럼 순서 정렬
-    df_incremental = df_incremental[["update_datetime","tutoring_state","tutor_gender","total_subject_done_month","student_user_No","student_type","start_date","stage_pre_offer_cycle_count","stage_offer_cycle_count","stage_max_cycle_count","stage_free_cycle_count","stage_end_datetime","reactive_datetime","pre_matching_tutor_No","payment_item","next_payment_item","memo","matching_guide","lecture_vt_No","lecture_subject_Id","last_done_datetime","is_holding","current_schedule_No","current_payment_No","current_payment_item_No","create_datetime","content_end_datetime","card_quota","application_datetime"]]
 
-    # # 특정 컬럼만 NaN 처리 후 int로 변환
-    # df_incremental[['payment_item', 'next_payment_item', 'current_schedule_no']] = (
-    #     df_incremental[['payment_item', 'next_payment_item', 'current_schedule_no']]
-    #     .fillna(0)  # NaN은 0으로 대체
-    #     .astype('int64')  # 정수형으로 변환
-    # )
-
-    # 정제된 데이터 data_warehouse 테이블에 삽입
+    # 5. 저장
     df_incremental.to_sql(
-        name= trino_schema+'.'+table_name,  # 삽입할 테이블 이름
-        con=pg_engine,  # PostgreSQL 연결 엔진
+        name=trino_schema + '.' + table_name,
+        con=pg_engine,
         schema=pg_schema,
-        if_exists='replace',  # 테이블이 있으면 삭제 후 재생성
-        index=False  # DataFrame 인덱스는 삽입하지 않음
+        if_exists='replace',
+        index=False
     )
 
     return df_incremental
