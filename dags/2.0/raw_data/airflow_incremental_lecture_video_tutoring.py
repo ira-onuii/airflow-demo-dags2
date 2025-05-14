@@ -73,7 +73,7 @@ def incremental_extract():
 
     # 2. 분기 처리
     if table_exists:
-        before_data_query = f'SELECT * FROM {pg_schema}."{trino_schema}.{table_name}"'
+        before_data_query = f'SELECT * FROM {pg_schema}."{table_name}"'
         max_updated_query = f'SELECT MAX(update_datetime) AS max_updatedat FROM {pg_schema}."{table_name}"'
         
         max_updated_result = pd.read_sql(max_updated_query, pg_engine)
