@@ -64,7 +64,7 @@ def incremental_extract():
     SELECT EXISTS (
         SELECT FROM information_schema.tables 
         WHERE table_schema = '{pg_schema}' 
-        AND table_name = '{trino_schema}.{table_name}'
+        AND table_name = '{table_name}'
     ) AS table_exists;
     """
     
@@ -74,7 +74,7 @@ def incremental_extract():
     # 2. 분기 처리
     if table_exists:
         before_data_query = f'SELECT * FROM {pg_schema}."{trino_schema}.{table_name}"'
-        max_updated_query = f'SELECT MAX(update_datetime) AS max_updatedat FROM {pg_schema}."{trino_schema}.{table_name}"'
+        max_updated_query = f'SELECT MAX(update_datetime) AS max_updatedat FROM {pg_schema}."{table_name}"'
         
         max_updated_result = pd.read_sql(max_updated_query, pg_engine)
         max_updatedat = max_updated_result['max_updatedat'].iloc[0]
@@ -112,7 +112,7 @@ def incremental_extract():
 
     # 5. 저장
     df_incremental.to_sql(
-        name=trino_schema + '.' + table_name,
+        name=table_name,
         con=pg_engine,
         schema=pg_schema,
         if_exists='replace',
