@@ -20,7 +20,7 @@ trino_schema = 'onuei'
 
 pg_schema = 'raw_data'
 
-table_name = 'lecture_video_tutoring'
+table_name = 'payment'
 
 filename = table_name+date + '.csv'
 
@@ -38,7 +38,7 @@ def save_to_s3_with_hook(data, bucket_name, version, folder_name, file_name):
 # incremental_extract 결과 받아와서 S3에 저장
 def save_results_to_s3(**context):
     query_results = context['ti'].xcom_pull(task_ids='incremental_extract_and_load')
-    column_names = ["lecture_vt_No","student_user_No","lecture_subject_Id","student_type","tutoring_state","payment_item","next_payment_item","card_quota","current_schedule_No","current_payment_No","content_end_datetime","stage_end_datetime","stage_max_cycle_count","stage_free_cycle_count","stage_pre_offer_cycle_count","stage_offer_cycle_count","create_datetime","update_datetime","last_done_datetime","tutor_gender","start_date","application_datetime","memo","matching_guide","pre_matching_tutor_No","total_subject_done_month","is_holding","reactive_datetime","current_payment_item_No"]
+    column_names = ["payment_no","user_no","pay_count_no","lgd_amount","card_quota","lgd_buyer","order_id","lgd_tid","lgd_paytype","tteok_ham_no","lgd_productinfo","payment_regdate","coupon_type","coupon_id","memo","lecture_vt_no","supply_value","additional_tax","cancelled_supply_value","cancelled_additional_tax","completed_at","discounted_value","cancelled_pg_tid","cancelled_receipt_url","cancelled_amount","cancelled_pg_fee","cancelled_payout_amount","cancelled_settlement_day","state","original_payment_id","payment_method"]
     df = pd.DataFrame(query_results, columns=column_names)
     save_to_s3_with_hook(df, 'onuii-data-pipeline', 'staging',table_name, filename)
 
@@ -85,7 +85,7 @@ def incremental_extract():
 
     else:
         max_updatedat = '2019-01-01 00:00:00'
-        df_before = pd.DataFrame(columns=["lecture_vt_No","student_user_No","lecture_subject_Id","student_type","tutoring_state","payment_item","next_payment_item","card_quota","current_schedule_No","current_payment_No","content_end_datetime","stage_end_datetime","stage_max_cycle_count","stage_free_cycle_count","stage_pre_offer_cycle_count","stage_offer_cycle_count","create_datetime","update_datetime","last_done_datetime","tutor_gender","start_date","application_datetime","memo","matching_guide","pre_matching_tutor_No","total_subject_done_month","is_holding","reactive_datetime","current_payment_item_No"])  # 필요한 컬럼으로 빈 df 생성
+        df_before = pd.DataFrame(columns=["payment_no","user_no","pay_count_no","lgd_amount","card_quota","lgd_buyer","order_id","lgd_tid","lgd_paytype","tteok_ham_no","lgd_productinfo","payment_regdate","coupon_type","coupon_id","memo","lecture_vt_no","supply_value","additional_tax","cancelled_supply_value","cancelled_additional_tax","completed_at","discounted_value","cancelled_pg_tid","cancelled_receipt_url","cancelled_amount","cancelled_pg_fee","cancelled_payout_amount","cancelled_settlement_day","state","original_payment_id","payment_method"])  # 필요한 컬럼으로 빈 df 생성
 
     print(f"기준 시각: {max_updatedat}")
 
@@ -94,7 +94,7 @@ def incremental_extract():
        select 
         *
         from "{trino_database}"."{trino_schema}".{table_name}
-        where update_datetime > cast('{max_updatedat}' as timestamp)
+        where payment_regdate > cast('{max_updatedat}' as timestamp)
     '''
 
   
@@ -106,8 +106,8 @@ def incremental_extract():
     df_union_all = pd.concat([df_before, df_today], ignore_index=True)
 
     df_union_all['row_number'] = df_union_all.sort_values(
-        by=['update_datetime'], ascending=False
-    ).groupby(['lecture_vt_no']).cumcount() + 1
+        by=['payment_regdate'], ascending=False
+    ).groupby(['payment_no']).cumcount() + 1
 
     df_incremental = df_union_all[df_union_all['row_number'] == 1]
 
