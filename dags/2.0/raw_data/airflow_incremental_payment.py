@@ -22,6 +22,8 @@ pg_schema = 'raw_data'
 
 table_name = 'payment'
 
+date_column = 'payment_regdate'
+
 filename = table_name+date + '.csv'
 
 
@@ -74,7 +76,7 @@ def incremental_extract():
     # 2. 분기 처리
     if table_exists:
         before_data_query = f'SELECT * FROM {pg_schema}."{table_name}"'
-        max_updated_query = f'SELECT MAX(update_datetime) AS max_updatedat FROM {pg_schema}."{table_name}"'
+        max_updated_query = f'SELECT MAX({date_column}) AS max_updatedat FROM {pg_schema}."{table_name}"'
         
         max_updated_result = pd.read_sql(max_updated_query, pg_engine)
         max_updatedat = max_updated_result['max_updatedat'].iloc[0]
@@ -94,7 +96,7 @@ def incremental_extract():
        select 
         *
         from "{trino_database}"."{trino_schema}".{table_name}
-        where payment_regdate > cast('{max_updatedat}' as timestamp)
+        where {date_column} > cast('{max_updatedat}' as timestamp)
     '''
 
   
