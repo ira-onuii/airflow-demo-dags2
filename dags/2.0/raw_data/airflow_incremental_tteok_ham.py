@@ -22,6 +22,8 @@ pg_schema = 'raw_data'
 
 table_name = 'tteok_ham'
 
+date_column = 'reg_datetime'
+
 filename = table_name+date + '.csv'
 
 
@@ -76,7 +78,7 @@ def incremental_extract():
         print('###True###')
         before_data_query = f'SELECT * FROM {pg_schema}."{table_name}"'
         print(before_data_query)
-        max_updated_query = f'SELECT MAX(update_datetime) AS max_updatedat FROM {pg_schema}."{table_name}"'
+        max_updated_query = f'SELECT MAX({date_column}) AS max_updatedat FROM {pg_schema}."{table_name}"'
         print(max_updated_query)
         
         max_updated_result = pd.read_sql(max_updated_query, pg_engine)
@@ -98,7 +100,7 @@ def incremental_extract():
        select 
         *
         from "{trino_database}"."{trino_schema}".{table_name}
-        where update_datetime > cast('{max_updatedat}' as timestamp)
+        where {date_column} > cast('{max_updatedat}' as timestamp)
     '''
     print(today_data_query)
 
@@ -111,7 +113,7 @@ def incremental_extract():
     df_union_all = pd.concat([df_before, df_today], ignore_index=True)
 
     df_union_all['row_number'] = df_union_all.sort_values(
-        by=['update_datetime'], ascending=False
+        by=date_column, ascending=False
     ).groupby(['lecture_vt_no']).cumcount() + 1
 
     df_incremental = df_union_all[df_union_all['row_number'] == 1]

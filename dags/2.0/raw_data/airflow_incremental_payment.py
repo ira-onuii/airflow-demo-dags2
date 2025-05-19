@@ -108,7 +108,7 @@ def incremental_extract():
     df_union_all = pd.concat([df_before, df_today], ignore_index=True)
 
     df_union_all['row_number'] = df_union_all.sort_values(
-        by=['payment_regdate'], ascending=False
+        by=date_column, ascending=False
     ).groupby(['payment_no']).cumcount() + 1
 
     df_incremental = df_union_all[df_union_all['row_number'] == 1]
