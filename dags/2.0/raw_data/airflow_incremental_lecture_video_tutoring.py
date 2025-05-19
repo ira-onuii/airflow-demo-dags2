@@ -73,8 +73,11 @@ def incremental_extract():
 
     # 2. 분기 처리
     if table_exists:
+        print('###True###')
         before_data_query = f'SELECT * FROM {pg_schema}."{table_name}"'
+        print(before_data_query)
         max_updated_query = f'SELECT MAX(update_datetime) AS max_updatedat FROM {pg_schema}."{table_name}"'
+        print(max_updated_query)
         
         max_updated_result = pd.read_sql(max_updated_query, pg_engine)
         max_updatedat = max_updated_result['max_updatedat'].iloc[0]
@@ -84,6 +87,7 @@ def incremental_extract():
         df_before = pd.read_sql(before_data_query, pg_engine)
 
     else:
+        print('###False###')
         max_updatedat = '2019-01-01 00:00:00'
         df_before = pd.DataFrame(columns=["lecture_vt_No","student_user_No","lecture_subject_Id","student_type","tutoring_state","payment_item","next_payment_item","card_quota","current_schedule_No","current_payment_No","content_end_datetime","stage_end_datetime","stage_max_cycle_count","stage_free_cycle_count","stage_pre_offer_cycle_count","stage_offer_cycle_count","create_datetime","update_datetime","last_done_datetime","tutor_gender","start_date","application_datetime","memo","matching_guide","pre_matching_tutor_No","total_subject_done_month","is_holding","reactive_datetime","current_payment_item_No"])  # 필요한 컬럼으로 빈 df 생성
 
@@ -96,6 +100,7 @@ def incremental_extract():
         from "{trino_database}"."{trino_schema}".{table_name}
         where update_datetime > cast('{max_updatedat}' as timestamp)
     '''
+    print(today_data_query)
 
   
  
