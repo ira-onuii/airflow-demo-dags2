@@ -67,10 +67,9 @@ def google_conn(sheet_name):
 #     values = [dataframe.columns.tolist()] + dataframe.values.tolist()
 #     sheet.update(range_start_cell, values)
 
-# 쿼리 결과 append
-def update_google_sheet_append_by_column(dataframe: pd.DataFrame, sheet_name: str):
-    sheet = google_conn(sheet_name=sheet_name)
-    
+#빈 행 탐색
+def found_blank():
+    sheet = google_conn(sheet_name='과외신청서 미작성 CS 확인용')
     # 대상 열 전체 읽기 (예: 'A2:A')
     col_range = "B2:D"
     col_values = sheet.get(col_range)
@@ -87,7 +86,13 @@ def update_google_sheet_append_by_column(dataframe: pd.DataFrame, sheet_name: st
 
     # 업데이트할 셀 범위
     range_start_cell = f"B{first_empty_row}"
-    
+    return range_start_cell
+
+
+# 쿼리 결과 append
+def update_google_sheet_append_by_column(range_start_cell, dataframe):
+    sheet = google_conn(sheet_name='과외신청서 미작성 CS 확인용')
+
     # 데이터프레임을 시트에 쓰기 위한 리스트로 변환
     values = [dataframe.columns.tolist()] + dataframe.values.tolist()
     sheet.update(range_start_cell, values)
@@ -108,7 +113,7 @@ def upload_daily_data():
     # Trino 연결
     # 실제 쿼리 → Pandas DF 처리
     df = run_query()
-    update_google_sheet_append_by_column(dataframe=df, sheet_name='과외신청서 미작성 CS 확인용')
+    update_google_sheet_append_by_column(dataframe=df, range_start_cell=found_blank())
 
 
 # DAG 정의
