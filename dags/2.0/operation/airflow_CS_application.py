@@ -25,7 +25,7 @@ def authorize_gspread():
 
 def google_conn(sheet_name):
     client = authorize_gspread()
-    sheet = client.open_by_key('1htuBC0kD-o1B8_JjYW81fEJ6WDr7_Ox-2mVJtQGsePQ').worksheet(sheet_name)
+    sheet = client.open_by_key('1fp9UD9kBKtDhFSY-XcTq5ZBF4xIR70FdQ70a09EUBYY').worksheet(sheet_name)
     return sheet
 
 # 쿼리 결과를 시트에 업로드
@@ -137,7 +137,7 @@ default_args = {
 with DAG(
     dag_id='CS_google_sheet_update_dag',
     default_args=default_args,
-    schedule_interval='0 7 * * *',  # 매일 오전 7시
+    schedule_interval='0 10 * * *',  # 매일 오전 7시
     catchup=False,
     tags=['2.0', 'operation', 'CS'],
 ) as dag:
