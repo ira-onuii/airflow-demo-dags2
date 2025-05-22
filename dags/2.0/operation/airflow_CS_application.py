@@ -55,7 +55,7 @@ def authorize_gspread():
 
 def google_conn(sheet_name):
     client = authorize_gspread()
-    sheet = client.open_by_key('1fp9UD9kBKtDhFSY-XcTq5ZBF4xIR70FdQ70a09EUBYY').worksheet(sheet_name)
+    sheet = client.open_by_key('1htuBC0kD-o1B8_JjYW81fEJ6WDr7_Ox-2mVJtQGsePQ').worksheet(sheet_name)
     return sheet
 
 # 쿼리 결과를 시트에 업로드
