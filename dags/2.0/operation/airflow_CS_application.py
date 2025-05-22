@@ -64,8 +64,8 @@ def update_google_sheet_append_by_column(range_start_cell, dataframe):
     sheet = google_conn(sheet_name='과외신청서 미작성 CS 확인용')
 
     # 데이터프레임을 시트에 쓰기 위한 리스트로 변환
-    values = [dataframe.columns.tolist()] + dataframe.values.tolist()
-    sheet.update(range_start_cell, values)
+    #values = [dataframe.columns.tolist()] + dataframe.values.tolist()
+    sheet.update(range_start_cell, dataframe)
 
 
 # def update_google_sheet(range_start_cell, dataframe):
@@ -130,7 +130,7 @@ def upload_daily_data():
 default_args = {
     'owner': 'airflow',
     'start_date': datetime(2024, 1, 1, tzinfo=KST),
-    'retries': 1,
+    #'retries': 1,
     #'retry_delay': timedelta(minutes=5),
 }
 
