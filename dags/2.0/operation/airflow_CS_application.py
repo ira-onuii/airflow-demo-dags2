@@ -137,7 +137,7 @@ default_args = {
 with DAG(
     dag_id='CS_google_sheet_update_dag',
     default_args=default_args,
-    schedule_interval='0 10 * * *',  # 매일 오전 7시
+    schedule_interval='0 10 * * *',  # 매일 오전 10시
     catchup=False,
     tags=['2.0', 'operation', 'CS'],
 ) as dag:
