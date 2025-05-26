@@ -114,7 +114,7 @@ def incremental_extract():
 
     df_union_all['row_number'] = df_union_all.sort_values(
         by=date_column, ascending=False
-    ).groupby(['tteok_ham_No']).cumcount() + 1
+    ).groupby(['tteok_ham_no']).cumcount() + 1
 
     df_incremental = df_union_all[df_union_all['row_number'] == 1]
 
@@ -151,7 +151,7 @@ dag = DAG(
     tags=['2.0','tutoring','raw']
 )
 
-#lvt
+
 incremental_extract_and_load = PythonOperator(
     task_id='incremental_extract_and_load',
     python_callable=incremental_extract,
