@@ -129,6 +129,8 @@ def schedule_list_update(**context):
             .merge(p_result, on="lecture_vt_No", how="inner") \
             .merge(t, left_on="teacher_user_No", right_on='user_No', how="inner") \
 
+    print(f'mlvt_result columns : {df.columns}')            
+    
     meta_data = pd.read_sql(fst_lecture_query.meta_data_query, trino_engine)
 
     df_meta = df.merge(meta_data, on='lecture_vt_No', how='left') \
