@@ -107,6 +107,7 @@ def incremental_extract():
         *
         from "{trino_database}"."{trino_schema}".{table_name}
         where {date_column} > cast('{max_updatedat}' as timestamp)
+        and lecture_cycle_no between 1 and 500000
     '''
     print(today_data_query)
 
