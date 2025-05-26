@@ -8,9 +8,10 @@ table_name = f'"{date}"'
 
 lvs_query_template = '''
 with lvs as (
-select lvs.lecture_vt_No, lvs.lecture_cycle_No, lvs.schedule_no, lvs.tutoring_datetime, lvs.schedule_state, sf.student_user_no, sf.teacher_user_No
+select lvs.lecture_vt_No, lvs.lecture_cycle_No, lvs.schedule_no, lvs.tutoring_datetime, lvs.schedule_state, sf.student_user_no, sf.teacher_user_No, u.name as teacher_name
 	from mysql.onuei.lecture_vt_schedules lvs
-	inner join mysql.onuei.student_follow sf on lvs.follow_no = sf.follow_no 
+	inner join mysql.onuei.student_follow sf on lvs.follow_no = sf.follow_no
+    inner join mysql.onuei."user" u on sf.teacher_user_No = u.user_No 
     -- where lvs.create_datetime >= timestamp '2025-03-27 00:00:00'
     -- and lvs.create_datetime < timestamp '2025-04-02 16:50:00'
 	where lvs.create_datetime >= timestamp '{{ data_interval_start }}'
@@ -34,7 +35,7 @@ select * from lvc
 mlvt_query = '''
 with mlvt as (
 select mlvt.lectures[1][1] as lecture_vt_No, mlvt.matchedat
-    , mlvt.matchedteacher[1] as teacher_user_No, mlvt.matchedteacher[2] as teacher_name, mlvt.lectures[1][2][2] as student_name
+    , mlvt.matchedteacher[1] as teacher_user_No
     from matching_mongodb.matching.matching_lvt mlvt
     where mlvt.status = 'MATCHED'
 )

@@ -134,14 +134,14 @@ def schedule_list_update(**context):
     df_meta = df.merge(meta_data, on='lecture_vt_No', how='left') \
         .sort_values(by=["lecture_vt_No"])
     print(df_meta.columns)
-    df_meta = df_meta[["lecture_vt_No", "subject", "student_user_No", "student_name_x","teacher_user_No","teacher_name","page_call_room_id","tutoring_datetime", "tteok_ham_type"]]
+    df_meta = df_meta[["lecture_vt_No", "subject", "student_user_No", "student_name","teacher_user_No","teacher_name","page_call_room_id","tutoring_datetime", "tteok_ham_type"]]
     return df_meta
 
 
 # 결과 정제 및 S3 저장
 def fst_lecture_save_results_to_s3(**context):
     # 컬럼 정렬
-    column_names = ["lecture_vt_No", "subject", "student_user_No", "student_name_x","teacher_user_No","teacher_name", 'rn',"page_call_room_id","tutoring_datetime", "tteok_ham_type"]
+    column_names = ["lecture_vt_No", "subject", "student_user_No", "student_name","teacher_user_No","teacher_name", 'rn',"page_call_room_id","tutoring_datetime", "tteok_ham_type"]
     hook = S3Hook(aws_conn_id='conn_S3')
     # S3에 있는 기존 파일 불러오기
     s3_obj = hook.get_key(key=user_filename, bucket_name='seoltab-datasource')
@@ -157,7 +157,7 @@ def fst_lecture_save_results_to_s3(**context):
     # 최근 결과 (쿼리 결과) 가져오기
     query_results = context['ti'].xcom_pull(task_ids='fst_lecture_run_query')
     query_results = pd.DataFrame(query_results, columns=column_names)
-    query_results['student_name'] = query_results['student_name_x']
+    #query_results['student_name'] = query_results['student_name_x']
     # 기존 파일, 최근 결과 병합
     updated_df = pd.concat([existing_df, query_results], ignore_index=True)
     # 날짜 타입으로 변환 (안 되는 값은 NaT 처리)
