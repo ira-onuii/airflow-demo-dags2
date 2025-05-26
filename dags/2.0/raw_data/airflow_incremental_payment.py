@@ -143,10 +143,11 @@ dag = DAG(
     default_args=default_args,
     description='Run query and load result to S3',
     schedule='10 17 * * *',
-    tags=['2.0','payment','raw']
+    tags=['2.0','payment','raw'],
+    catchup=False
 )
 
-#lvt
+
 incremental_extract_and_load = PythonOperator(
     task_id='incremental_extract_and_load',
     python_callable=incremental_extract,
