@@ -64,17 +64,9 @@ def update_google_sheet_append_by_column(range_start_cell, dataframe):
     sheet = google_conn(sheet_name='과외신청서 미작성 CS 확인용')
 
     # 데이터프레임을 시트에 쓰기 위한 리스트로 변환
-    #values = [dataframe.columns.tolist()] + dataframe.values.tolist()
     sheet.update(range_start_cell, dataframe)
 
 
-# def update_google_sheet(range_start_cell, dataframe):
-#     sheet = google_conn(sheet_name='과외신청서 미작성 CS 확인용')
-
-    
-#     # Pandas DF를 시트에 쓰기 위해 리스트 변환
-#     values = [dataframe.columns.tolist()] + dataframe.values.tolist()
-#     sheet.update(range_start_cell, values)
 
 
 def run_query():
@@ -101,7 +93,7 @@ select p.lecture_vt_no, p.student_user_No, p.student_name, p.subject, p.state, p
 		(select row_number() over(partition by p.lecture_vt_no order by p.payment_regdate asc) as rn 
 			,p.payment_regdate, p.state, lvt.*
 			from mysql.onuei.payment p
-			inner join lvt on (p.lecture_vt_no = lvt.lecture_vt_no and p.payment_regdate >= lvt.crda)
+			inner join lvt on (p.lecture_vt_no = lvt.lecture_vt_no and cast(date_format(p.payment_regdate,'%Y-%m-%d') as timestamp) >= cast(date_format(lvt.crda,'%Y-%m-%d') as timestamp))
 		) p
 	where p.rn = 1
 	and p.state = '결제완료'
