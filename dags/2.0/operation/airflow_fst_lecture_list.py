@@ -9,11 +9,9 @@ from airflow.operators.python import PythonOperator
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from sqlalchemy.orm import Session
 from airflow.utils.session import provide_session   
-import pendulum
 from datetime import datetime, timedelta
 import pandas as pd
 from io import StringIO
-from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from jinja2 import Template
 import pytz
 
