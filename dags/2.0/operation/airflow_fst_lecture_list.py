@@ -20,7 +20,7 @@ import pytz
 
 date = str(((datetime.now()) + timedelta(hours=9)).strftime("%Y-%m-%d"))
 
-user_filename = 'list_2.csv'
+user_filename = 'list.csv'
 
 
 
@@ -144,7 +144,7 @@ def fst_lecture_save_results_to_s3(**context):
     column_names = ["lecture_vt_No", "subject", "student_user_No", "student_name","teacher_user_No","teacher_name", 'rn',"page_call_room_id","tutoring_datetime"]
     hook = S3Hook(aws_conn_id='conn_S3')
     # S3에 있는 기존 파일 불러오기
-    s3_obj = hook.get_key(key='list.csv', bucket_name='seoltab-datasource')
+    s3_obj = hook.get_key(key=user_filename, bucket_name='seoltab-datasource')
     content = s3_obj.get()['Body'].read().decode('utf-8')
     print('S3 connected')
     try:
