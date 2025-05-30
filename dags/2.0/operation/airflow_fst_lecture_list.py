@@ -167,7 +167,7 @@ def fst_lecture_save_results_to_s3(**context):
     # 회차열 생성 및 정렬
     updated_df['rn'] = updated_df.sort_values(by = ['tutoring_datetime'], ascending = True).groupby(['lecture_vt_No']).cumcount()+1
     updated_df['rn'] = updated_df['rn'].astype(int)
-    updated_df = updated_df[["lecture_vt_No", "subject", "student_user_No", "student_name","teacher_user_No","teacher_name", 'rn',"page_call_room_id","tutoring_datetime", "tteok_ham_type"]]
+    updated_df = updated_df[["lecture_vt_No", "subject", "student_user_No", "student_name","teacher_user_No","teacher_name", 'rn',"page_call_room_id","tutoring_datetime"]]
     updated_df.sort_values(by=["lecture_vt_No",'rn'], ascending=[True, True])
     fst_lecture_save_to_s3_with_hook(updated_df, 'seoltab-datasource', user_filename)
 
