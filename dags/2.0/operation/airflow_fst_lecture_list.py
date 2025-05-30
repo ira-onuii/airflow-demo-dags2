@@ -20,7 +20,7 @@ import pytz
 
 date = str(((datetime.now()) + timedelta(hours=9)).strftime("%Y-%m-%d"))
 
-user_filename = 'list.csv'
+user_filename = 'list_2.csv'
 
 
 
