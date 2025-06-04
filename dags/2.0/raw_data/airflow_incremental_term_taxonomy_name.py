@@ -106,7 +106,7 @@ def incremental_extract():
        select 
         *
         from "{trino_database}"."{trino_schema}".{table_name}
-        where {date_column} >= {max_updatedat}'
+        where {date_column} >= {max_updatedat}
     '''
     print(today_data_query)
 
