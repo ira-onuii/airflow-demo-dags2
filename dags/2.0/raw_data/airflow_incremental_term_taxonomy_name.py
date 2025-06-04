@@ -20,13 +20,13 @@ trino_schema = 'onuei'
 
 pg_schema = 'raw_data'
 
-table_name = 'user'
+table_name = 'term_taxonomy_name'
 
-date_column = 'recent_login_datetme'
+date_column = 'term_taxonomy_id'
 
-column_list = ['user_No','term_user_type','user_status','email_id','password','push_auth_key','push_switch','nickname','name','phone_number','device','school_seq','sex','birth_year','profile_photo','recent_login_datetime','join_datetime','connecting_count','user_profile_text','ad_push_end_datetime','login_platform','login_version','login_device']
+column_list = ['name','term_taxonomy_id','taxonomy','term_id','description','parent','count','term_depth','version','order','inventory_no','curriculum_th']
 
-pk = 'user_No'
+pk = 'term_taxonomy_id'
 
 filename = table_name+date + '.csv'
 
@@ -90,13 +90,13 @@ def incremental_extract():
         max_updated_result = pd.read_sql(max_updated_query, pg_engine)
         max_updatedat = max_updated_result['max_updatedat'].iloc[0]
         if max_updatedat is None:
-            max_updatedat = '2019-01-01 00:00:00'
+            max_updatedat = 1
         
         df_before = pd.read_sql(before_data_query, pg_engine)
 
     else:
         print('###False###')
-        max_updatedat = '2019-01-01 00:00:00'
+        max_updatedat = 1
         df_before = pd.DataFrame(columns=column_list) 
 
     print(f"기준 시각: {max_updatedat}")
@@ -106,7 +106,7 @@ def incremental_extract():
        select 
         *
         from "{trino_database}"."{trino_schema}".{table_name}
-        where {date_column} > cast('{max_updatedat}' as timestamp)
+        where {date_column} >= {max_updatedat}'
     '''
     print(today_data_query)
 
