@@ -14,19 +14,19 @@ from io import StringIO
 
 date = str(((datetime.now()) + timedelta(hours=9)).strftime("%Y-%m-%d"))
 
-trino_database = 'matching_mongodb'
+trino_database = 'mysql'
 
-trino_schema = 'matching'
+trino_schema = 'onuei'
 
 pg_schema = 'raw_data'
 
-table_name = 'matching_lvt'
+table_name = 'user'
 
-date_column = 'updatedat'
+date_column = 'recent_login_datetme'
 
-column_list = ['_id','uid','type','status','teachersuggestionstatus','lectures','subject','option','itemtype','itemmonth','possibleat','suggestedteachers','matchedteacher','manager','application','matchedat','createdat','updatedat','__v','memo','note']
+column_list = ['user_No','term_user_type','user_status','email_id','password','push_auth_key','push_switch','nickname','name','phone_number','device','school_seq','sex','birth_year','profile_photo','recent_login_datetime','join_datetime','connecting_count','user_profile_text','ad_push_end_datetime','login_platform','login_version','login_device']
 
-pk = '_id'
+pk = 'user_No'
 
 filename = table_name+date + '.csv'
 
