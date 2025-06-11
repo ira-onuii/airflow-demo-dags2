@@ -126,8 +126,18 @@ def incremental_extract():
 
     df_incremental = df_union_all[df_union_all['row_number'] == 1]
 
+    def clean_nul_chars(df: pd.DataFrame) -> pd.DataFrame:
+        """
+        모든 문자열(object) 컬럼에서 NUL 문자 제거
+        """
+        for col in df.select_dtypes(include='object'):
+            df[col] = df[col].apply(lambda x: x.replace('\x00', '') if isinstance(x, str) else x)
+        return df
+
+    df_cleaned = clean_nul_chars(df_incremental)    
+
     # 5. 저장
-    df_incremental.to_sql(
+    df_cleaned.to_sql(
         name=table_name,
         con=pg_engine,
         schema=pg_schema,
