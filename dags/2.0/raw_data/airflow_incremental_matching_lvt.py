@@ -131,7 +131,7 @@ def incremental_extract():
         모든 문자열(object) 컬럼에서 NUL 문자 제거
         """
         for col in df_incremental.select_dtypes(include='object'):
-            df_incremental[col] = df_incremental[col].apply(lambda x: x.replace('\x00', '') if isinstance(x, str) else x)
+            df_incremental[col] = df_incremental[col].apply(lambda x: x.replace('\u00', '') if isinstance(x, str) else x)
         return df_incremental
 
     df_cleaned = clean_nul_chars(df_incremental)    
