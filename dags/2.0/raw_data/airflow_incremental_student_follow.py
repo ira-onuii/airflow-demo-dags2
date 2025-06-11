@@ -14,19 +14,19 @@ from io import StringIO
 
 date = str(((datetime.now()) + timedelta(hours=9)).strftime("%Y-%m-%d"))
 
-trino_database = 'matching_mongodb'
+trino_database = 'mysql'
 
-trino_schema = 'matching'
+trino_schema = 'onuei'
 
 pg_schema = 'raw_data'
 
-table_name = 'matching_lvt'
+table_name = 'student_follow'
 
-date_column = 'updatedat'
+date_column = 'req_datetime'
 
-column_list = ['_id','type','status','teachersuggestionstatus','lectures','subject','option','itemtype','itemmonth','possibleat','suggestedteachers','matchedteacher','manager','application','matchedat','createdat','updatedat','__v','memo','note']
+column_list = ['follow_no', 'student_user_No','teacher_user_no']
 
-pk = '_id'
+pk = 'follow_no'
 
 filename = table_name+date + '.csv'
 
@@ -104,7 +104,7 @@ def incremental_extract():
     # 최근 실행시점 이후 update된 데이터 추출 쿼리
     today_data_query = f'''
        select 
-        "_id","uid","type","status","teachersuggestionstatus","lectures","subject","option","itemtype","itemmonth","possibleat","suggestedteachers","matchedteacher","manager","application","matchedat","createdat","updatedat","__v","memo","note"
+        *
         from "{trino_database}"."{trino_schema}".{table_name}
         where {date_column} > cast('{max_updatedat}' as timestamp)
     '''
