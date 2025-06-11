@@ -55,6 +55,8 @@ def save_results_to_s3(**context):
 def incremental_extract():
     from airflow.providers.postgres.hooks.postgres import PostgresHook
     from airflow.providers.trino.hooks.trino import TrinoHook
+    from sqlalchemy import Integer, String, TIMESTAMP
+    from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 
 
     # postgresql 연결
@@ -130,7 +132,29 @@ def incremental_extract():
         con=pg_engine,
         schema=pg_schema,
         if_exists='replace',
-        index=False
+        index=False,
+        dtype={
+        '_id': String,
+        'type' : String,
+        'status' : String,
+        'teachersuggestionstatus' : String,
+        'lectures' : JSONB,
+        'subject' : JSONB,
+        'option' : String,
+        'itemtype' : String,
+        'itemmonth' : Integer,
+        'possibleat' : TIMESTAMP,
+        'suggestedteachers' : JSONB,
+        'matchedteacher' : JSONB,
+        'manager' : JSONB,
+        'application' : JSONB,
+        'matchedat'  : TIMESTAMP,
+        'createdat' : TIMESTAMP,
+        'updatedat' : TIMESTAMP,
+        '__v' : Integer,
+        'memo' : String,
+        'note' : String
+    }
     )
 
     return df_incremental
