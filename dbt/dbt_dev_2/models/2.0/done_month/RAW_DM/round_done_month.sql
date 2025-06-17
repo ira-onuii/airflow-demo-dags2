@@ -1,6 +1,7 @@
 {{ config(
     materialized='incremental',
     unique_key='schedule_no',  
+    schema='block_done-month',
     on_schema_change='append_new_columns'
 ) }}
 
