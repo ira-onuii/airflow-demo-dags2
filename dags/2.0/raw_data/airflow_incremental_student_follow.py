@@ -24,7 +24,7 @@ table_name = 'student_follow'
 
 date_column = 'req_datetime'
 
-column_list = ['follow_no', 'student_user_No','teacher_user_no','req_datetime']
+column_list = ["follow_no", "student_user_No","teacher_user_no","req_datetime"]
 
 pk = 'follow_no'
 
