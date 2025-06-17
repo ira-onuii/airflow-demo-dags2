@@ -7,8 +7,8 @@ os.environ["DBT_LOG_PATH"] = "/tmp/dbt_logs"
 os.environ["DBT_TARGET_PATH"] = "/tmp/dbt_target"
 
 block_category = 'done_month'
-block_name = 'tutoring_total_done_month'
-model_name = 'tutoring_total_DM'
+block_name = 'round_done_month'
+block_file = block_name + '.sql'
 
 
 default_args = {
@@ -29,7 +29,7 @@ dag = DAG(
 
 dbt_run_student_indicator = BashOperator(
     task_id=f'dbt_run_{block_name}',
-    bash_command=f'dbt run --profiles-dir /opt/airflow/dags/repo/dbt/dbt_dev_3/.dbt --project-dir /opt/airflow/dags/repo/dbt/dbt_dev_3 --model --select {model_name}.sql',
+    bash_command=f'dbt run --profiles-dir /opt/airflow/dags/repo/dbt/dbt_dev_2/.dbt --project-dir /opt/airflow/dags/repo/dbt/dbt_dev_2 --model --select {block_file}',
     dag=dag
 )
 
