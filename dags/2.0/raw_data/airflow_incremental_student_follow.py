@@ -25,6 +25,7 @@ table_name = 'student_follow'
 date_column = 'req_datetime'
 
 column_list = ["follow_no", "student_user_No","teacher_user_no","req_datetime"]
+columns_str = ", ".join(f'"{col}"' for col in column_list)
 
 pk = 'follow_no'
 
@@ -82,7 +83,7 @@ def incremental_extract():
     # 2. 분기 처리
     if table_exists:
         print('###True###')
-        before_data_query = f'SELECT {column_list} FROM {pg_schema}."{table_name}"'
+        before_data_query = f'SELECT {columns_str} FROM {pg_schema}."{table_name}"'
         print(before_data_query)
         max_updated_query = f'SELECT MAX({date_column}) AS max_updatedat FROM {pg_schema}."{table_name}"'
         print(max_updated_query)
@@ -104,7 +105,7 @@ def incremental_extract():
     # 최근 실행시점 이후 update된 데이터 추출 쿼리
     today_data_query = f'''
        select 
-        {column_list}
+        {columns_str}
         from "{trino_database}"."{trino_schema}".{table_name}
         where {date_column} > cast('{max_updatedat}' as timestamp)
     '''
