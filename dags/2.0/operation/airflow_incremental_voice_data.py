@@ -15,7 +15,7 @@ from io import StringIO
 date = str(((datetime.now()) + timedelta(hours=9)).strftime("%Y-%m-%d"))
 
 
-pg_schema = 'raw_data'
+pg_schema = 'kpis'
 
 table_name = 'voice_data'
 
