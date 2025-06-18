@@ -75,3 +75,67 @@ select * from meta_data
 
 
 
+voice_data_query = '''
+with voice as (
+select trim(da.room_id) as room_id, da.student_tokens, da.student_lq, da.teacher_tokens 
+	from ai_analysis_mongodb.analysis_db."data" da
+),
+lvc as (
+select lvc.lecture_cycle_no, lvc.lecture_vt_no, trim(lvc.page_call_room_id) as room_id, lvc.durations
+	, voice.student_tokens, voice.student_lq, voice.teacher_tokens
+	from mysql.onuei.lecture_vt_cycles lvc
+	inner join voice on trim(lvc.page_call_room_id) = voice.room_id
+),
+lvs as (
+select lvs.follow_no, lvs.schedule_no, lvs.lecture_vt_no, lvs.lecture_cycle_no, lvs.is_free, lvs.schedule_state, lvs.tutoring_datetime, lvs.update_datetime, lvs.per_done_month, lvs.cycle_payment_item  
+	from mysql.onuei.lecture_vt_schedules lvs
+	where lvs.lecture_cycle_no in (select lecture_cycle_no from lvc)
+),
+lvcs as (
+select lvs.follow_no, lvs.lecture_vt_no, lvs.schedule_no, lvs.is_free, lvs.schedule_state, lvs.tutoring_datetime, lvs.update_datetime as time_stamp, lvs.per_done_month, lvs.cycle_payment_item
+	, lvc.room_id, lvc.durations, lvc.student_tokens, lvc.student_lq, lvc.teacher_tokens, 'active' as active_state
+	from lvs 
+	inner join lvc on lvs.lecture_cycle_no = lvc.lecture_cycle_no 
+),
+lcf as (
+select null as follow_no, lcf.lecture_vt_no, null as schedule_no, null as is_free, null as schedule_state, null as tutoring_datetime, lcf.update_datetime as time_stamp, null as per_done_month, null as cycle_payment_item
+	, null as room_id, null as durations, null as student_tokens, null as student_lq, null as teacher_tokens, 'done' as active_state
+	from mysql.onuei.lecture_change_form lcf
+	inner join mysql.onuei.student_change_pause scp on lcf.lecture_change_form_no = scp.lecture_change_form_no 
+	where lcf.form_type = '중단'
+	and lcf.process_status = '안내완료'
+	and scp.resume_left_lecture = '중단'
+	and lcf.lecture_vt_no in (select lecture_vt_no from lvc)
+	-- and lcf.update_datetime >= cast('2024-11-01' as timestamp)
+	-- and lcf.lecture_vt_no = 42223
+),
+list as (
+select *
+	from lvcs
+union all
+select *
+	from lcf
+	order by time_stamp asc
+)
+-- select * from list
+,
+list_2 as (
+select sum(case when active_state = 'done' then 1 else 0 end) over(partition by lecture_vt_no order by tutoring_datetime nulls last, time_stamp asc) + 1 as raw_group_no
+	,*
+	from list
+),
+list_3 as (
+select case when active_state = 'done' then raw_group_no-1 else raw_group_no end as seq, *
+	from list_2
+),
+list_4 as (
+select lecture_vt_no, concat(cast(lecture_vt_No as varchar),'_', cast(seq as varchar)) as group_lecture_vt_No,time_stamp, schedule_No, active_state
+	, room_id, tutoring_datetime
+	, schedule_state, per_done_month 
+	, sum(case when per_done_month is null then 0 else per_done_month end) over(partition by concat(cast(lecture_vt_No as varchar),'_', cast(seq as varchar)) order by tutoring_datetime nulls last,time_stamp) as sum_done_month
+	, student_tokens, teacher_tokens, student_lq 
+	from list_3
+)
+select * from list_4
+'''
+
