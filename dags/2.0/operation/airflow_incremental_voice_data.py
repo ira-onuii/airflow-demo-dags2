@@ -117,6 +117,8 @@ def incremental_extract():
 
     df_incremental = df_union_all[df_union_all['row_number'] == 1]
 
+    df_incremental.columns=column_list
+
     # 5. 저장
     df_incremental.to_sql(
         name=table_name,
