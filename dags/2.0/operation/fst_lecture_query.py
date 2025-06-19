@@ -86,12 +86,13 @@ select lvc.lecture_cycle_no, lvc.lecture_vt_no, trim(lvc.page_call_room_id) as r
 	, voice.student_tokens, voice.student_lq, voice.teacher_tokens
 	from mysql.onuei.lecture_vt_cycles lvc
 	inner join voice on trim(lvc.page_call_room_id) = voice.room_id
+    where lvc.update_datetime >= cast('{max_updatedat}' as timestamp)
 ),
 lvs as (
 select lvs.follow_no, lvs.schedule_no, lvs.lecture_vt_no, lvs.lecture_cycle_no, lvs.is_free, lvs.schedule_state, lvs.tutoring_datetime, lvs.update_datetime, lvs.per_done_month, lvs.cycle_payment_item  
 	from mysql.onuei.lecture_vt_schedules lvs
 	where lvs.lecture_cycle_no in (select lecture_cycle_no from lvc)
-    and lvs.update_datetime >= cast('{max_updatedat}' as timestamp)
+    
 ),
 lvcs as (
 select lvs.follow_no, lvs.lecture_vt_no, lvs.schedule_no, lvs.is_free, lvs.schedule_state, lvs.tutoring_datetime, lvs.update_datetime as time_stamp, lvs.per_done_month, lvs.cycle_payment_item
