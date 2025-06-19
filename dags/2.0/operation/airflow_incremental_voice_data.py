@@ -10,6 +10,9 @@ from airflow.utils.dates import days_ago
 from datetime import datetime, timedelta
 import pandas as pd
 from io import StringIO
+from pendulum import timezone
+
+KST = timezone("Asia/Seoul")
 
 
 date = str(((datetime.now()) + timedelta(hours=9)).strftime("%Y-%m-%d"))
@@ -158,6 +161,7 @@ default_args = {
     'start_date': days_ago(1),
     'email_on_failure': False,
     'email_on_retry': False,
+    'start_date': datetime(2024, 1, 1, tzinfo=KST),
 }
 
 dag = DAG(
