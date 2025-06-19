@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta
+from airflow_incremental_voice_data import max_updated_at
 
 date = str(((datetime.now()) + timedelta(hours=9)).strftime("%Y-%m-%d"))
 
 table_name = f'"{date}"'
 
-
+max_updatedat = max_updated_at()[0]
 
 lvs_query_template = '''
 with lvs as (
@@ -75,7 +76,7 @@ select * from meta_data
 
 
 
-voice_data_query = '''
+voice_data_query = f'''
 with voice as (
 select trim(da.room_id) as room_id, da.student_tokens, da.student_lq, da.teacher_tokens 
 	from ai_analysis_mongodb.analysis_db."data" da
@@ -90,6 +91,7 @@ lvs as (
 select lvs.follow_no, lvs.schedule_no, lvs.lecture_vt_no, lvs.lecture_cycle_no, lvs.is_free, lvs.schedule_state, lvs.tutoring_datetime, lvs.update_datetime, lvs.per_done_month, lvs.cycle_payment_item  
 	from mysql.onuei.lecture_vt_schedules lvs
 	where lvs.lecture_cycle_no in (select lecture_cycle_no from lvc)
+    and lvs.update_datetime >= {max_updatedat}
 ),
 lvcs as (
 select lvs.follow_no, lvs.lecture_vt_no, lvs.schedule_no, lvs.is_free, lvs.schedule_state, lvs.tutoring_datetime, lvs.update_datetime as time_stamp, lvs.per_done_month, lvs.cycle_payment_item
@@ -106,6 +108,7 @@ select null as follow_no, lcf.lecture_vt_no, null as schedule_no, null as is_fre
 	and lcf.process_status = '안내완료'
 	and scp.resume_left_lecture = '중단'
 	and lcf.lecture_vt_no in (select lecture_vt_no from lvc)
+    and lcf.update_datetime >= {max_updatedat}
 	-- and lcf.update_datetime >= cast('2024-11-01' as timestamp)
 	-- and lcf.lecture_vt_no = 42223
 ),

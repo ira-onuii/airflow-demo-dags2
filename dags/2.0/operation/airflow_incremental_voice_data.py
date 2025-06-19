@@ -49,20 +49,16 @@ def save_results_to_s3(**context):
     save_to_s3_with_hook(df, 'onuii-data-pipeline', 'staging',table_name, filename)
 
 
-# 증분 추출 with row_number()
-def incremental_extract():
+
+# 기준시간 추출
+def max_updated_at():
     from airflow.providers.postgres.hooks.postgres import PostgresHook
-    from airflow.providers.trino.hooks.trino import TrinoHook
-    import fst_lecture_query 
 
     # postgresql 연결
     pg_hook = PostgresHook(postgres_conn_id='postgres_conn_2.0')  
-    # trino 연결
-    trino_hook = TrinoHook(trino_conn_id='trino_conn')   
 
     # SQLAlchemy Engine 생성
     pg_engine = pg_hook.get_sqlalchemy_engine()
-    trino_engine = trino_hook.get_sqlalchemy_engine()
 
 
     # 1. 테이블 존재 여부 확인
@@ -98,12 +94,32 @@ def incremental_extract():
         df_before = pd.DataFrame(columns=column_list) 
 
     print(f"기준 시각: {max_updatedat}")
+    return max_updatedat, df_before
+
+# 증분 추출 
+def incremental_extract():
+    from airflow.providers.postgres.hooks.postgres import PostgresHook
+    from airflow.providers.trino.hooks.trino import TrinoHook
+    from fst_lecture_query import voice_data_query
+
+    # postgresql 연결
+    pg_hook = PostgresHook(postgres_conn_id='postgres_conn_2.0')  
+    # trino 연결
+    trino_hook = TrinoHook(trino_conn_id='trino_conn')   
+
+    # SQLAlchemy Engine 생성
+    pg_engine = pg_hook.get_sqlalchemy_engine()
+    trino_engine = trino_hook.get_sqlalchemy_engine()
+
+
+    
 
     # 최근 실행시점 이후 update된 데이터 추출 쿼리
-    today_data_query = fst_lecture_query.voice_data_query
+
+    today_data_query = voice_data_query
     print(today_data_query)
 
-  
+    df_before = max_updated_at()[1]
  
     df_today = pd.read_sql(today_data_query, trino_engine)
     print(df_today)
