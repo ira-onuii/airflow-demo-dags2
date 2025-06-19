@@ -164,7 +164,7 @@ dag = DAG(
     f'data-warehouse-test-postgresql-{table_name}-incremental_2.0',
     default_args=default_args,
     description='Run query and load result to S3',
-    schedule='10 17 * * *',
+    schedule='00 9 * * *',
     tags=['2.0','ai','analysis'],
     catchup=False
 )
