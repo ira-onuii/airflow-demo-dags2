@@ -120,15 +120,15 @@ def upload_daily_data():
 
     # 1. 쿼리 실행
     new_df = run_query()
-    print(f'### today_data ### : {new_df}')
+    print(f'### today_data ### : {len(new_df)}')
 
     # 2. 기존 데이터 가져오기
     existing_rows = sheet.get("B2:D")
-    print(f'### existing_data ### : {existing_rows}')
+    print(f'### existing_data ### : {len(existing_rows)}')
 
     # 3. 중복 제거
     filtered_df = filter_duplicates(new_df, existing_rows)
-    print(f'### filtered_data ### : {filtered_df}')
+    print(f'### filtered_data ### : {len(filtered_df)}')
 
     # 4. 데이터 남아있으면 append
     if not filtered_df.empty:
