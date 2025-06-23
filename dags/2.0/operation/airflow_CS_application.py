@@ -40,39 +40,29 @@ def google_conn(sheet_name):
 #빈 행 탐색
 def found_blank():
     sheet = google_conn(sheet_name='과외신청서 미작성 CS 확인용')
-    # 대상 열 전체 읽기 (예: 'A2:A')
     col_range = "B2:D"
     col_values = sheet.get(col_range)
-    
-    # 빈 행 찾기: 값이 없으면 빈 리스트거나 빈 문자열
-    first_empty_row = 2  # A2부터 시작
+
+    first_empty_row = 2
     for i, row in enumerate(col_values, start=2):
-        if not row or not row[0]:  # 빈 값이면
+        if not row or not row[0]:  # student_name 기준
             first_empty_row = i
             break
     else:
-        # 모두 채워졌다면 그 아래 행부터 입력
         first_empty_row = len(col_values) + 2
 
-    # 업데이트할 셀 범위
-    range_start_cell = f"B{first_empty_row}"
-    return range_start_cell
+    return f"B{first_empty_row}"
 
 
-# 쿼리 결과 append
 def update_google_sheet_append_by_column(range_start_cell, dataframe):
     sheet = google_conn(sheet_name='과외신청서 미작성 CS 확인용')
-
-    # 데이터프레임을 시트에 쓰기 위한 리스트로 변환
     sheet.update(range_start_cell, dataframe)
-
-
 
 
 def run_query():
     from airflow.providers.trino.hooks.trino import TrinoHook
     query = '''
-with lvt as (
+    with lvt as (
 select lvt.lecture_vt_no,lvt.student_user_no, lvt.tutoring_state,ttn.name as subject, u.name as student_name, if(lvt.reactive_datetime is null,lvt.create_datetime, reactive_datetime) as crda
 	from mysql.onuei.lecture_video_tutoring lvt
 	inner join mysql.onuei."user" u on lvt.student_user_No = u.user_no 
@@ -101,21 +91,51 @@ select p.lecture_vt_no, p.student_user_No, p.student_name, p.subject, p.state, p
 )
 select p.student_name, p.student_user_No, p.subject
 	from p
-'''
-    trino_hook = TrinoHook(trino_conn_id='trino_conn')   
-
-    # SQLAlchemy Engine 생성
+    '''
+    trino_hook = TrinoHook(trino_conn_id='trino_conn')
     trino_engine = trino_hook.get_sqlalchemy_engine()
-    CS_list = pd.read_sql(query, trino_engine)
-    df = CS_list.values.tolist()
+    df = pd.read_sql(query, trino_engine)
     return df
 
-# DAG 내에서 사용될 함수
+
+def filter_duplicates(new_df, existing_rows):
+    # 기존 값으로 키 만들기 (user_no + subject)
+    existing_keys = set()
+    for row in existing_rows:
+        if len(row) >= 3:
+            user_no = str(row[1]).strip()
+            subject = str(row[2]).strip()
+            key = f"{user_no}_{subject}"
+            existing_keys.add(key)
+
+    # 새로운 DF에서 중복 아닌 것만 필터링
+    filtered_df = new_df[
+        ~new_df.apply(lambda x: f"{str(x['student_user_No']).strip()}_{str(x['subject']).strip()}", axis=1).isin(existing_keys)
+    ]
+    return filtered_df
+
+
 def upload_daily_data():
-    # Trino 연결
-    # 실제 쿼리 → Pandas DF 처리
-    df = run_query()
-    update_google_sheet_append_by_column(dataframe=df, range_start_cell=found_blank())
+    sheet = google_conn(sheet_name='과외신청서 미작성 CS 확인용')
+
+    # 1. 쿼리 실행
+    new_df = run_query()
+    print(f'### today_data ### : {len(new_df)}')
+
+    # 2. 기존 데이터 가져오기
+    existing_rows = sheet.get("B2:D")
+    print(f'### existing_data ### : {len(existing_rows)}')
+
+    # 3. 중복 제거
+    filtered_df = filter_duplicates(new_df, existing_rows)
+    print(f'### filtered_data ### : {len(filtered_df)}')
+
+    # 4. 데이터 남아있으면 append
+    if not filtered_df.empty:
+        update_google_sheet_append_by_column(
+            range_start_cell=found_blank(),
+            dataframe=filtered_df.values.tolist()
+        )
 
 
 # DAG 정의
