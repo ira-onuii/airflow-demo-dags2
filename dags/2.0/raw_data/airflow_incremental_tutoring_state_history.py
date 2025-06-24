@@ -86,7 +86,7 @@ def incremental_extract():
         print("✅ Trino에서 새로운 변경 데이터 없음.")
         return []
 
-    df_today['created_at'] = datetime.now()
+    #df_today['created_at'] = datetime.now()
 
     # PostgreSQL의 최신 상태 조회
     if table_exists:
