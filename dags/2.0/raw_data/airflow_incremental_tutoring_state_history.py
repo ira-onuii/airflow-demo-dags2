@@ -77,7 +77,7 @@ def incremental_extract():
         SELECT 
             lecture_vt_No AS lecture_vt_no,
             tutoring_state,
-            cast(now()+interval '9' hour as timestamp) AS created_at
+            cast(now()+interval '9' hour as varchar) AS created_at
         FROM {trino_database}.{trino_schema}.lecture_video_tutoring
         WHERE update_datetime > cast('{max_created_at}' as timestamp)
     '''
