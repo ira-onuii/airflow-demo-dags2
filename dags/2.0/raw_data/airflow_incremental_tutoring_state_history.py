@@ -7,6 +7,9 @@ from airflow.utils.dates import days_ago
 from datetime import datetime, timedelta
 import pandas as pd
 from io import StringIO
+from pendulum import timezone
+
+KST = timezone("Asia/Seoul")
 
 
 # 경로 추가
@@ -127,7 +130,7 @@ def incremental_extract():
 default_args = {
     'owner': 'Chad',
     'depends_on_past': False,
-    'start_date': days_ago(1),
+    'start_date': datetime(2024, 1, 1, tzinfo=KST),
     'email_on_failure': False,
     'email_on_retry': False,
 }
@@ -136,8 +139,8 @@ dag = DAG(
     f'data-warehouse-test-postgresql-{table_name}-incremental_2.0',
     default_args=default_args,
     description='Incremental extract and append history to PostgreSQL and S3',
-    schedule='10 17 * * *',
-    tags=['2.0', 'tutoring', 'raw'],
+    schedule='0 0,12 * * *',
+    tags=['2.0', 'tutoring', 'raw','history'],
     catchup=False
 )
 
