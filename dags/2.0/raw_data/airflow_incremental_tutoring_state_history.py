@@ -78,7 +78,7 @@ def incremental_extract():
             tutoring_state,
             now() AS created_at
         FROM {trino_database}.{trino_schema}.lecture_video_tutoring
-        WHERE update_datetime > TIMESTAMP '{max_created_at}'
+        WHERE update_datetime > cast('{max_created_at}' as timestamp)
     '''
     df_today = pd.read_sql(today_data_query, trino_engine)
 
