@@ -7,9 +7,7 @@ from airflow.utils.dates import days_ago
 from datetime import datetime, timedelta
 import pandas as pd
 from io import StringIO
-from pendulum import timezone
 
-KST = timezone("Asia/Seoul")
 
 # 경로 추가
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -79,7 +77,7 @@ def incremental_extract():
         SELECT 
             lecture_vt_No AS lecture_vt_no,
             tutoring_state,
-            now() AS created_at
+            now()+interval '9' hour AS created_at
         FROM {trino_database}.{trino_schema}.lecture_video_tutoring
         WHERE update_datetime > cast('{max_created_at}' as timestamp)
     '''
@@ -132,7 +130,6 @@ default_args = {
     'start_date': days_ago(1),
     'email_on_failure': False,
     'email_on_retry': False,
-    'start_date': datetime(2024, 1, 1, tzinfo=KST),
 }
 
 dag = DAG(
