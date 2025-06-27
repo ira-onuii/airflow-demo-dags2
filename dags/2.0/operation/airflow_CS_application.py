@@ -157,6 +157,8 @@ with DAG(
     upload_daily = PythonOperator(
         task_id='upload_daily_data',
         python_callable=upload_daily_data,
+        retries=5,
+        retry_delay=timedelta(seconds=2),
     )
 
 
