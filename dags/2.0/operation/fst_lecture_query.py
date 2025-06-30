@@ -110,8 +110,6 @@ select null as follow_no, lcf.lecture_vt_no, null as schedule_no, null as is_fre
 	and scp.resume_left_lecture = '중단'
 	and lcf.lecture_vt_no in (select lecture_vt_no from lvc)
     and lcf.update_datetime >= cast('{max_updatedat}' as timestamp)
-	-- and lcf.update_datetime >= cast('2024-11-01' as timestamp)
-	-- and lcf.lecture_vt_no = 42223
 ),
 list as (
 select *
@@ -124,7 +122,7 @@ select *
 -- select * from list
 ,
 list_2 as (
-select sum(case when active_state = 'done' then 1 else 0 end) over(partition by lecture_vt_no order by tutoring_datetime nulls last, time_stamp asc) + 1 as raw_group_no
+select sum(case when active_state = 'done' then 1 else 0 end) over(partition by lecture_vt_no order by time_stamp asc) + 1 as raw_group_no
 	,*
 	from list
 ),
