@@ -22,7 +22,7 @@ pg_schema = 'raw_data'
 
 table_name = 'group_lvt'
 
-date_column = 'time_stamp'
+date_column = 'updated_at'
 
 column_list = ["lecture_vt_no","group_lecture_vt_No","active_timestamp","done_timestamp","min_payment_No","updated_at","min_tutoring_datetime","min_schedule_No","done_month"]
 columns_str = ", ".join(f'"{col}"' for col in column_list)

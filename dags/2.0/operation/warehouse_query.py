@@ -2,6 +2,8 @@ from datetime import datetime, timedelta
 
 date = str(((datetime.now()) + timedelta(hours=9)).strftime("%Y-%m-%d"))
 
+from airflow_incremental_group_lvt import max_updated_at
+
 table_name = f'"{date}"'
 
 
