@@ -86,7 +86,7 @@ select lvc.lecture_cycle_no, lvc.lecture_vt_no, trim(lvc.page_call_room_id) as r
 	, voice.student_tokens, voice.student_lq, voice.teacher_tokens
 	from mysql.onuei.lecture_vt_cycles lvc
 	inner join voice on trim(lvc.page_call_room_id) = voice.room_id
-    where lvc.update_datetime >= cast('{max_updatedat}' as timestamp)
+    -- where lvc.update_datetime >= cast('{max_updatedat}' as timestamp)
 ),
 lvs as (
 select lvs.follow_no, lvs.schedule_no, lvs.lecture_vt_no, lvs.lecture_cycle_no, lvs.is_free, lvs.schedule_state, lvs.tutoring_datetime, lvs.update_datetime, lvs.per_done_month, lvs.cycle_payment_item  
@@ -109,7 +109,7 @@ select null as follow_no, lcf.lecture_vt_no, null as schedule_no, null as is_fre
 	and lcf.process_status = '안내완료'
 	and scp.resume_left_lecture = '중단'
 	and lcf.lecture_vt_no in (select lecture_vt_no from lvc)
-    and lcf.update_datetime >= cast('{max_updatedat}' as timestamp)
+   -- and lcf.update_datetime >= cast('{max_updatedat}' as timestamp)
 ),
 list as (
 select *
@@ -134,7 +134,7 @@ list_4 as (
 select lecture_vt_no, concat(cast(lecture_vt_No as varchar),'_', cast(seq as varchar)) as group_lecture_vt_No,time_stamp, schedule_No, active_state
 	, room_id, tutoring_datetime
 	, schedule_state, per_done_month 
-	, sum(case when per_done_month is null then 0 else per_done_month end) over(partition by concat(cast(lecture_vt_No as varchar),'_', cast(seq as varchar)) order by tutoring_datetime nulls last,time_stamp) as sum_done_month
+	-- , sum(case when per_done_month is null then 0 else per_done_month end) over(partition by concat(cast(lecture_vt_No as varchar),'_', cast(seq as varchar)) order by tutoring_datetime nulls last,time_stamp) as sum_done_month
 	, student_tokens, teacher_tokens, student_lq 
 	from list_3
 )

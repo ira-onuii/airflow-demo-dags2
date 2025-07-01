@@ -76,7 +76,7 @@ def max_updated_at():
     table_exists_result = pd.read_sql(table_check_query, pg_engine)
     table_exists = table_exists_result['table_exists'].iloc[0]
 
-    # 2. 분기 처리
+    # 2. 테이블 존재 여부에 따른 분기 처리
     if table_exists:
         print('###True###')
         before_data_query = f'SELECT {columns_str} FROM {pg_schema}."{table_name}"'
