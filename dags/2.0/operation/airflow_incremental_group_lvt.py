@@ -24,7 +24,7 @@ table_name = 'group_lvt'
 
 date_column = 'updated_at'
 
-column_list = ["lecture_vt_no","group_lecture_vt_no","active_timestamp","done_timestamp","min_payment_no","updated_at","min_tutoring_datetime","min_schedule_No","done_month"]
+column_list = ["lecture_vt_no","group_lecture_vt_no","active_timestamp","done_timestamp","min_payment_no","updated_at","min_tutoring_datetime","min_schedule_no","done_month"]
 columns_str = ", ".join(f'"{col}"' for col in column_list)
 
 pk = 'group_lecture_vt_no'
