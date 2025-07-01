@@ -29,7 +29,7 @@ columns_str = ", ".join(f'"{col}"' for col in column_list)
 
 pk = 'group_lecture_vt_No'
 
-tags = ['2.0','raw','lecture']
+tags = ['2.0','raw','lecture','history']
 
 filename = table_name+date + '.csv'
 
