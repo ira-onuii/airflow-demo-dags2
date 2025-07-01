@@ -24,10 +24,10 @@ table_name = 'group_lvt'
 
 date_column = 'updated_at'
 
-column_list = ["lecture_vt_No","group_lecture_vt_No","active_timestamp","done_timestamp","min_payment_No","updated_at","min_tutoring_datetime","min_schedule_No","done_month"]
+column_list = ["lecture_vt_no","group_lecture_vt_no","active_timestamp","done_timestamp","min_payment_no","updated_at","min_tutoring_datetime","min_schedule_No","done_month"]
 columns_str = ", ".join(f'"{col}"' for col in column_list)
 
-pk = 'group_lecture_vt_No'
+pk = 'group_lecture_vt_no'
 
 tags = ['2.0','raw','lecture','history']
 
@@ -170,7 +170,7 @@ dag = DAG(
     f'data-warehouse-test-postgresql-{table_name}-incremental_2.0',
     default_args=default_args,
     description='Run query and load result to S3',
-    schedule='00 9 * * *',
+    schedule='0 0,12 * * *',
     tags=tags,
     catchup=False
 )
