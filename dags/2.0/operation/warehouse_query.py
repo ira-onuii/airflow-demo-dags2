@@ -72,7 +72,7 @@ select lecture_vt_no, concat(cast(lecture_vt_no as varchar),'_', cast(seq as var
 -- select * from list_4 where  active_timestamp >= cast('2024-05-01' as timestamp)
 ,
 list_5 as (
-select list_4.lecture_vt_no, list_4.group_lecture_vt_no, list_4.active_timestamp, list_4.done_timestamp
+select list_4.lecture_vt_no, list_4.group_lecture_vt_no, list_4.active_timestamp, list_4.done_timestamp, list_4.min_payment_no
 	, cast(case when max(lvs.update_datetime) >= updated_at then max(lvs.update_datetime) else updated_at end as timestamp) as updated_at 
 	, min(tutoring_datetime) as min_tutoring_datetime, min(schedule_no) as min_schedule_no, sum(per_done_month) as done_month
 	from list_4
