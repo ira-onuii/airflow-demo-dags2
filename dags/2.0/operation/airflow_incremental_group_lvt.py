@@ -130,10 +130,7 @@ def incremental_extract():
     print(df_today)
 
     # 4. 병합 및 최신 row 추출
-    if df_before.empty:
-        df_union_all = df_today.copy()
-    else:
-        df_union_all = pd.concat([df_before, df_today], ignore_index=True)
+    df_union_all = pd.concat([df_before, df_today], ignore_index=True)
 
     df_union_all['row_number'] = df_union_all.sort_values(
         by=date_column, ascending=False
