@@ -73,7 +73,7 @@ select lecture_vt_no, concat(cast(lecture_vt_No as varchar),'_', cast(seq as var
 ,
 list_5 as (
 select list_4.lecture_vt_no, list_4.group_lecture_vt_no, list_4.active_timestamp, list_4.done_timestamp
-	, case when max(lvs.update_datetime) >= updated_at then max(lvs.update_datetime) else updated_at end as updated_at 
+	, cast(case when max(lvs.update_datetime) >= updated_at then max(lvs.update_datetime) else updated_at end as timestamp) as updated_at 
 	, min(tutoring_datetime) as min_tutoring_datetime, min(schedule_No) as min_schedule_No, sum(per_done_month) as done_month
 	from list_4
 	left join lvs on (list_4.lecture_vt_No = lvs.lecture_vt_no and list_4.active_timestamp <= lvs.tutoring_datetime and if(list_4.done_timestamp is null, now(), done_timestamp) >= lvs.tutoring_datetime)
