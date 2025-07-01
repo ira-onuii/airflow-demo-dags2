@@ -78,6 +78,7 @@ def max_updated_at():
 
     # 2. 테이블 존재 여부에 따른 분기 처리
     if table_exists:
+        # 있을 경우-가장 마지막 updatedat 추출
         print('###True###')
         before_data_query = f'SELECT {columns_str} FROM {pg_schema}."{table_name}"'
         print(before_data_query)
@@ -92,6 +93,7 @@ def max_updated_at():
         df_before = pd.read_sql(before_data_query, pg_engine)
 
     else:
+        #없을 경우-특정 일자 추출
         print('###False###')
         max_updatedat = '2019-01-01 00:00:00'
         df_before = pd.DataFrame(columns=column_list) 
@@ -123,9 +125,34 @@ def incremental_extract():
     print(today_data_query)
 
     df_before = max_updated_at()[1]
+
+    
  
     df_today = pd.read_sql(today_data_query, trino_engine)
     print(df_today)
+
+    if df_today.empty:
+        print("✅ Trino에서 새로운 변경 데이터 없음.")
+        return []
+
+    # group_lecture_vt_No별 기존 sum_done_month의 max값
+    max_sum = (
+        df_before.groupby('group_lecture_vt_No')['sum_done_month']
+        .max()
+        .rename('base_sum_done')
+        .reset_index()
+    )
+
+     # 병합 후 누적합 계산
+    df_today = df_today.merge(max_sum, on='group_lecture_vt_No', how='left')
+    df_today['base_sum_done'] = df_today['base_sum_done'].fillna(0)
+    df_today['per_done_month'] = df_today['per_done_month'].fillna(0)
+
+    df_today['sum_done_month'] = (
+        df_today.groupby('group_lecture_vt_No')['per_done_month']
+        .cumsum() + df_today['base_sum_done']
+    )
+
 
     # 4. 병합 및 최신 row 추출
     df_union_all = pd.concat([df_before, df_today], ignore_index=True)
