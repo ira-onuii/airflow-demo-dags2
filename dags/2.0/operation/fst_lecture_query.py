@@ -134,7 +134,7 @@ list_4 as (
 select lecture_vt_no, concat(cast(lecture_vt_No as varchar),'_', cast(seq as varchar)) as group_lecture_vt_No,time_stamp, schedule_No, active_state
 	, room_id, tutoring_datetime
 	, schedule_state, per_done_month 
-	-- , sum(case when per_done_month is null then 0 else per_done_month end) over(partition by concat(cast(lecture_vt_No as varchar),'_', cast(seq as varchar)) order by tutoring_datetime nulls last,time_stamp) as sum_done_month
+	, sum(case when per_done_month is null then 0 else per_done_month end) over(partition by concat(cast(lecture_vt_No as varchar),'_', cast(seq as varchar)) order by tutoring_datetime nulls last,time_stamp) as sum_done_month
 	, student_tokens, teacher_tokens, student_lq 
 	from list_3
 )
