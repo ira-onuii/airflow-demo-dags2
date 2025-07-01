@@ -4,10 +4,12 @@ date = str(((datetime.now()) + timedelta(hours=9)).strftime("%Y-%m-%d"))
 
 from airflow_incremental_group_lvt import max_updated_at
 
+max_updatedat = max_updated_at()[0]
+
 table_name = f'"{date}"'
 
 
-group_lvt_query = '''
+group_lvt_query = f'''
 -- group_lvt
 with p as (
 select lecture_vt_no, payment_no, payment_regdate
@@ -70,7 +72,9 @@ select lecture_vt_no, concat(cast(lecture_vt_No as varchar),'_', cast(seq as var
 -- select * from list_4 where  active_timestamp >= cast('2024-05-01' as timestamp)
 ,
 list_5 as (
-select list_4.*, min(tutoring_datetime) as min_tutoring_datetime, min(schedule_No) as min_schedule_No, sum(per_done_month) as done_month
+select list_4.lecture_vt_no, list_4.group_lecture_vt_no, list_4.active_timestamp, list_4.done_timestamp
+	, case when max(lvs.update_datetime) >= updated_at then max(lvs.update_datetime) else updated_at end as updated_at 
+	, min(tutoring_datetime) as min_tutoring_datetime, min(schedule_No) as min_schedule_No, sum(per_done_month) as done_month
 	from list_4
 	left join lvs on (list_4.lecture_vt_No = lvs.lecture_vt_no and list_4.active_timestamp <= lvs.tutoring_datetime and list_4.done_timestamp >= lvs.tutoring_datetime)
 	where active_timestamp >= cast('2024-05-01' as timestamp)
@@ -78,4 +82,5 @@ select list_4.*, min(tutoring_datetime) as min_tutoring_datetime, min(schedule_N
 )
 select * 
 from list_5
+where updated_at >= cast('{max_updatedat}' as timestamp)
 '''
