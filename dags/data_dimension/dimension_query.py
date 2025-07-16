@@ -23,19 +23,15 @@ fst_list as (
 select *
 	from lvs
 	where lvs.rn = 1 
-)
--- select * from fst_list where lecture_vt_no = 52584
-,
+),
 lsf as (
 select fst_list.*, cast(concat(cast(lsf.student_id as varchar), cast(lsf.teacher_id as varchar)) as bigint) as student_teacher_No
 	, lsf.feedback_cycle, lsf.student_id, lsf.teacher_id 
 	from fst_list
-	left join mysql.onuei.lecture_student_feedback lsf on fst_list.schedule_No = lsf.schedule_no 
-)
--- select * from lsf where lsf.lecture_vt_no = 52584
-,
+	left join mysql.onuei.lecture_student_feedback lsf on fst_list.schedule_no = lsf.schedule_no 
+),
 fbd as (
-select cast(concat(cast(student_user_id as varchar), cast(tutor_user_id as varchar)) as bigint) as student_teacher_No, cast(value as int) as fst_nps, created_at, lecture_vt_no 
+select cast(concat(cast(student_user_id as varchar), cast(tutor_user_id as varchar)) as bigint) as student_teacher_no, cast(value as int) as fst_nps, created_at, lecture_vt_no 
 	from 		
 		(WITH cte AS (
 			select sf.lecture_vt_no,sf.body_list_map,sf.cycle_count,sf.created_at,sf.tutor_user_id,sf.student_user_id 
@@ -43,13 +39,12 @@ select cast(concat(cast(student_user_id as varchar), cast(tutor_user_id as varch
 				where sf.cycle_count=1
 				)
 				SELECT lecture_vt_no,cycle_count,created_at,tutor_user_id,student_user_id ,
-					 replace(replace(replace(concat_ws('',map_keys.key),'{',''),'}',''),'"','') as key,replace(replace(replace(concat_ws('',map_keys.value),'{',''),'}',''),'"','') as value
+					replace(replace(replace(concat_ws('', map_keys.key), '{{', ''), '}}', ''), '"', '') as key,replace(replace(replace(concat_ws('',map_keys.value),'{{',''),'}}',''),'"','') as value
 					FROM cte
 					CROSS JOIN UNNEST(split_to_multimap(cte.body_list_map, '","', ':')) map_keys(key, value)
 		) A		
 	where key in ('cyMj2Q5EbCE2gOZPuvJs','SbXI6fGKqJeuGagtJFqU','9qiFkIjQ4ztJE5vyy0rY','WwZI08GtA8p7KANNMTuJ')
 )
--- select * from fbd where lecture_vt_no = 52584
 ,
 lfbd as (
 select lsf.lecture_vt_no, lsf.schedule_no, lsf.lecture_cycle_No
