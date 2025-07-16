@@ -139,7 +139,7 @@ dag = DAG(
     f'data-warehouse-test-postgresql-{table_name}-incremental_2.0',
     default_args=default_args,
     description='Incremental extract and append history to PostgreSQL and S3',
-    schedule='0 0,12 * * *',
+    schedule='0 */2 * * *',
     tags=['2.0', 'tutoring', 'raw','history'],
     catchup=False
 )
