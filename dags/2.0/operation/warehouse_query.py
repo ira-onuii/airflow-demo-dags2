@@ -23,12 +23,12 @@ select lvs.follow_no, lvs.schedule_no, lvs.lecture_vt_no, lvs.lecture_cycle_no, 
 	-- where lvs.schedule_state <> 'CANCEL'
 ),
 lvcs as (
-select p.lecture_vt_no, p.payment_no, p.payment_regdate as time_stamp
+select p.lecture_vt_no, p.payment_no, p.payment_regdate as time_stamp, p.order_id 
 	, 'active' as active_state
 	from p
 ),
 lcf as (
-select lcf.lecture_vt_no, null as payment_no, lcf.update_datetime as time_stamp
+select lcf.lecture_vt_no, null as payment_no, lcf.update_datetime as time_stamp, null as order_id 
 	,'done' as active_state
 	from mysql.onuei.lecture_change_form lcf
 	-- inner join mysql.onuei.student_change_pause scp on lcf.lecture_change_form_no = scp.lecture_change_form_no 
@@ -61,7 +61,7 @@ list_4 as (
 select lecture_vt_no, concat(cast(lecture_vt_no as varchar),'_', cast(seq as varchar)) as group_lecture_vt_no
 	,min(case when active_state = 'active' then time_stamp else null end) as active_timestamp
 	,max(case when active_state = 'done' then time_stamp else null end) as done_timestamp
-	,min(payment_no) as min_payment_no, max(time_stamp) as updated_at
+	,min(payment_no) as min_payment_no, min(order_id) as min_order_id, max(time_stamp) as updated_at
 	-- , min(time_stamp) as min_active_done_time_stamp, max(time_stamp) as max_active_done_time_stamp, min(payment_no) as min_payment_no, active_state
 	-- , min(time_sta) as min_payment_regdate
 	-- , sum(per_done_month) as done_month
@@ -72,7 +72,7 @@ select lecture_vt_no, concat(cast(lecture_vt_no as varchar),'_', cast(seq as var
 -- select * from list_4 where  active_timestamp >= cast('2024-05-01' as timestamp)
 ,
 list_5 as (
-select list_4.lecture_vt_no, list_4.group_lecture_vt_no, list_4.active_timestamp, list_4.done_timestamp, list_4.min_payment_no
+select list_4.lecture_vt_no, list_4.group_lecture_vt_no, list_4.active_timestamp, list_4.done_timestamp, list_4.min_payment_no, list_4.min_order_id
 	, cast(case when max(lvs.update_datetime) >= updated_at then max(lvs.update_datetime) else updated_at end as timestamp) as updated_at 
 	, min(tutoring_datetime) as min_tutoring_datetime, min(schedule_no) as min_schedule_no, sum(per_done_month) as done_month
 	from list_4
