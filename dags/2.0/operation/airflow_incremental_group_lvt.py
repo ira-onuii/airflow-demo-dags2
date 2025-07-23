@@ -20,7 +20,7 @@ date = str(((datetime.now()) + timedelta(hours=9)).strftime("%Y-%m-%d"))
 
 pg_schema = 'raw_data'
 
-table_name = 'group_lvt_new'
+table_name = 'group_lvt'
 
 date_column = 'updated_at'
 
