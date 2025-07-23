@@ -31,10 +31,10 @@ lcf as (
 select lcf.lecture_vt_no, null as payment_no, lcf.update_datetime as time_stamp
 	,'done' as active_state
 	from mysql.onuei.lecture_change_form lcf
-	inner join mysql.onuei.student_change_pause scp on lcf.lecture_change_form_no = scp.lecture_change_form_no 
+	-- inner join mysql.onuei.student_change_pause scp on lcf.lecture_change_form_no = scp.lecture_change_form_no 
 	where lcf.form_type = '중단'
 	and lcf.process_status = '안내완료'
-	and scp.resume_left_lecture = '중단'
+	-- and scp.resume_left_lecture = '중단'
 	-- and lcf.create_datetime >= cast('2024-05-01' as timestamp)
 ),
 list as (
@@ -82,7 +82,7 @@ select list_4.lecture_vt_no, list_4.group_lecture_vt_no, list_4.active_timestamp
 )
 select * 
 from list_5
-where updated_at >= cast('{max_updatedat}' as timestamp)
+-- where updated_at >= cast('{max_updatedat}' as timestamp)
 '''
 
 
