@@ -40,7 +40,7 @@ def google_conn(sheet_name):
 #빈 행 탐색
 def found_blank():
     sheet = google_conn(sheet_name='과외신청서 미작성 CS 확인용')
-    col_range = "B2:D"
+    col_range = "B2:E"
     col_values = sheet.get(col_range)
 
     first_empty_row = 2
@@ -89,7 +89,7 @@ select p.lecture_vt_no, p.student_user_No, p.student_name, p.subject, p.state, p
 	and p.state = '결제완료'
 	and date_diff('day', p.payment_regdate, now()) >= 3
 )
-select p.student_name, p.student_user_No, p.subject
+select p.lecture_vt_No, p.student_name, p.student_user_No, p.subject
 	from p
     '''
     trino_hook = TrinoHook(trino_conn_id='trino_conn')
@@ -123,7 +123,7 @@ def upload_daily_data():
     print(f'### today_data ### : {len(new_df)}')
 
     # 2. 기존 데이터 가져오기
-    existing_rows = sheet.get("B2:D")
+    existing_rows = sheet.get("B2:E")
     print(f'### existing_data ### : {len(existing_rows)}')
 
     # 3. 중복 제거
@@ -136,6 +136,7 @@ def upload_daily_data():
             range_start_cell=found_blank(),
             dataframe=filtered_df.values.tolist()
         )
+
 
 
 # DAG 정의
