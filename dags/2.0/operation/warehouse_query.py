@@ -159,5 +159,5 @@ select list_4.lecture_vt_no, list_4.group_lecture_vt_no, list_4.active_timestamp
 )
 select * 
 from list_5
--- where updated_at >= cast('{max_updatedat}' as timestamp)
+where updated_at >= cast('{max_updatedat}' as timestamp)
 '''
