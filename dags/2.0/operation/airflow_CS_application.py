@@ -103,14 +103,13 @@ def filter_duplicates(new_df, existing_rows):
     existing_keys = set()
     for row in existing_rows:
         if len(row) >= 3:
-            user_no = str(row[1]).strip()
-            subject = str(row[2]).strip()
-            key = f"{user_no}_{subject}"
+            lecture_vt_no = str(row[0]).strip()
+            key = lecture_vt_no
             existing_keys.add(key)
 
     # 새로운 DF에서 중복 아닌 것만 필터링
     filtered_df = new_df[
-        ~new_df.apply(lambda x: f"{str(x['student_user_No']).strip()}_{str(x['subject']).strip()}", axis=1).isin(existing_keys)
+        ~new_df.apply(lambda x: f"{str(x['lecture_vt_No']).strip()}", axis=1).isin(existing_keys)
     ]
     return filtered_df
 
