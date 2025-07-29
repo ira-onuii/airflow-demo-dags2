@@ -141,21 +141,26 @@ def get_empty_f_column_lecture_vt_nos():
     sheet = google_conn(sheet_name='과외신청서 미작성 CS 확인용의 사본')
     
     # B열과 F열 데이터 가져오기 (충분한 범위로 설정)
-    data_range = "B2:F"  # 적절한 범위로 조정
+    data_range = "B2:G"  # 적절한 범위로 조정
     data_values = sheet.get(data_range)
     
-    empty_i_lecture_vt_nos = []
+    empty_f_lecture_vt_nos = []
     
     for i, row in enumerate(data_values, start=2):
         if len(row) >= 1 and row[0]:  # B열에 값이 있는지 확인
             lecture_vt_no = str(row[0]).strip()
-            i_column_value = row[4] if len(row) > 4 and row[4] else None  # F열 값
+            f_column_value = row[4] if len(row) > 4 and row[4] else None  # F열 값
+            g_column_value = str(row[5]).strip() if len(row) > 5 and row[5] else ""  # G열 값
             
-            # B열에 값이 있고 F열이 비어있는 경우
-            if lecture_vt_no and not i_column_value:
-                empty_i_lecture_vt_nos.append(lecture_vt_no)
+            # 조건: B열에 값이 있고, F열이 비어있고, G열이 '중단'이 아니고, #N/A가 아닌 경우
+            if (lecture_vt_no and 
+                not f_column_value and 
+                g_column_value != '중단' and
+                lecture_vt_no not in ['#N/A', '#n/a', '#N/a', '#n/A'] and
+                lecture_vt_no.replace('#', '').replace('N/A', '').replace('n/a', '') != ''):
+                empty_f_lecture_vt_nos.append(lecture_vt_no)
     
-    return empty_i_lecture_vt_nos
+    return empty_f_lecture_vt_nos
 
 
 def run_application_datetime_query(lecture_vt_no_list):
@@ -205,7 +210,7 @@ def update_f_column_with_application_datetime():
                            datetime_df['application_datetime']))
     
     # 4. 시트의 모든 데이터 가져오기 (B열과 F열)
-    data_range = "B2:F"
+    data_range = "B2:G"
     data_values = sheet.get(data_range)
     
     # 5. 업데이트할 셀들 찾기 및 업데이트
@@ -215,10 +220,15 @@ def update_f_column_with_application_datetime():
         if len(row) >= 1 and row[0]:  # B열에 값이 있는지 확인
             lecture_vt_no = str(row[0]).strip()
             f_column_value = row[4] if len(row) > 4 and row[4] else None
+            g_column_value = str(row[5]).strip() if len(row) > 5 and row[5] else ""  # G열 값
             
-            # F열이 비어있고 딕셔너리에 해당 lecture_vt_No가 있는 경우
-            if not f_column_value and lecture_vt_no in datetime_dict:
-                cell_range = f"I{i}"
+            # 조건: B열에 값이 있고, F열이 비어있고, G열이 '중단'이 아니고, #N/A가 아닌 경우
+            if (not f_column_value and 
+                g_column_value != '중단' and
+                lecture_vt_no not in ['#N/A', '#n/a', '#N/a', '#n/A'] and
+                lecture_vt_no.replace('#', '').replace('N/A', '').replace('n/a', '') != '' and
+                lecture_vt_no in datetime_dict):
+                cell_range = f"F{i}"
                 cell_value = datetime_dict[lecture_vt_no]
                 sheet.update(cell_range, [[cell_value]])
                 update_count += 1
