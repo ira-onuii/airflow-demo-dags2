@@ -206,8 +206,19 @@ def update_f_column_with_application_datetime():
         return
     
     # 3. lecture_vt_No별 application_datetime 딕셔너리 생성
-    datetime_dict = dict(zip(datetime_df['lecture_vt_No'].astype(str), 
-                           datetime_df['application_datetime']))
+    # NaT 값 처리: NaT이거나 null인 경우 제외
+    datetime_dict = {}
+    for _, row in datetime_df.iterrows():
+        lecture_vt_no = str(row['lecture_vt_No'])
+        app_datetime = row['application_datetime']
+        
+        # NaT, NaN, None 값이 아닌 경우만 딕셔너리에 추가
+        if pd.notna(app_datetime) and app_datetime is not pd.NaT:
+            # datetime 객체를 문자열로 변환
+            if hasattr(app_datetime, 'strftime'):
+                datetime_dict[lecture_vt_no] = app_datetime.strftime('%Y-%m-%d %H:%M:%S')
+            else:
+                datetime_dict[lecture_vt_no] = str(app_datetime)
     
     # 4. 시트의 모든 데이터 가져오기 (B열과 F열)
     data_range = "B2:G"
