@@ -220,14 +220,9 @@ def update_f_column_with_application_datetime():
         if len(row) >= 1 and row[0]:  # B열에 값이 있는지 확인
             lecture_vt_no = str(row[0]).strip()
             f_column_value = row[4] if len(row) > 4 and row[4] else None
-            g_column_value = str(row[5]).strip() if len(row) > 5 and row[5] else ""  # G열 값
             
-            # 조건: B열에 값이 있고, F열이 비어있고, G열이 '중단'이 아니고, #N/A가 아닌 경우
-            if (not f_column_value and 
-                g_column_value != '중단' and
-                lecture_vt_no not in ['#N/A', '#n/a', '#N/a', '#n/A'] and
-                lecture_vt_no.replace('#', '').replace('N/A', '').replace('n/a', '') != '' and
-                lecture_vt_no in datetime_dict):
+            # F열이 비어있고 딕셔너리에 해당 lecture_vt_No가 있는 경우
+            if not f_column_value and lecture_vt_no in datetime_dict:
                 cell_range = f"F{i}"
                 cell_value = datetime_dict[lecture_vt_no]
                 sheet.update(cell_range, [[cell_value]])
