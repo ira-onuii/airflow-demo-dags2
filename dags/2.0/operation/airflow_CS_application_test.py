@@ -166,12 +166,12 @@ def run_application_datetime_query(lecture_vt_no_list):
     from airflow.providers.trino.hooks.trino import TrinoHook
     
     # IN 절을 위한 문자열 생성
-    lecture_vt_no_str = "','".join(lecture_vt_no_list)
+    lecture_vt_no_str = ",".join(lecture_vt_no_list)
     
     query = f'''
         select lecture_vt_No, application_datetime
         from mysql.onuei.lecture_video_tutoring
-        where lecture_vt_No in ('{lecture_vt_no_str}')
+        where lecture_vt_No in ({lecture_vt_no_str})
     '''
     
     trino_hook = TrinoHook(trino_conn_id='trino_conn')
