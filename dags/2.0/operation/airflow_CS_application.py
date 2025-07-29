@@ -136,6 +136,115 @@ def upload_daily_data():
             dataframe=filtered_df.values.tolist()
         )
 
+def get_empty_f_column_lecture_vt_nos():
+    """F열이 비어있는 행들의 lecture_vt_No를 가져오는 함수"""
+    sheet = google_conn(sheet_name='과외신청서 미작성 CS 확인용')
+    
+    # B열과 F열 데이터 가져오기 (충분한 범위로 설정)
+    data_range = "B2:G"  # 적절한 범위로 조정
+    data_values = sheet.get(data_range)
+    
+    empty_f_lecture_vt_nos = []
+    
+    for i, row in enumerate(data_values, start=2):
+        if len(row) >= 1 and row[0]:  # B열에 값이 있는지 확인
+            lecture_vt_no = str(row[0]).strip()
+            f_column_value = row[4] if len(row) > 4 and row[4] else None  # F열 값
+            g_column_value = str(row[5]).strip() if len(row) > 5 and row[5] else ""  # G열 값
+            
+            # 조건: B열에 값이 있고, F열이 비어있고, G열이 '중단'이 아니고, #N/A가 아닌 경우
+            if (lecture_vt_no and 
+                not f_column_value and 
+                g_column_value != '중단' and
+                lecture_vt_no not in ['#N/A', '#n/a', '#N/a', '#n/A'] and
+                lecture_vt_no.replace('#', '').replace('N/A', '').replace('n/a', '') != ''):
+                empty_f_lecture_vt_nos.append(lecture_vt_no)
+    
+    return empty_f_lecture_vt_nos
+
+
+def run_application_datetime_query(lecture_vt_no_list):
+    """lecture_vt_No 리스트로 application_datetime을 조회하는 함수"""
+    if not lecture_vt_no_list:
+        return pd.DataFrame()
+    
+    from airflow.providers.trino.hooks.trino import TrinoHook
+    
+    # IN 절을 위한 문자열 생성
+    lecture_vt_no_str = ",".join(lecture_vt_no_list)
+    
+    query = f'''
+        select lecture_vt_No, application_datetime
+        from mysql.onuei.lecture_video_tutoring
+        where lecture_vt_No in ({lecture_vt_no_str})
+    '''
+    
+    trino_hook = TrinoHook(trino_conn_id='trino_conn')
+    trino_engine = trino_hook.get_sqlalchemy_engine()
+    df = pd.read_sql(query, trino_engine)
+    return df
+
+
+def update_f_column_with_application_datetime():
+    """F열에 application_datetime 값을 업데이트하는 함수"""
+    sheet = google_conn(sheet_name='과외신청서 미작성 CS 확인용')
+    
+    # 1. I열이 비어있는 행들의 lecture_vt_No 가져오기
+    empty_f_lecture_vt_nos = get_empty_f_column_lecture_vt_nos()
+    print(f'### F열이 비어있는 lecture_vt_No 개수 ### : {len(empty_f_lecture_vt_nos)}')
+    
+    if not empty_f_lecture_vt_nos:
+        print('### F열이 비어있는 행이 없습니다 ###')
+        return
+    
+    # 2. application_datetime 조회
+    datetime_df = run_application_datetime_query(empty_f_lecture_vt_nos)
+    print(f'### 조회된 application_datetime 개수 ### : {len(datetime_df)}')
+    
+    if datetime_df.empty:
+        print('### 조회된 application_datetime이 없습니다 ###')
+        return
+    
+    # 3. lecture_vt_No별 application_datetime 딕셔너리 생성
+    # NaT 값 처리: NaT이거나 null인 경우 제외
+    datetime_dict = {}
+    for _, row in datetime_df.iterrows():
+        lecture_vt_no = str(row['lecture_vt_No'])
+        app_datetime = row['application_datetime']
+        
+        # NaT, NaN, None 값이 아닌 경우만 딕셔너리에 추가
+        if pd.notna(app_datetime) and app_datetime is not pd.NaT:
+            # datetime 객체를 문자열로 변환
+            if hasattr(app_datetime, 'strftime'):
+                datetime_dict[lecture_vt_no] = app_datetime.strftime('%Y-%m-%d %H:%M:%S')
+            else:
+                datetime_dict[lecture_vt_no] = str(app_datetime)
+    
+    # 4. 시트의 모든 데이터 가져오기 (B열과 F열)
+    data_range = "B2:G"
+    data_values = sheet.get(data_range)
+    
+    # 5. 업데이트할 셀들 찾기 및 업데이트
+    update_count = 0
+    
+    for i, row in enumerate(data_values, start=2):
+        if len(row) >= 1 and row[0]:  # B열에 값이 있는지 확인
+            lecture_vt_no = str(row[0]).strip()
+            f_column_value = row[4] if len(row) > 4 and row[4] else None
+            
+            # F열이 비어있고 딕셔너리에 해당 lecture_vt_No가 있는 경우
+            if not f_column_value and lecture_vt_no in datetime_dict:
+                cell_range = f"F{i}"
+                cell_value = datetime_dict[lecture_vt_no]
+                sheet.update(cell_range, [[cell_value]])
+                update_count += 1
+    
+    # 6. 업데이트 결과 출력
+    if update_count > 0:
+        print(f'### 업데이트 완료된 셀 개수 ### : {update_count}')
+        print('### F열 업데이트 완료 ###')
+    else:
+        print('### 업데이트할 데이터가 없습니다 ###')
 
 # DAG 정의
 default_args = {
@@ -160,6 +269,13 @@ with DAG(
         retry_delay=timedelta(seconds=2),
     )
 
+    upload_daily_application_datetime = PythonOperator(
+        task_id='upload_daily_application_datetime',
+        python_callable=update_f_column_with_application_datetime,
+        retries=5,
+        retry_delay=timedelta(seconds=2),
+    )
 
 
-    upload_daily
+
+    upload_daily >> upload_daily_application_datetime
