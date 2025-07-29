@@ -137,7 +137,6 @@ def upload_daily_data():
         )
 
 
-
 # DAG 정의
 default_args = {
     'owner': 'airflow',

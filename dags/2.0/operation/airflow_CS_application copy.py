@@ -62,7 +62,42 @@ def update_google_sheet_append_by_column(range_start_cell, dataframe):
 def run_query():
     from airflow.providers.trino.hooks.trino import TrinoHook
     query = '''
-        select lecture_vt_No, student_name, student_user_No, subject from mytable
+     with lvt as (
+select lvt.lecture_vt_no,lvt.student_user_no, lvt.tutoring_state,ttn.name as subject, u.name as student_name, if(lvt.reactive_datetime is null,lvt.create_datetime, reactive_datetime) as crda
+	from mysql.onuei.lecture_video_tutoring lvt
+	inner join mysql.onuei."user" u on lvt.student_user_No = u.user_no 
+	inner join mysql.onuei.term_taxonomy_name ttn on lvt.lecture_subject_id = ttn.term_taxonomy_id 
+	where u.email_id not like '%onuii%'
+	and u.email_id not like '%test%'
+	and u.phone_number not like '%00000%'
+	and u.phone_number not like '%11111%'
+	and u.name not like '%테스트%'
+    and u.user_No not in (621888,621889,622732,615701)
+	and lvt.student_type in ('PAYED','PAYED_B')
+	and lvt.tutoring_state = 'REGISTER'
+	and lvt.application_datetime is null
+),
+p as (
+select p.lecture_vt_no, p.student_user_No, p.student_name, p.subject, p.state, p.payment_regdate, tutoring_state 
+	from 
+		(select row_number() over(partition by p.lecture_vt_no order by p.payment_regdate asc) as rn 
+			,p.payment_regdate, p.state, lvt.*
+			from mysql.onuei.payment p
+			inner join lvt on (p.lecture_vt_no = lvt.lecture_vt_no and cast(date_format(p.payment_regdate,'%Y-%m-%d') as timestamp) >= cast(date_format(lvt.crda,'%Y-%m-%d') as timestamp))
+		) p
+	where p.rn = 1
+	and p.state = '결제완료'
+	and date_diff('day', p.payment_regdate, now()) >= 3
+),
+teacher as (
+select ltvt.teacher_user_no, ltvt.lecture_vt_no, u.phone_number as teacher_phone_number
+	from mysql.onuei.lecture_teacher_vt ltvt
+	inner join mysql.onuei."user" u on ltvt.teacher_user_no = u.user_no 
+	where ltvt.teacher_vt_status = 'ASSIGN'
+)
+select p.lecture_vt_No, p.student_name, p.student_user_No, p.subject, teacher_user_No, teacher_phone_number, tutoring_state
+	from p
+	left join teacher on p.lecture_vt_no = teacher.lecture_vt_no 
     '''
     trino_hook = TrinoHook(trino_conn_id='trino_conn')
     trino_engine = trino_hook.get_sqlalchemy_engine()
@@ -108,26 +143,26 @@ def upload_daily_data():
             dataframe=filtered_df.values.tolist()
         )
 
-def get_empty_f_column_lecture_vt_nos():
-    """F열이 비어있는 행들의 lecture_vt_No를 가져오는 함수"""
+def get_empty_i_column_lecture_vt_nos():
+    """I열이 비어있는 행들의 lecture_vt_No를 가져오는 함수"""
     sheet = google_conn(sheet_name='과외신청서 미작성 CS 확인용의 사본')
     
     # B열과 F열 데이터 가져오기 (충분한 범위로 설정)
-    data_range = "B2:F"  # 적절한 범위로 조정
+    data_range = "B2:I"  # 적절한 범위로 조정
     data_values = sheet.get(data_range)
     
-    empty_f_lecture_vt_nos = []
+    empty_i_lecture_vt_nos = []
     
     for i, row in enumerate(data_values, start=2):
         if len(row) >= 1 and row[0]:  # B열에 값이 있는지 확인
             lecture_vt_no = str(row[0]).strip()
-            f_column_value = row[4] if len(row) > 4 and row[4] else None  # F열 값
+            i_column_value = row[4] if len(row) > 4 and row[4] else None  # F열 값
             
             # B열에 값이 있고 F열이 비어있는 경우
-            if lecture_vt_no and not f_column_value:
-                empty_f_lecture_vt_nos.append(lecture_vt_no)
+            if lecture_vt_no and not i_column_value:
+                empty_i_lecture_vt_nos.append(lecture_vt_no)
     
-    return empty_f_lecture_vt_nos
+    return empty_i_lecture_vt_nos
 
 
 def run_application_datetime_query(lecture_vt_no_list):
@@ -152,16 +187,16 @@ def run_application_datetime_query(lecture_vt_no_list):
     return df
 
 
-def update_f_column_with_application_datetime():
-    """F열에 application_datetime 값을 업데이트하는 함수"""
+def update_i_column_with_application_datetime():
+    """I열에 application_datetime 값을 업데이트하는 함수"""
     sheet = google_conn(sheet_name='과외신청서 미작성 CS 확인용의 사본')
     
-    # 1. F열이 비어있는 행들의 lecture_vt_No 가져오기
-    empty_f_lecture_vt_nos = get_empty_f_column_lecture_vt_nos()
-    print(f'### F열이 비어있는 lecture_vt_No 개수 ### : {len(empty_f_lecture_vt_nos)}')
+    # 1. I열이 비어있는 행들의 lecture_vt_No 가져오기
+    empty_f_lecture_vt_nos = get_empty_i_column_lecture_vt_nos()
+    print(f'### I열이 비어있는 lecture_vt_No 개수 ### : {len(empty_f_lecture_vt_nos)}')
     
     if not empty_f_lecture_vt_nos:
-        print('### F열이 비어있는 행이 없습니다 ###')
+        print('### I열이 비어있는 행이 없습니다 ###')
         return
     
     # 2. application_datetime 조회
@@ -177,7 +212,7 @@ def update_f_column_with_application_datetime():
                            datetime_df['application_datetime']))
     
     # 4. 시트의 모든 데이터 가져오기 (B열과 F열)
-    data_range = "B2:F1000"
+    data_range = "B2:I"
     data_values = sheet.get(data_range)
     
     # 5. 업데이트할 셀들 찾기 및 업데이트
@@ -190,7 +225,7 @@ def update_f_column_with_application_datetime():
             
             # F열이 비어있고 딕셔너리에 해당 lecture_vt_No가 있는 경우
             if not f_column_value and lecture_vt_no in datetime_dict:
-                cell_range = f"F{i}"
+                cell_range = f"I{i}"
                 cell_value = datetime_dict[lecture_vt_no]
                 sheet.update(cell_range, [[cell_value]])
                 update_count += 1
@@ -211,7 +246,7 @@ default_args = {
 }
 
 with DAG(
-    dag_id='CS_google_sheet_update_dag',
+    dag_id='CS_google_sheet_update_dag_test',
     default_args=default_args,
     schedule_interval='0 10 * * *',  # 매일 오전 10시
     catchup=False,
@@ -227,7 +262,7 @@ with DAG(
 
     upload_daily_application_datetime = PythonOperator(
         task_id='upload_daily_application_datetime',
-        python_callable=update_f_column_with_application_datetime,
+        python_callable=update_i_column_with_application_datetime,
         retries=5,
         retry_delay=timedelta(seconds=2),
     )
