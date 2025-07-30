@@ -79,7 +79,7 @@ select * from meta_data
 voice_data_query = f'''
 with voice as (
 select trim(da.room_id) as room_id, da.student_tokens, da.student_lq, da.teacher_tokens 
-	from ai_analysis_mongodb.analysis_db."data" da
+	from ai_analysis_mongodb.ai_analysis_db."data" da
 ),
 lvc as (
 select lvc.lecture_cycle_no, lvc.lecture_vt_no, trim(lvc.page_call_room_id) as room_id, lvc.durations
