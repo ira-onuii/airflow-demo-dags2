@@ -80,7 +80,9 @@ select lvt.lecture_vt_no, u.name as student_name, lvt.student_user_no, ttn.name 
 	inner join mysql.onuei.term_taxonomy_name ttn on lvt.lecture_subject_id = ttn.term_taxonomy_id 
 	where ltvt.teacher_vt_status = 'ASSIGN'
 )
-select schedule_no, list.lecture_vt_No, student_name, student_user_No, subject, parent_phone_number, tutoring_state, schedule_state, tutoring_datetime, teacher_name, teacher_phone_number
+select schedule_no, list.lecture_vt_No, student_name, student_user_No, subject
+    , parent_phone_number, tutoring_state, schedule_state, cast(tutoring_datetime as varchar) as tutoring_datetime
+    , teacher_name, teacher_phone_number
 	from list
 	inner join meta on list.lecture_vt_No = meta.lecture_vt_No
     '''
