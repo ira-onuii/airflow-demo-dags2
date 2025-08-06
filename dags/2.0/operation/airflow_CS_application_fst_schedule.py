@@ -39,7 +39,7 @@ def google_conn(sheet_name):
 
 #빈 행 탐색
 def found_blank():
-    sheet = google_conn(sheet_name='첫 수업 미진행')
+    sheet = google_conn(sheet_name='첫 수업 미진행 팔로업')
     col_range = "B2:M"
     col_values = sheet.get(col_range)
 
@@ -55,7 +55,7 @@ def found_blank():
 
 
 def update_google_sheet_append_by_column(range_start_cell, dataframe):
-    sheet = google_conn(sheet_name='첫 수업 미진행')
+    sheet = google_conn(sheet_name='첫 수업 미진행 팔로업')
     sheet.update(range_start_cell, dataframe)
 
 
@@ -67,7 +67,7 @@ select glvt.lecture_vt_no, lvs.schedule_no, lvs.schedule_state, lvs.tutoring_dat
 	from mysql.onuei.lecture_vt_schedules lvs
 	inner join data_warehouse.raw_data.group_lvt glvt on lvs.schedule_no = glvt.min_schedule_no
 	where cast(lvs.tutoring_datetime as date) = cast(now()- interval '1' day as date)
-	and schedule_state not in ('TUTORING','DONE')
+	and schedule_state not in ('TUTORING','DONE','CANCEL')
 ),
 meta as (
 select lvt.lecture_vt_no, u.name as student_name, lvt.student_user_no, ttn.name as subject, s.parent_phone_number
@@ -109,7 +109,7 @@ def filter_duplicates(new_df, existing_rows):
 
 
 def upload_daily_data():
-    sheet = google_conn(sheet_name='첫 수업 미진행')
+    sheet = google_conn(sheet_name='첫 수업 미진행 팔로업')
 
     # 1. 쿼리 실행
     new_df = run_query()
