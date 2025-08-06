@@ -75,7 +75,7 @@ select lvt.lecture_vt_no, u.name as student_name, lvt.student_user_no, ttn.name 
 	from mysql.onuei.lecture_video_tutoring lvt
 	inner join mysql.onuei.lecture_teacher_vt ltvt on lvt.lecture_vt_no = ltvt.lecture_vt_no 
 	inner join mysql.onuei."user" u on lvt.student_user_no = u.user_no
-	inner join mysql.onuei."user" u2 on lvt.student_user_no = u2.user_no
+	inner join mysql.onuei."user" u2 on ltvt.teacher_user_no = u2.user_no
 	inner join mysql.onuei.student s on lvt.student_user_no = s.user_no 
 	inner join mysql.onuei.term_taxonomy_name ttn on lvt.lecture_subject_id = ttn.term_taxonomy_id 
 	where ltvt.teacher_vt_status = 'ASSIGN'
