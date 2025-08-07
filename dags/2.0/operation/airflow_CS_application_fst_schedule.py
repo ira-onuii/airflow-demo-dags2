@@ -67,7 +67,7 @@ select glvt.lecture_vt_no, lvs.schedule_no, lvs.schedule_state, lvs.tutoring_dat
 	from mysql.onuei.lecture_vt_schedules lvs
 	inner join data_warehouse.raw_data.group_lvt glvt on lvs.schedule_no = glvt.min_schedule_no
 	where cast(lvs.tutoring_datetime as date) = cast(now()- interval '1' day as date)
-	and schedule_state not in ('TUTORING','DONE','CANCEL')
+	and schedule_state not in ('DONE','CANCEL')
 ),
 meta as (
 select lvt.lecture_vt_no, u.name as student_name, lvt.student_user_no, ttn.name as subject, s.parent_phone_number
