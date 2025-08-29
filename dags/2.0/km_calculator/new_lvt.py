@@ -12,10 +12,10 @@ from pendulum import timezone
 
 KST = timezone("Asia/Seoul")
 
-new_column_list = ['start_date', 'lecture_vt_no', 'student_user_no','tutoring_state']
+new_column_list = ['start_date', 'lecture_vt_no', 'student_user_no','tutoring_state', 'fst_months']
 new_columns_str = ", ".join(f'"{col}"' for col in new_column_list)
 
-pause_column_list = ['end_date', 'lecture_vt_no', 'student_user_no','tutoring_state']
+pause_column_list = ['end_date', 'lecture_vt_no', 'student_user_no','tutoring_state', 'fst_months']
 pause_columns_str = ", ".join(f'"{col}"' for col in pause_column_list)
 
 def authorize_gspread():
@@ -153,7 +153,7 @@ def merge_fst_months_new():
     """
     print(query)
     result = pd.read_sql(query, con=trino_engine)
-    merge_new_result = new_df.merge(result, on='lecture_vt_no', how='inner')
+    merge_new_result = new_df.merge(result, left_on='lecture_vt_No', right_on='lecture_vt_no', how='inner')
     print(f'####new_query_result #### {merge_new_result}')
     return merge_new_result
 
@@ -203,7 +203,7 @@ def merge_fst_months_pause():
     """
     print(query)
     result = pd.read_sql(query, con=trino_engine)
-    merge_pause_result = pause_df.merge(result, on='lecture_vt_no', how='inner')
+    merge_pause_result = pause_df.merge(result, left_on='lecture_vt_No', right_on='lecture_vt_no', how='inner')
 
     print(f'####pause_query_result #### {merge_pause_result}')
     return merge_pause_result
@@ -217,7 +217,7 @@ def load_new_result():
     pg_hook = PostgresHook(postgres_conn_id='postgres_conn_2.0')  
     pg_engine = pg_hook.get_sqlalchemy_engine()
     fin_new_result = merge_fst_months_new()
-
+    fin_new_result = fin_new_result.reindex(column = new_columns_str)
     fin_new_result = fin_new_result.to_sql(
         name='new_lecture',
         con=pg_engine,
@@ -235,7 +235,7 @@ def load_pause_result():
     pg_hook = PostgresHook(postgres_conn_id='postgres_conn_2.0')  
     pg_engine = pg_hook.get_sqlalchemy_engine()
     fin_pause_result = merge_fst_months_pause()
-
+    fin_pause_result = fin_pause_result.reindex(column = pause_columns_str)
     fin_pause_result = fin_pause_result.to_sql(
         name='pause_lecture',
         con=pg_engine,
