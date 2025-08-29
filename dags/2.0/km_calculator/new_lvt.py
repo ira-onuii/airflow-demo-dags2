@@ -224,9 +224,31 @@ def load_new_result():
     fin_new_result = merge_fst_months_new()
     fin_new_result = fin_new_result.reindex(columns = new_column_list)
     fin_new_result = fin_new_result.rename(columns={"추가 일자": "start_date"})
-    fin_new_result["start_date"] = pd.to_datetime(
-        fin_new_result["start_date"], errors="coerce"
-    ).dt.date
+    
+    # 2) 문자열 정규화: 공백 제거, 점/슬래시 → 하이픈
+    s = (
+        fin_new_result["start_date"]
+        .astype(str)
+        .str.strip()
+        .str.replace(r"\s+", "", regex=True)    # 모든 공백 제거: '2025. 08. 28' → '2025.08.28'
+        .str.replace(r"[./]", "-", regex=True)  # '.' '/' → '-'
+    )
+
+    # 3) 포맷 고정 변환: YYYY-MM-DD 로 파싱 실패 시만 보조 시도
+    dt = pd.to_datetime(s, format="%Y-%m-%d", errors="coerce")
+    # (필요하면 보조 포맷 추가 시도)
+    mask = dt.isna()
+    if mask.any():
+        # 예: YYYYMMDD 형태가 섞여 있을 수도 있음
+        dt2 = pd.to_datetime(s[mask], format="%Y%m%d", errors="coerce")
+        dt.loc[mask] = dt2
+
+    # 4) date만 남기기
+    fin_new_result["start_date"] = dt.dt.date
+
+    # 5) 저장 전 sanity check (로그에 찍기)
+    null_cnt = fin_new_result["start_date"].isna().sum()
+    print(f"[save] start_date nulls={null_cnt}, sample={fin_new_result['start_date'].head(3).tolist()}")
 
     fin_new_result = fin_new_result.to_sql(
         name='new_lecture',
@@ -246,10 +268,33 @@ def load_pause_result():
     pg_engine = pg_hook.get_sqlalchemy_engine()
     fin_pause_result = merge_fst_months_pause()
     fin_pause_result = fin_pause_result.reindex(columns = pause_column_list)
-    fin_new_result = fin_new_result.rename(columns={"추가 일자": "end_date"})
-    fin_new_result["end_date"] = pd.to_datetime(
-        fin_new_result["end_date"], errors="coerce"
-    ).dt.date
+    fin_pause_result = fin_pause_result.rename(columns={"추가 일자": "end_date"})
+
+    # 2) 문자열 정규화: 공백 제거, 점/슬래시 → 하이픈
+    s = (
+        fin_pause_result["end_date"]
+        .astype(str)
+        .str.strip()
+        .str.replace(r"\s+", "", regex=True)    # 모든 공백 제거: '2025. 08. 28' → '2025.08.28'
+        .str.replace(r"[./]", "-", regex=True)  # '.' '/' → '-'
+    )
+
+    # 3) 포맷 고정 변환: YYYY-MM-DD 로 파싱 실패 시만 보조 시도
+    dt = pd.to_datetime(s, format="%Y-%m-%d", errors="coerce")
+    # (필요하면 보조 포맷 추가 시도)
+    mask = dt.isna()
+    if mask.any():
+        # 예: YYYYMMDD 형태가 섞여 있을 수도 있음
+        dt2 = pd.to_datetime(s[mask], format="%Y%m%d", errors="coerce")
+        dt.loc[mask] = dt2
+
+    # 4) date만 남기기
+    fin_pause_result["end_date"] = dt.dt.date
+
+    # 5) 저장 전 sanity check (로그에 찍기)
+    null_cnt = fin_pause_result["end_date"].isna().sum()
+    print(f"[save] end_date nulls={null_cnt}, sample={fin_pause_result['end_date'].head(3).tolist()}")
+    
 
     fin_pause_result = fin_pause_result.to_sql(
         name='pause_lecture',
