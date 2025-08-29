@@ -61,7 +61,7 @@ def filter_today_new_list():
 
     # ids 추출: 시트가 문자열일 수 있으니 형 변환/결측 제거
     ids = (
-        df_today['lecture_vt_no']
+        df_today['lecture_vt_No']
         .dropna()
         .map(lambda x: str(x).strip())
         .tolist()
@@ -100,7 +100,7 @@ def filter_today_pause_list():
 
     # ids 추출: 시트가 문자열일 수 있으니 형 변환/결측 제거
     ids = (
-        df_today['lecture_vt_no']
+        df_today['lecture_vt_No']
         .dropna()
         .map(lambda x: str(x).strip())
         .tolist()
