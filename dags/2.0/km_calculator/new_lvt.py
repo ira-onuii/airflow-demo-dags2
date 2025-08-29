@@ -223,6 +223,11 @@ def load_new_result():
     pg_engine = pg_hook.get_sqlalchemy_engine()
     fin_new_result = merge_fst_months_new()
     fin_new_result = fin_new_result.reindex(columns = new_columns_str)
+    fin_new_result = fin_new_result.rename(columns={"추가 일자": "start_date"})
+    fin_new_result["start_date"] = pd.to_datetime(
+        fin_new_result["start_date"], errors="coerce"
+    ).dt.date
+
     fin_new_result = fin_new_result.to_sql(
         name='new_lecture',
         con=pg_engine,
@@ -241,6 +246,11 @@ def load_pause_result():
     pg_engine = pg_hook.get_sqlalchemy_engine()
     fin_pause_result = merge_fst_months_pause()
     fin_pause_result = fin_pause_result.reindex(columns = pause_columns_str)
+    fin_new_result = fin_new_result.rename(columns={"추가 일자": "end_date"})
+    fin_new_result["end_date"] = pd.to_datetime(
+        fin_new_result["end_date"], errors="coerce"
+    ).dt.date
+
     fin_pause_result = fin_pause_result.to_sql(
         name='pause_lecture',
         con=pg_engine,
