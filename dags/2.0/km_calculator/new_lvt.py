@@ -140,7 +140,7 @@ def merge_fst_months_new():
             SELECT 
                 lecture_vt_no, MAX(glvt.min_payment_no) AS min_payment_no
             FROM data_warehouse.raw_data.group_lvt glvt
-            WHERE glvt.lecture_vt_no IN ({in_list})
+            WHERE cast(glvt.lecture_vt_no as varchar) IN ({in_list})
             GROUP BY lecture_vt_no
         ),
         fst_months AS (
@@ -190,7 +190,7 @@ def merge_fst_months_pause():
             SELECT 
                 lecture_vt_no, MAX(glvt.min_payment_no) AS min_payment_no
             FROM data_warehouse.raw_data.group_lvt glvt
-            WHERE glvt.lecture_vt_no IN ({in_list})
+            WHERE cast(lecture_vt_no as varchar) IN ({in_list})
             GROUP BY lecture_vt_no
         ),
         fst_months AS (
