@@ -59,8 +59,8 @@ def filter_today_pause_list():
 
 
 def merge_fst_months_new():
-    from airflow.providers.postgres.hooks.postgres import PostgresHook
     from airflow.providers.trino.hooks.trino import TrinoHook
+    from sqlalchemy import text
 
     # trino 연결
     trino_hook = TrinoHook(trino_conn_id='trino_conn')   
@@ -68,25 +68,30 @@ def merge_fst_months_new():
     # SQLAlchemy Engine 생성
     trino_engine = trino_hook.get_sqlalchemy_engine()
     
-    list = filter_today_new_list()[1]
+    ids = filter_today_new_list()[1]              # <- list 말고 ids로
     new_df = filter_today_new_list()[0]
-    query = f'''
-        with glvt as (
-        select 
-            lecture_vt_no, max(glvt.min_payment_no) as min_payment_no 
-            from data_warehouse.raw_data.group_lvt glvt
-            where glvt.lecture_vt_no in ({list})
-            group by lecture_vt_No
-        ),
-        fst_months as (
-        select glvt.lecture_vt_no, th.months as fst_months
-            from glvt
-            inner join mysql.onuei.payment p on glvt.min_payment_no = p.payment_no 
-            inner join mysql.onuei.tteok_ham th on p.tteok_ham_no = th.tteok_ham_no 
-        )
-        select *
-            from fst_months
-    '''
+    if not ids:
+        # 빈 목록이면 쿼리를 생략하거나, 빈 DF로 처리
+        fst_months_df = pd.DataFrame(columns=["lecture_vt_no", "fst_months"])
+    else:
+        # placeholder를 개수만큼 생성해서 안전하게 바인딩
+        placeholders = ", ".join([":id{}".format(i) for i in range(len(ids))])
+        query = text(f"""
+            WITH glvt AS (
+                SELECT 
+                    lecture_vt_no, MAX(glvt.min_payment_no) AS min_payment_no
+                FROM data_warehouse.raw_data.group_lvt glvt
+                WHERE glvt.lecture_vt_no IN ({placeholders})
+                GROUP BY lecture_vt_no
+            ),
+            fst_months AS (
+                SELECT glvt.lecture_vt_no, th.months AS fst_months
+                FROM glvt
+                INNER JOIN mysql.onuei.payment p ON glvt.min_payment_no = p.payment_no 
+                INNER JOIN mysql.onuei.tteok_ham th ON p.tteok_ham_no = th.tteok_ham_no 
+            )
+            SELECT * FROM fst_months
+        """)
     result = pd.read_sql(query, trino_engine) 
     merge_new_result = new_df.merge(result, on='lecture_vt_no', how='inner')
     return merge_new_result
@@ -94,6 +99,7 @@ def merge_fst_months_new():
 
 def merge_fst_months_pause():
     from airflow.providers.trino.hooks.trino import TrinoHook
+    from sqlalchemy import text
 
     # trino 연결
     trino_hook = TrinoHook(trino_conn_id='trino_conn')   
@@ -101,27 +107,29 @@ def merge_fst_months_pause():
     # SQLAlchemy Engine 생성
     trino_engine = trino_hook.get_sqlalchemy_engine()
     
-    list = filter_today_pause_list()[1]
-    new_df = filter_today_pause_list()[0]
-    query = f'''
-        with glvt as (
-        select 
-            lecture_vt_no, max(glvt.min_payment_no) as min_payment_no 
-            from data_warehouse.raw_data.group_lvt glvt
-            where glvt.lecture_vt_no in ({list})
-            group by lecture_vt_No
+    ids = filter_today_pause_list()[1]
+    pause_df = filter_today_pause_list()[0]
+
+    # placeholder를 개수만큼 생성해서 안전하게 바인딩
+    placeholders = ", ".join([":id{}".format(i) for i in range(len(ids))])
+    query = text(f"""
+        WITH glvt AS (
+            SELECT 
+                lecture_vt_no, MAX(glvt.min_payment_no) AS min_payment_no
+            FROM data_warehouse.raw_data.group_lvt glvt
+            WHERE glvt.lecture_vt_no IN ({placeholders})
+            GROUP BY lecture_vt_no
         ),
-        fst_months as (
-        select glvt.lecture_vt_no, th.months as fst_months
-            from glvt
-            inner join mysql.onuei.payment p on glvt.min_payment_no = p.payment_no 
-            inner join mysql.onuei.tteok_ham th on p.tteok_ham_no = th.tteok_ham_no 
+        fst_months AS (
+            SELECT glvt.lecture_vt_no, th.months AS fst_months
+            FROM glvt
+            INNER JOIN mysql.onuei.payment p ON glvt.min_payment_no = p.payment_no 
+            INNER JOIN mysql.onuei.tteok_ham th ON p.tteok_ham_no = th.tteok_ham_no 
         )
-        select *
-            from fst_months
-    '''
+        SELECT * FROM fst_months
+    """)
     result = pd.read_sql(query, trino_engine) 
-    merge_pause_result = new_df.merge(result, on='lecture_vt_no', how='inner')
+    merge_pause_result = pause_df.merge(result, on='lecture_vt_no', how='inner')
     return merge_pause_result
 
 
