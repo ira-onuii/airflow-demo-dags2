@@ -34,28 +34,80 @@ def open_worksheet(sheet_name: str):
 
 
 def filter_today_new_list():
-    today = (datetime.now() - timedelta(days=1)).strftime("%Y. %m. %d")
+    import pandas as pd
+    from datetime import datetime, timedelta
+
+    # 날짜 비교는 문자열 포맷 대신 datetime으로 안전하게 처리
+    # 어제 걸 뽑는 게 의도면 -1day 유지, "오늘"이면 timedelta 제거
+    target_date = (datetime.now() - timedelta(days=1)).date()
+
     sheet = open_worksheet('신규 수업 명단')
     col_range = "B1:E"
     col_values = sheet.get(col_range)
+
     df = pd.DataFrame(col_values[1:], columns=col_values[0])
-    df_today = df[df["추가 일자"] == today]
-    df_today = pd.DataFrame(columns=new_column_list) 
-    list = df_today['lecture_vt_no']
-    return df_today,list
+
+    # 공백 제거
+    df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+
+    # '추가 일자'를 datetime으로 파싱 (시트 값이 '2025. 08. 28'이든 '2025-08-28'이든 대응)
+    df['추가 일자'] = pd.to_datetime(df['추가 일자'], errors='coerce').dt.date
+
+    # 날짜 필터
+    df_today = df[df['추가 일자'] == target_date].copy()
+
+    # 필요한 컬럼만 선택 (기존에 쓰던 pause_column_list 활용)
+    # df_today = df_today[pause_column_list]  # ← 이 줄만 쓰세요. 새 DF로 초기화 금지!
+
+    # ids 추출: 시트가 문자열일 수 있으니 형 변환/결측 제거
+    ids = (
+        df_today['lecture_vt_no']
+        .dropna()
+        .map(lambda x: str(x).strip())
+        .tolist()
+    )
+
+    return df_today, ids
+
 
 
 
 def filter_today_pause_list():
-    today = (datetime.now() - timedelta(days=1)).strftime("%Y. %m. %d")
+    import pandas as pd
+    from datetime import datetime, timedelta
+
+    # 날짜 비교는 문자열 포맷 대신 datetime으로 안전하게 처리
+    # 어제 걸 뽑는 게 의도면 -1day 유지, "오늘"이면 timedelta 제거
+    target_date = (datetime.now() - timedelta(days=1)).date()
+
     sheet = open_worksheet('중단 수업 명단')
     col_range = "B1:E"
     col_values = sheet.get(col_range)
+
     df = pd.DataFrame(col_values[1:], columns=col_values[0])
-    df_today = df[df["추가 일자"] == today]
-    df_today = pd.DataFrame(columns=pause_column_list) 
-    list = df_today['lecture_vt_no']
-    return df_today,list
+
+    # 공백 제거
+    df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+
+    # '추가 일자'를 datetime으로 파싱 (시트 값이 '2025. 08. 28'이든 '2025-08-28'이든 대응)
+    df['추가 일자'] = pd.to_datetime(df['추가 일자'], errors='coerce').dt.date
+
+    # 날짜 필터
+    df_today = df[df['추가 일자'] == target_date].copy()
+
+    # 필요한 컬럼만 선택 (기존에 쓰던 pause_column_list 활용)
+    # df_today = df_today[pause_column_list]  # ← 이 줄만 쓰세요. 새 DF로 초기화 금지!
+
+    # ids 추출: 시트가 문자열일 수 있으니 형 변환/결측 제거
+    ids = (
+        df_today['lecture_vt_no']
+        .dropna()
+        .map(lambda x: str(x).strip())
+        .tolist()
+    )
+
+    return df_today, ids
+
 
 
 def merge_fst_months_new():
@@ -170,7 +222,7 @@ def load_new_result():
         name='new_lecture',
         con=pg_engine,
         schema='kpis',
-        if_exists='append',
+        if_exists='replace',
         index=False
     )
     print(f'####new_query_result #### {fin_new_result}')
@@ -188,7 +240,7 @@ def load_pause_result():
         name='pause_lecture',
         con=pg_engine,
         schema='kpis',
-        if_exists='append',
+        if_exists='replace',
         index=False
     )
     print(f'####new_query_result #### {fin_pause_result}')
