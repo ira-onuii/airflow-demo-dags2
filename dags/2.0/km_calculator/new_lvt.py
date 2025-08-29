@@ -1,3 +1,5 @@
+
+
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime, timedelta, date
@@ -21,7 +23,7 @@ def authorize_gspread():
         "https://www.googleapis.com/auth/spreadsheets.readonly",
         "https://www.googleapis.com/auth/drive.readonly",
     ]
-    creds = ServiceAccountCredentials.from_json_keyfile_name('/Users/chad_mac/Documents/project/aws_key/pj_appscript.json', scope) #/opt/airflow/gcp/pj_appscript.json
+    creds = ServiceAccountCredentials.from_json_keyfile_name('/opt/airflow/gcp/pj_appscript.json', scope) #/opt/airflow/gcp/pj_appscript.json
     client = gspread.authorize(creds)
     return client
 
