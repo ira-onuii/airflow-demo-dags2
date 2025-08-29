@@ -164,8 +164,9 @@ def load_new_result():
     # postgresql 연결
     pg_hook = PostgresHook(postgres_conn_id='postgres_conn_2.0')  
     pg_engine = pg_hook.get_sqlalchemy_engine()
+    fin_new_result = merge_fst_months_new()
 
-    fin_new_result = merge_fst_months_new().to_sql(
+    fin_new_result = fin_new_result.to_sql(
         name='new_lecture',
         con=pg_engine,
         schema='kpis',
@@ -181,8 +182,9 @@ def load_pause_result():
     # postgresql 연결
     pg_hook = PostgresHook(postgres_conn_id='postgres_conn_2.0')  
     pg_engine = pg_hook.get_sqlalchemy_engine()
+    fin_pause_result = merge_fst_months_pause()
 
-    fin_pause_result = merge_fst_months_pause().to_sql(
+    fin_pause_result = fin_pause_result.to_sql(
         name='pause_lecture',
         con=pg_engine,
         schema='kpis',
