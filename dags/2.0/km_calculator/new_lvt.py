@@ -133,7 +133,7 @@ def merge_fst_months_new():
 
     # 혹시라도 빈 경우 안전 처리 (inner join이면 빈 DF 반환)
     if not in_list:
-        return new_df.iloc[0:0].assign(lecture_vt_no=pd.Series(dtype=new_df.get("lecture_vt_no", pd.Series(dtype="object")).dtype))
+        return new_df.iloc[0:0].assign(lecture_vt_no=pd.Series(dtype=new_df.get("lecture_vt_No", pd.Series(dtype="object")).dtype))
 
     query = f"""
         WITH glvt AS (
@@ -153,7 +153,7 @@ def merge_fst_months_new():
     """
     print(query)
     result = pd.read_sql(query, con=trino_engine)
-    merge_new_result = new_df.merge(result, on='lecture_vt_no', how='inner')
+    merge_new_result = new_df.merge(result, on='lecture_vt_No', how='inner')
     print(f'####new_query_result #### {merge_new_result}')
     return merge_new_result
 
@@ -183,7 +183,7 @@ def merge_fst_months_pause():
 
     # 혹시라도 빈 경우 안전 처리 (inner join이면 빈 DF 반환)
     if not in_list:
-        return pause_df.iloc[0:0].assign(lecture_vt_no=pd.Series(dtype=pause_df.get("lecture_vt_no", pd.Series(dtype="object")).dtype))
+        return pause_df.iloc[0:0].assign(lecture_vt_no=pd.Series(dtype=pause_df.get("lecture_vt_No", pd.Series(dtype="object")).dtype))
 
     query = f"""
         WITH glvt AS (
@@ -203,7 +203,7 @@ def merge_fst_months_pause():
     """
     print(query)
     result = pd.read_sql(query, con=trino_engine)
-    merge_pause_result = pause_df.merge(result, on='lecture_vt_no', how='inner')
+    merge_pause_result = pause_df.merge(result, on='lecture_vt_No', how='inner')
 
     print(f'####pause_query_result #### {merge_pause_result}')
     return merge_pause_result
