@@ -99,7 +99,7 @@ def merge_fst_months_new():
         )
         SELECT * FROM fst_months
     """
-
+    print(query)
     result = pd.read_sql(query, con=trino_engine)
     merge_new_result = new_df.merge(result, on='lecture_vt_no', how='inner')
     print(f'####new_query_result #### {merge_new_result}')
@@ -149,7 +149,7 @@ def merge_fst_months_pause():
         )
         SELECT * FROM fst_months
     """
-
+    print(query)
     result = pd.read_sql(query, con=trino_engine)
     merge_pause_result = pause_df.merge(result, on='lecture_vt_no', how='inner')
 
@@ -172,7 +172,7 @@ def load_new_result():
         if_exists='append',
         index=False
     )
-    print(f'####pause_query_result #### {fin_new_result}')
+    print(f'####new_query_result #### {fin_new_result}')
     return fin_new_result
 
 
@@ -189,7 +189,7 @@ def load_pause_result():
         if_exists='append',
         index=False
     )
-    print(f'####pause_query_result #### {fin_pause_result}')
+    print(f'####new_query_result #### {fin_pause_result}')
     return fin_pause_result
 
 
