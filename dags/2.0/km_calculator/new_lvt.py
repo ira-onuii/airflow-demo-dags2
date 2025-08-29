@@ -61,26 +61,34 @@ def filter_today_pause_list():
 def merge_fst_months_new():
     import pandas as pd
     from airflow.providers.trino.hooks.trino import TrinoHook
-    from sqlalchemy import text
 
-    trino_hook = TrinoHook(trino_conn_id='trino_conn')
-    trino_engine = trino_hook.get_sqlalchemy_engine()
-    
-    new_df, ids = filter_today_new_list()   # 함수 두 번 호출하지 않도록
-    # ids가 Series면 list로
-    try:
+    # Trino 연결
+    trino_engine = TrinoHook(trino_conn_id='trino_conn').get_sqlalchemy_engine()
+
+    # 함수는 한 번만 호출해서 일관성 보장
+    new_df, ids = filter_today_new_list()
+
+    # ids를 리스트로 정규화
+    if hasattr(ids, "tolist"):
         ids = ids.tolist()
-    except AttributeError:
-        pass
 
-    # placeholder 생성
-    placeholders = ", ".join([f":id{i}" for i in range(len(ids))])
-    query = text(f"""
+    # lecture_vt_no가 문자열이라면 모두 따옴표 감싸기 (숫자라면 따옴표 빼도 OK)
+    def sql_literal(v):
+        s = str(v)
+        return "'" + s.replace("'", "''") + "'"   # 작은따옴표 이스케이프
+
+    in_list = ", ".join(sql_literal(v) for v in ids)
+
+    # 혹시라도 빈 경우 안전 처리 (inner join이면 빈 DF 반환)
+    if not in_list:
+        return new_df.iloc[0:0].assign(lecture_vt_no=pd.Series(dtype=new_df.get("lecture_vt_no", pd.Series(dtype="object")).dtype))
+
+    query = f"""
         WITH glvt AS (
             SELECT 
                 lecture_vt_no, MAX(glvt.min_payment_no) AS min_payment_no
             FROM data_warehouse.raw_data.group_lvt glvt
-            WHERE glvt.lecture_vt_no IN ({placeholders})
+            WHERE glvt.lecture_vt_no IN ({in_list})
             GROUP BY lecture_vt_no
         ),
         fst_months AS (
@@ -90,40 +98,46 @@ def merge_fst_months_new():
             INNER JOIN mysql.onuei.tteok_ham th ON p.tteok_ham_no = th.tteok_ham_no 
         )
         SELECT * FROM fst_months
-    """)
+    """
 
-    # ✅ 여기가 핵심: params 전달
-    params = {f"id{i}": v for i, v in enumerate(ids)}
-    result = pd.read_sql(query, con=trino_engine, params=params)
-
+    result = pd.read_sql(query, con=trino_engine)
     merge_new_result = new_df.merge(result, on='lecture_vt_no', how='inner')
     return merge_new_result
+
 
 
 
 def merge_fst_months_pause():
     import pandas as pd
     from airflow.providers.trino.hooks.trino import TrinoHook
-    from sqlalchemy import text
 
-    trino_hook = TrinoHook(trino_conn_id='trino_conn')
-    trino_engine = trino_hook.get_sqlalchemy_engine()
-    
-    pause_df, ids = filter_today_pause_list()   # 함수 두 번 호출하지 않도록
-    # ids가 Series면 list로
-    try:
+    # Trino 연결
+    trino_engine = TrinoHook(trino_conn_id='trino_conn').get_sqlalchemy_engine()
+
+    # 함수는 한 번만 호출해서 일관성 보장
+    pause_df, ids = filter_today_pause_list()
+
+    # ids를 리스트로 정규화
+    if hasattr(ids, "tolist"):
         ids = ids.tolist()
-    except AttributeError:
-        pass
 
-    # placeholder 생성
-    placeholders = ", ".join([f":id{i}" for i in range(len(ids))])
-    query = text(f"""
+    # lecture_vt_no가 문자열이라면 모두 따옴표 감싸기 (숫자라면 따옴표 빼도 OK)
+    def sql_literal(v):
+        s = str(v)
+        return "'" + s.replace("'", "''") + "'"   # 작은따옴표 이스케이프
+
+    in_list = ", ".join(sql_literal(v) for v in ids)
+
+    # 혹시라도 빈 경우 안전 처리 (inner join이면 빈 DF 반환)
+    if not in_list:
+        return pause_df.iloc[0:0].assign(lecture_vt_no=pd.Series(dtype=pause_df.get("lecture_vt_no", pd.Series(dtype="object")).dtype))
+
+    query = f"""
         WITH glvt AS (
             SELECT 
                 lecture_vt_no, MAX(glvt.min_payment_no) AS min_payment_no
             FROM data_warehouse.raw_data.group_lvt glvt
-            WHERE glvt.lecture_vt_no IN ({placeholders})
+            WHERE glvt.lecture_vt_no IN ({in_list})
             GROUP BY lecture_vt_no
         ),
         fst_months AS (
@@ -133,14 +147,12 @@ def merge_fst_months_pause():
             INNER JOIN mysql.onuei.tteok_ham th ON p.tteok_ham_no = th.tteok_ham_no 
         )
         SELECT * FROM fst_months
-    """)
+    """
 
-    # ✅ 여기가 핵심: params 전달
-    params = {f"id{i}": v for i, v in enumerate(ids)}
-    result = pd.read_sql(query, con=trino_engine, params=params)
-
+    result = pd.read_sql(query, con=trino_engine)
     merge_pause_result = pause_df.merge(result, on='lecture_vt_no', how='inner')
     return merge_pause_result
+
 
 
 
