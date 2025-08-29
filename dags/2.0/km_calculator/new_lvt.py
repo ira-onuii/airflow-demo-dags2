@@ -153,7 +153,7 @@ def merge_fst_months_new():
     """
     print(query)
     result = pd.read_sql(query, con=trino_engine)
-    new_df["lecture_vt_No"] = pd.to_numeric(pause_df["lecture_vt_No"], errors="coerce").astype("Int64")
+    new_df["lecture_vt_No"] = pd.to_numeric(new_df["lecture_vt_No"], errors="coerce").astype("Int64")
     result["lecture_vt_no"] = pd.to_numeric(result["lecture_vt_no"], errors="coerce").astype("Int64")
     merge_new_result = new_df.merge(result, left_on='lecture_vt_No', right_on='lecture_vt_no', how='inner')
     print(f'####new_query_result #### {merge_new_result}')
