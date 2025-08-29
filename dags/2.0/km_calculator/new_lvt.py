@@ -59,19 +59,22 @@ def filter_today_pause_list():
 
 
 def merge_fst_months_new():
+    import pandas as pd
     from airflow.providers.trino.hooks.trino import TrinoHook
     from sqlalchemy import text
 
-    # trino 연결
-    trino_hook = TrinoHook(trino_conn_id='trino_conn')   
-
-    # SQLAlchemy Engine 생성
+    trino_hook = TrinoHook(trino_conn_id='trino_conn')
     trino_engine = trino_hook.get_sqlalchemy_engine()
     
-    ids = filter_today_new_list()[1]  
-    ids = ids.tolist()
-    new_df = filter_today_new_list()[0]
-    placeholders = ", ".join([":id{}".format(i) for i in range(len(ids))])
+    new_df, ids = filter_today_new_list()   # 함수 두 번 호출하지 않도록
+    # ids가 Series면 list로
+    try:
+        ids = ids.tolist()
+    except AttributeError:
+        pass
+
+    # placeholder 생성
+    placeholders = ", ".join([f":id{i}" for i in range(len(ids))])
     query = text(f"""
         WITH glvt AS (
             SELECT 
@@ -88,27 +91,33 @@ def merge_fst_months_new():
         )
         SELECT * FROM fst_months
     """)
-    result = pd.read_sql(query, trino_engine) 
+
+    # ✅ 여기가 핵심: params 전달
+    params = {f"id{i}": v for i, v in enumerate(ids)}
+    result = pd.read_sql(query, con=trino_engine, params=params)
+
     merge_new_result = new_df.merge(result, on='lecture_vt_no', how='inner')
     return merge_new_result
 
 
+
 def merge_fst_months_pause():
+    import pandas as pd
     from airflow.providers.trino.hooks.trino import TrinoHook
     from sqlalchemy import text
 
-    # trino 연결
-    trino_hook = TrinoHook(trino_conn_id='trino_conn')   
-
-    # SQLAlchemy Engine 생성
+    trino_hook = TrinoHook(trino_conn_id='trino_conn')
     trino_engine = trino_hook.get_sqlalchemy_engine()
     
-    ids = filter_today_pause_list()[1]
-    ids = ids.tolist()
-    pause_df = filter_today_pause_list()[0]
+    pause_df, ids = filter_today_pause_list()   # 함수 두 번 호출하지 않도록
+    # ids가 Series면 list로
+    try:
+        ids = ids.tolist()
+    except AttributeError:
+        pass
 
-    # placeholder를 개수만큼 생성해서 안전하게 바인딩
-    placeholders = ", ".join([":id{}".format(i) for i in range(len(ids))])
+    # placeholder 생성
+    placeholders = ", ".join([f":id{i}" for i in range(len(ids))])
     query = text(f"""
         WITH glvt AS (
             SELECT 
@@ -125,9 +134,14 @@ def merge_fst_months_pause():
         )
         SELECT * FROM fst_months
     """)
-    result = pd.read_sql(query, trino_engine) 
+
+    # ✅ 여기가 핵심: params 전달
+    params = {f"id{i}": v for i, v in enumerate(ids)}
+    result = pd.read_sql(query, con=trino_engine, params=params)
+
     merge_pause_result = pause_df.merge(result, on='lecture_vt_no', how='inner')
     return merge_pause_result
+
 
 
 def load_new_result():
