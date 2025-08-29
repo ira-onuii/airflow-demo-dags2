@@ -102,6 +102,7 @@ def merge_fst_months_new():
 
     result = pd.read_sql(query, con=trino_engine)
     merge_new_result = new_df.merge(result, on='lecture_vt_no', how='inner')
+    print(f'####new_query_result #### {merge_new_result}')
     return merge_new_result
 
 
@@ -151,6 +152,8 @@ def merge_fst_months_pause():
 
     result = pd.read_sql(query, con=trino_engine)
     merge_pause_result = pause_df.merge(result, on='lecture_vt_no', how='inner')
+
+    print(f'####pause_query_result #### {merge_pause_result}')
     return merge_pause_result
 
 
@@ -169,7 +172,7 @@ def load_new_result():
         if_exists='append',
         index=False
     )
-
+    print(f'####pause_query_result #### {fin_new_result}')
     return fin_new_result
 
 
@@ -179,15 +182,15 @@ def load_pause_result():
     pg_hook = PostgresHook(postgres_conn_id='postgres_conn_2.0')  
     pg_engine = pg_hook.get_sqlalchemy_engine()
 
-    fin_new_result = merge_fst_months_pause().to_sql(
+    fin_pause_result = merge_fst_months_pause().to_sql(
         name='pause_lecture',
         con=pg_engine,
         schema='kpis',
         if_exists='append',
         index=False
     )
-
-    return fin_new_result
+    print(f'####pause_query_result #### {fin_pause_result}')
+    return fin_pause_result
 
 
 default_args = {
