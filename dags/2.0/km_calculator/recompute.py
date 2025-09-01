@@ -315,9 +315,10 @@ def km_weekly_full():
 
         # ----- 데이터 로드
         eng = hook.get_sqlalchemy_engine()
-        fit_start, fit_end = window["fit_start"], window["fit_end"]
-        as_of = pd.to_datetime(window["week_end"]).date()
-        horizon = int(window["horizon_weeks"])
+        fit_start = pd.to_datetime(window["fit_start"])
+        fit_end   = pd.to_datetime(window["fit_end"])
+        as_of     = pd.to_datetime(window["week_end"])  # .date() 빼기
+        horizon   = int(window["horizon_weeks"])
 
         df = pd.read_sql(
             """
