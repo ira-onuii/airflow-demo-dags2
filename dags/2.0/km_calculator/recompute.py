@@ -240,7 +240,7 @@ def km_weekly_full():
         hook = PostgresHook(postgres_conn_id=CONN_ID)
         _ensure_weekly_actuals(hook)
         sql = """
-        INSERT INTO weekly_actuals (week_start, new_actual, pause_actual, source, closed_at)
+        INSERT INTO kpis.weekly_actuals (week_start, new_actual, pause_actual, source, closed_at)
         SELECT
           p.week_start,
           COALESCE(SUM(CASE WHEN l.start_date BETWEEN p.week_start AND p.week_end THEN 1 ELSE 0 END), 0) AS new_actual,
