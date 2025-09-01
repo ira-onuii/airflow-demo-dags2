@@ -137,7 +137,7 @@ def km_weekly_full():
             n.fst_months,
             n.start_date::date AS start_date,
             n.tutoring_state
-          FROM new_lecture n, params p
+          FROM kpis.new_lecture n, params p
           WHERE n.start_date::date BETWEEN p.week_start AND p.week_end
         ),
         state AS (
@@ -145,7 +145,7 @@ def km_weekly_full():
             l.lecture_vt_no,
             MAX(l.episode_no) AS max_ep,
             BOOL_OR(l.end_date IS NULL) AS has_open
-          FROM lvt_log l
+          FROM kpis.lvt_log l
           GROUP BY l.lecture_vt_no
         ),
         cand AS (
@@ -160,7 +160,7 @@ def km_weekly_full():
           FROM new_src n
           LEFT JOIN state s ON s.lecture_vt_no = n.lecture_vt_no
         )
-        INSERT INTO lvt_log (
+        INSERT INTO kpis.lvt_log (
           lecture_vt_no, episode_no, student_user_no, fst_months,
           start_date, end_date, tutoring_state, created_at, updated_at
         )
@@ -177,7 +177,7 @@ def km_weekly_full():
         WHERE c.has_open = FALSE
           AND NOT EXISTS (
             SELECT 1
-            FROM lvt_log x
+            FROM kpis.lvt_log x
             WHERE x.lecture_vt_no = c.lecture_vt_no
               AND x.episode_no    = c.next_ep
               AND x.start_date    = c.start_date
@@ -187,7 +187,7 @@ def km_weekly_full():
         # 통계
         cnt_sql = """
         WITH p AS (SELECT %(week_start)s::date AS ws, %(week_end)s::date AS we)
-        SELECT COUNT(*) FROM lvt_log, p WHERE start_date BETWEEN p.ws AND p.we;
+        SELECT COUNT(*) FROM kpis.lvt_log, p WHERE start_date BETWEEN p.ws AND p.we;
         """
         cnt = hook.get_first(cnt_sql, parameters=window)[0]
         return {"inserted_new": int(cnt)}
@@ -210,7 +210,7 @@ def km_weekly_full():
             p.lecture_vt_no,
             p.end_date::date AS pause_date,
             p.tutoring_state
-          FROM pause_lecture p, params par
+          FROM kpis.pause_lecture p, params par
           WHERE p.end_date::date BETWEEN par.week_start AND par.week_end
         )
         UPDATE lvt_log l
@@ -226,7 +226,7 @@ def km_weekly_full():
         # 통계
         cnt_sql = """
         WITH p AS (SELECT %(week_start)s::date AS ws, %(week_end)s::date AS we)
-        SELECT COUNT(*) FROM lvt_log, p WHERE end_date BETWEEN p.ws AND p.we;
+        SELECT COUNT(*) FROM kpis.lvt_log, p WHERE end_date BETWEEN p.ws AND p.we;
         """
         cnt = hook.get_first(cnt_sql, parameters=window)[0]
         return {"updated_pause": int(cnt)}
@@ -248,7 +248,7 @@ def km_weekly_full():
           'lvt_log' AS source,
           NOW()
         FROM (SELECT %(week_start)s::date AS week_start, %(week_end)s::date AS week_end) p
-        LEFT JOIN lvt_log l ON TRUE
+        LEFT JOIN kpis.lvt_log l ON TRUE
         GROUP BY p.week_start
         ON CONFLICT (week_start) DO UPDATE
           SET new_actual = EXCLUDED.new_actual,
@@ -280,7 +280,7 @@ def km_weekly_full():
         df = pd.read_sql(
             """
             SELECT lecture_vt_no, student_user_no, fst_months, start_date, end_date
-            FROM lvt_log
+            FROM kpis.lvt_log
             WHERE start_date BETWEEN %(s)s AND %(e)s
               AND fst_months IN (1,3,6,12)
             """,
@@ -375,7 +375,7 @@ def km_weekly_full():
         with hook.get_conn() as conn, conn.cursor() as cur:
             cur.execute(
                 """
-                DELETE FROM km_models
+                DELETE FROM kpis.km_models
                 WHERE fit_window_start=%s AND fit_window_end=%s AND time_unit='week'
                 """,
                 (fit_start, fit_end)
@@ -389,7 +389,7 @@ def km_weekly_full():
         with hook.get_conn() as conn, conn.cursor() as cur:
             cur.execute(
                 """
-                INSERT INTO model_versions
+                INSERT INTO kpis.model_versions
                   (fit_window_start, fit_window_end, time_unit, horizon_weeks, status, created_by, notes)
                 VALUES
                   (%s, %s, 'week', %s, 'active', %s, %s)
