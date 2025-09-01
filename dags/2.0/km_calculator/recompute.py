@@ -76,37 +76,36 @@ def _ensure_weekly_actuals(hook: PostgresHook):
 
 
 def _ensure_km_tables(hook: PostgresHook):
-    sqls = [
-        # km_models
-        """
-        CREATE TABLE IF NOT EXISTS kpis.km_models (
-          fit_window_start date,
-          fit_window_end date,
-          time_unit varchar(16),
-          cohort_months integer,
-          time_k integer,
-          s double precision,
-          q double precision,
-          h double precision
-        );
-        """,
-        # model_versions
-        """
-        CREATE TABLE IF NOT EXISTS kpis.model_versions (
-          fit_window_start date,
-          fit_window_end date,
-          time_unit varchar(16),
-          horizon_weeks integer,
-          status varchar(16),
-          created_at timestamptz DEFAULT now(),
-          created_by varchar(64),
-          notes text,
-          PRIMARY KEY (fit_window_start, fit_window_end, time_unit)
-        );
-        """
-    ]
-    for s in sqls:
-        hook.run(s)
+    # km_models (kpis 스키마 강제)
+    hook.run("""
+    CREATE TABLE IF NOT EXISTS kpis.km_models (
+      fit_window_start date,
+      fit_window_end   date,
+      time_unit        varchar(16),
+      cohort_months    integer,
+      time_k           integer
+    );
+    """)
+    # 누락 컬럼 보강
+    hook.run("ALTER TABLE kpis.km_models ADD COLUMN IF NOT EXISTS s double precision;")
+    hook.run("ALTER TABLE kpis.km_models ADD COLUMN IF NOT EXISTS q double precision;")
+    hook.run("ALTER TABLE kpis.km_models ADD COLUMN IF NOT EXISTS h double precision;")
+
+    # model_versions도 kpis로
+    hook.run("""
+    CREATE TABLE IF NOT EXISTS kpis.model_versions (
+      fit_window_start date,
+      fit_window_end   date,
+      time_unit        varchar(16),
+      horizon_weeks    integer,
+      status           varchar(16),
+      created_at       timestamptz DEFAULT now(),
+      created_by       varchar(64),
+      notes            text,
+      PRIMARY KEY (fit_window_start, fit_window_end, time_unit)
+    );
+    """)
+
 
 def _monday(d: pd.Timestamp) -> pd.Timestamp:
     return d - pd.Timedelta(days=d.weekday())
@@ -414,7 +413,7 @@ def km_weekly_full():
 
         df_km_out = pd.DataFrame(rows).sort_values(["cohort_months", "time_k"])
 
-        # ----- 저장 (idempotent: 같은 창/단위 삭제 후 삽입)
+        # ----- 저장 (항상 kpis.km_models 사용)
         with hook.get_conn() as conn, conn.cursor() as cur:
             cur.execute(
                 """
@@ -425,28 +424,38 @@ def km_weekly_full():
             )
             conn.commit()
 
-        # to_sql
-        df_km_out.to_sql("km_models", hook.get_sqlalchemy_engine(),
-                         if_exists="append", index=False)
+        # Pandas → SQL: 스키마 지정 + 컬럼 dtype 정리(날짜는 date로 다운캐스트 권장)
+        df_km_out = df_km_out.copy()
+        df_km_out["fit_window_start"] = pd.to_datetime(df_km_out["fit_window_start"]).dt.date
+        df_km_out["fit_window_end"]   = pd.to_datetime(df_km_out["fit_window_end"]).dt.date
+
+        df_km_out.to_sql(
+            "km_models",
+            hook.get_sqlalchemy_engine(),
+            schema="kpis",              # ✅ 중요
+            if_exists="append",
+            index=False,
+        )
 
         with hook.get_conn() as conn, conn.cursor() as cur:
             cur.execute(
                 """
                 INSERT INTO kpis.model_versions
-                  (fit_window_start, fit_window_end, time_unit, horizon_weeks, status, created_by, notes)
+                (fit_window_start, fit_window_end, time_unit, horizon_weeks, status, created_by, notes)
                 VALUES
-                  (%s, %s, 'week', %s, 'active', %s, %s)
+                (%s, %s, 'week', %s, 'active', %s, %s)
                 ON CONFLICT (fit_window_start, fit_window_end, time_unit)
                 DO UPDATE SET
-                  horizon_weeks = EXCLUDED.horizon_weeks,
-                  status        = 'active',
-                  created_at    = now(),
-                  created_by    = EXCLUDED.created_by,
-                  notes         = EXCLUDED.notes
+                horizon_weeks = EXCLUDED.horizon_weeks,
+                status        = 'active',
+                created_at    = now(),
+                created_by    = EXCLUDED.created_by,
+                notes         = EXCLUDED.notes
                 """,
                 (fit_start, fit_end, horizon, "airflow:weekly", f"Weekly retrain as_of={window['week_end']}")
             )
             conn.commit()
+
 
         return {"status": "ok", "rows": int(len(df_km_out))}
 
