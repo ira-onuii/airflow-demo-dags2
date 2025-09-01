@@ -255,7 +255,7 @@ def load_new_result():
         name='new_lecture',
         con=pg_engine,
         schema='kpis',
-        if_exists='replace',
+        if_exists='append',
         index=False
     )
     print(f'####fin_new_query_result #### {fin_new_result}')
@@ -302,7 +302,7 @@ def load_pause_result():
         name='pause_lecture',
         con=pg_engine,
         schema='kpis',
-        if_exists='replace',
+        if_exists='append',
         index=False
     )
     print(f'####fin_pause_query_result #### {fin_pause_result}')
@@ -321,7 +321,7 @@ dag = DAG(
     'KM_calculator_daily_actuals',
     default_args=default_args,
     description='Run query and load result to S3',
-    schedule='10 17 * * *',
+    schedule='15 0 * * *',
     tags=['2.0','KM_calculator'],
     catchup=False
 )
