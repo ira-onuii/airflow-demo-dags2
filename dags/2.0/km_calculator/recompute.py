@@ -213,7 +213,7 @@ def km_weekly_full():
           FROM kpis.pause_lecture p, params par
           WHERE p.end_date::date BETWEEN par.week_start AND par.week_end
         )
-        UPDATE lvt_log l
+        UPDATE kpis.lvt_log l
         SET
           end_date       = GREATEST(p.pause_date, l.start_date),
           tutoring_state = COALESCE(p.tutoring_state, l.tutoring_state),
