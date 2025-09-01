@@ -40,16 +40,29 @@ def _week_bounds_kst(now_ts: pendulum.DateTime):
     return week_start.date().isoformat(), week_end.date().isoformat()
 
 def _ensure_weekly_actuals(hook: PostgresHook):
-    sql = """
+    # 1) 테이블 생성 (없으면)
+    hook.run("""
     CREATE TABLE IF NOT EXISTS kpis.weekly_actuals (
-      week_start date PRIMARY KEY,
+      week_start date NOT NULL,
+      cohort_months integer NOT NULL,
       new_actual integer NOT NULL DEFAULT 0,
       pause_actual integer NOT NULL DEFAULT 0,
       source varchar(32),
       closed_at timestamptz
     );
-    """
-    hook.run(sql)
+    """)
+
+    # 2) PK 보장: (week_start, cohort_months)
+    #    이미 PK/UNIQUE가 있으면 에러가 나므로 예외는 무시
+    try:
+        hook.run("""
+        ALTER TABLE kpis.weekly_actuals
+        ADD CONSTRAINT weekly_actuals_pkey
+        PRIMARY KEY (week_start, cohort_months);
+        """)
+    except Exception:
+        pass  # 이미 존재하면 OK
+
 
 def _ensure_km_tables(hook: PostgresHook):
     sqls = [
