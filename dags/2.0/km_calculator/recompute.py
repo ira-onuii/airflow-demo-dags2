@@ -96,7 +96,7 @@ def _monday(d: pd.Timestamp) -> pd.Timestamp:
     start_date=datetime(2025, 1, 1, tzinfo=SEOUL),
     catchup=False,
     default_args={"retries": 2, "retry_delay": timedelta(minutes=10)},
-    tags=["km", "weekly", "lvt_log"],
+    tags=["KM_calculator", "weekly", "lvt_log"],
 )
 def km_weekly_full():
 
