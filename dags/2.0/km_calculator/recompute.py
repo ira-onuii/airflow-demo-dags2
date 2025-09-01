@@ -258,30 +258,48 @@ def km_weekly_full():
     @task()
     def aggregate_weekly_actuals(window: dict):
         """
-        lvt_log → weekly_actuals 집계/업서트
-        - 기준: 월~일
+        lvt_log → weekly_actuals 코호트별 집계/업서트
+        기준: 월~일(Asia/Seoul)
+        주의: weekly_actuals PK = (week_start, cohort_months)
         """
         hook = PostgresHook(postgres_conn_id=CONN_ID)
-        _ensure_weekly_actuals(hook)
+        _ensure_weekly_actuals(hook)  # 이미 (week_start, cohort_months) PK 보장하는 버전
+
         sql = """
-        INSERT INTO kpis.weekly_actuals (week_start, new_actual, pause_actual, source, closed_at)
+        WITH p AS (
+        SELECT %(week_start)s::date AS week_start, %(week_end)s::date AS week_end
+        ),
+        cohorts AS (
+        SELECT 1 AS cohort_months UNION ALL
+        SELECT 3 UNION ALL
+        SELECT 6 UNION ALL
+        SELECT 12
+        ),
+        agg AS (
         SELECT
-          p.week_start,
-          COALESCE(SUM(CASE WHEN l.start_date BETWEEN p.week_start AND p.week_end THEN 1 ELSE 0 END), 0) AS new_actual,
-          COALESCE(SUM(CASE WHEN l.end_date   BETWEEN p.week_start AND p.week_end THEN 1 ELSE 0 END), 0) AS pause_actual,
-          'lvt_log' AS source,
-          NOW()
-        FROM (SELECT %(week_start)s::date AS week_start, %(week_end)s::date AS week_end) p
-        LEFT JOIN kpis.lvt_log l ON TRUE
-        GROUP BY p.week_start
-        ON CONFLICT (week_start) DO UPDATE
-          SET new_actual = EXCLUDED.new_actual,
-              pause_actual = EXCLUDED.pause_actual,
-              source = EXCLUDED.source,
-              closed_at = NOW();
+            p.week_start,
+            c.cohort_months,
+            COALESCE(SUM(CASE WHEN l.start_date BETWEEN p.week_start AND p.week_end THEN 1 ELSE 0 END), 0) AS new_actual,
+            COALESCE(SUM(CASE WHEN l.end_date   BETWEEN p.week_start AND p.week_end THEN 1 ELSE 0 END), 0) AS pause_actual
+        FROM p
+        CROSS JOIN cohorts c
+        LEFT JOIN kpis.lvt_log l
+            ON l.fst_months = c.cohort_months
+        GROUP BY p.week_start, c.cohort_months
+        )
+        INSERT INTO kpis.weekly_actuals (week_start, cohort_months, new_actual, pause_actual, source, closed_at)
+        SELECT
+        a.week_start, a.cohort_months, a.new_actual, a.pause_actual, 'lvt_log', NOW()
+        FROM agg a
+        ON CONFLICT (week_start, cohort_months) DO UPDATE
+        SET new_actual = EXCLUDED.new_actual,
+            pause_actual = EXCLUDED.pause_actual,
+            source      = EXCLUDED.source,
+            closed_at   = NOW();
         """
         hook.run(sql, parameters=window)
         return {"status": "ok"}
+
 
     @task()
     def retrain_km(window: dict):
