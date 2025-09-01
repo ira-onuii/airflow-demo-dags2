@@ -12,10 +12,10 @@ from pendulum import timezone
 
 KST = timezone("Asia/Seoul")
 
-new_column_list = ['start_date', 'lecture_vt_no', 'student_user_no','tutoring_state', 'fst_months']
+new_column_list = ['lecture_vt_no', 'student_user_no','fst_months','start_date','end_date','tutoring_state','created_at']
 new_columns_str = ", ".join(f'"{col}"' for col in new_column_list)
 
-pause_column_list = ['end_date', 'lecture_vt_no', 'student_user_no','tutoring_state', 'fst_months']
+pause_column_list = ['lecture_vt_no', 'student_user_no','fst_months','start_date','end_date','tutoring_state','created_at']
 pause_columns_str = ", ".join(f'"{col}"' for col in pause_column_list)
 
 def authorize_gspread():
@@ -144,7 +144,7 @@ def merge_fst_months_new():
             GROUP BY lecture_vt_no
         ),
         fst_months AS (
-            SELECT glvt.lecture_vt_no, th.months AS fst_months
+            SELECT glvt.lecture_vt_no, th.months AS fst_months, now() as created_at
             FROM glvt
             INNER JOIN mysql.onuei.payment p ON glvt.min_payment_no = p.payment_no 
             INNER JOIN mysql.onuei.tteok_ham th ON p.tteok_ham_no = th.tteok_ham_no 
@@ -196,7 +196,7 @@ def merge_fst_months_pause():
             GROUP BY lecture_vt_no
         ),
         fst_months AS (
-            SELECT glvt.lecture_vt_no, th.months AS fst_months
+            SELECT glvt.lecture_vt_no, th.months AS fst_months, now() as created_at
             FROM glvt
             INNER JOIN mysql.onuei.payment p ON glvt.min_payment_no = p.payment_no 
             INNER JOIN mysql.onuei.tteok_ham th ON p.tteok_ham_no = th.tteok_ham_no 
