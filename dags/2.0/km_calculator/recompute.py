@@ -40,7 +40,7 @@ def _week_bounds_kst(now_ts: pendulum.DateTime):
     return week_start.date().isoformat(), week_end.date().isoformat()
 
 def _ensure_weekly_actuals(hook: PostgresHook):
-    # 1) 테이블 생성 (없으면)
+    # 1) 테이블 생성 (없으면). 스키마 명시!
     hook.run("""
     CREATE TABLE IF NOT EXISTS kpis.weekly_actuals (
       week_start date NOT NULL,
@@ -52,8 +52,13 @@ def _ensure_weekly_actuals(hook: PostgresHook):
     );
     """)
 
-    # 2) PK 보장: (week_start, cohort_months)
-    #    이미 PK/UNIQUE가 있으면 에러가 나므로 예외는 무시
+    # 2) 기존 테이블에 cohort_months 없거나 NULL이면 보정
+    hook.run("ALTER TABLE kpis.weekly_actuals ADD COLUMN IF NOT EXISTS cohort_months integer;")
+    hook.run("UPDATE kpis.weekly_actuals SET cohort_months = 0 WHERE cohort_months IS NULL;")
+    hook.run("ALTER TABLE kpis.weekly_actuals ALTER COLUMN cohort_months SET NOT NULL;")
+
+    # 3) (week_start, cohort_months) 유니크 보장
+    #    PK 추가가 실패(기존 PK 존재 등)해도, 유니크 인덱스는 반드시 생성
     try:
         hook.run("""
         ALTER TABLE kpis.weekly_actuals
@@ -61,7 +66,13 @@ def _ensure_weekly_actuals(hook: PostgresHook):
         PRIMARY KEY (week_start, cohort_months);
         """)
     except Exception:
-        pass  # 이미 존재하면 OK
+        pass  # 이미 PK가 있으면 무시
+
+    hook.run("""
+    CREATE UNIQUE INDEX IF NOT EXISTS weekly_actuals_week_cohort_uniq
+    ON kpis.weekly_actuals(week_start, cohort_months);
+    """)
+
 
 
 def _ensure_km_tables(hook: PostgresHook):
