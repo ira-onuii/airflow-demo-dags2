@@ -41,7 +41,7 @@ def _week_bounds_kst(now_ts: pendulum.DateTime):
 
 def _ensure_weekly_actuals(hook: PostgresHook):
     sql = """
-    CREATE TABLE IF NOT EXISTS weekly_actuals (
+    CREATE TABLE IF NOT EXISTS kpis.weekly_actuals (
       week_start date PRIMARY KEY,
       new_actual integer NOT NULL DEFAULT 0,
       pause_actual integer NOT NULL DEFAULT 0,
@@ -55,7 +55,7 @@ def _ensure_km_tables(hook: PostgresHook):
     sqls = [
         # km_models
         """
-        CREATE TABLE IF NOT EXISTS km_models (
+        CREATE TABLE IF NOT EXISTS kpis.km_models (
           fit_window_start date,
           fit_window_end date,
           time_unit varchar(16),
@@ -68,7 +68,7 @@ def _ensure_km_tables(hook: PostgresHook):
         """,
         # model_versions
         """
-        CREATE TABLE IF NOT EXISTS model_versions (
+        CREATE TABLE IF NOT EXISTS kpis.model_versions (
           fit_window_start date,
           fit_window_end date,
           time_unit varchar(16),
