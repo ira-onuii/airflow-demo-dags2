@@ -12,7 +12,7 @@ table_name = f'"{date}"'
 group_lvt_query = f'''
 -- group_lvt
 with p as (
-select lecture_vt_no, payment_no, payment_regdate, order_id 
+select lecture_vt_no, payment_no, payment_regdate, order_id, completed_at 
 	from mysql.onuei.payment p
 	where state = '결제완료'
 	-- and payment_regdate >= cast('2024-05-01' as timestamp)
@@ -23,7 +23,7 @@ select lvs.follow_no, lvs.schedule_no, lvs.lecture_vt_no, lvs.lecture_cycle_no, 
 	-- where lvs.schedule_state <> 'CANCEL'
 ),
 lvcs as (
-select p.lecture_vt_no, p.payment_no, p.payment_regdate as time_stamp, p.order_id 
+select p.lecture_vt_no, p.payment_no, p.completed_at as time_stamp, p.order_id 
 	, 'active' as active_state
 	from p
 ),
