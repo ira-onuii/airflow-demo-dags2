@@ -321,7 +321,7 @@ dag = DAG(
     'KM_calculator_daily_actuals',
     default_args=default_args,
     description='Run query and load result to S3',
-    schedule='15 0 * * *',
+    schedule='15 15 * * *',
     tags=['2.0','KM_calculator'],
     catchup=False
 )
