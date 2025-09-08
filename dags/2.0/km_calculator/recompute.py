@@ -316,9 +316,9 @@ def km_weekly_full():
         eng = hook.get_sqlalchemy_engine()
         fit_start = pd.to_datetime(window["fit_start"])
         fit_end   = pd.to_datetime(window["fit_end"])
-        as_of     = pd.to_datetime(window["week_end"])  # .date() 빼기
-        horizon   = int(window["horizon_weeks"])
         as_of = pd.Timestamp(window["week_end"]).normalize()
+        horizon   = int(window["horizon_weeks"])
+        
 
         df = pd.read_sql(
             """
@@ -332,9 +332,21 @@ def km_weekly_full():
         )
         if df.empty:
             return {"status": "no_data"}
+        
+        # ---- 날짜 컬럼들을 전부 tz-naive Timestamp로 강제 변환 ----
+        def _as_naive_ts(s: pd.Series) -> pd.Series:
+            s = pd.to_datetime(s, errors="coerce")              # object(date) → datetime64[ns] 또는 datetime64[ns, tz]
+            tz = getattr(s.dtype, "tz", None)
+            if tz is not None:                                   # tz-aware → tz-naive
+                s = s.dt.tz_convert(None)
+            return s.dt.normalize()       
 
-        df["start_date"] = pd.to_datetime(df["start_date"]).dt.date
-        df["end_date"]   = pd.to_datetime(df["end_date"]).dt.date
+        df["start_date"] = _as_naive_ts(df["start_date"])
+        df["end_date"]   = _as_naive_ts(df["end_date"])
+
+        print(df[["start_date","end_date"]].dtypes)  # 둘 다 datetime64[ns] 여야 합니다.
+        print(type(as_of))                           # <class 'pandas._libs.tslibs.timestamps.Timestamp'>
+
 
         # ----- KM용 표본 변환
         def weeks_between(a, b) -> int:
