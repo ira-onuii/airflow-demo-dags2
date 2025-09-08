@@ -142,75 +142,63 @@ def km_weekly_full():
     @task()
     def insert_new(window: dict):
         """
-        new_lecture → lvt_log INSERT (키 정규화 + 겹침 자동 종료)
-        - 이번 주(KST 고려 X: 이미 날짜는 date 컬럼으로 가정) 신규만
-        - lecture 키를 trim/text로 정규화해 조인 불일치를 제거
-        - 열린 episode는 start_date-1로 닫고 새 episode 삽입
-        - 멱등: ON CONFLICT(lecture_vt_no, episode_no) DO NOTHING
+        new_lecture → lvt_log INSERT (정규화 키 + 스칼라 MAX + 겹침 자동 종료)
+        - 이번 주(start_date ∈ [week_start, week_end]) 신규만
+        - lecture_vt_no 표현 차이(선행 0/공백/하이픈/대소문자)를 정규화하여 일치
+        - 열린 episode는 start_date-1 로 닫고, 다음 episode_no로 INSERT
+        - 멱등 보장: ON CONFLICT (lecture_vt_no, episode_no) DO NOTHING
         """
         hook = PostgresHook(postgres_conn_id=CONN_ID)
         sql = """
         WITH params AS (
           SELECT %(week_start)s::date AS week_start, %(week_end)s::date AS week_end
         ),
-
-        -- 0) 소스 정규화: lecture_key = trim(lecture_vt_no::text)
+        -- 0) 소스 정규화
         new_src AS (
           SELECT
-            TRIM(BOTH FROM n.lecture_vt_no::text) AS lecture_key,
-            n.lecture_vt_no                      AS lecture_vt_no_raw,   -- 원본 보존(삽입에 사용)
+            REGEXP_REPLACE(REGEXP_REPLACE(LOWER(TRIM(n.lecture_vt_no::text)), '\\s|-', '', 'g'), '^0+', '') AS norm_key,
+            n.lecture_vt_no        AS lecture_vt_no_raw,
             n.student_user_no,
             n.fst_months,
-            n.start_date::date AS start_date,
+            n.start_date::date     AS start_date,
             n.tutoring_state
           FROM kpis.new_lecture n, params p
           WHERE n.start_date::date BETWEEN p.week_start AND p.week_end
         ),
-
-        -- 1) 기존 상태 정규화: 같은 방식으로 키 생성
-        state AS (
-          SELECT
-            TRIM(BOTH FROM l.lecture_vt_no::text) AS lecture_key,
-            MAX(l.episode_no)                      AS max_ep,
-            BOOL_OR(l.end_date IS NULL)            AS has_open
-          FROM kpis.lvt_log l
-          GROUP BY 1
-        ),
-
-        -- 2) 겹침 자동 종료(무조건): 같은 키의 열린 건 다 닫음 (end_date = LEAST(start_date-1, week_end))
+        -- 1) 겹침 자동 종료
         closed AS (
           UPDATE kpis.lvt_log l
           SET end_date  = LEAST((s.start_date - INTERVAL '1 day')::date, (SELECT week_end FROM params)),
               updated_at = NOW()
           FROM new_src s
-          WHERE TRIM(BOTH FROM l.lecture_vt_no::text) = s.lecture_key
+          WHERE REGEXP_REPLACE(REGEXP_REPLACE(LOWER(TRIM(l.lecture_vt_no::text)), '\\s|-', '', 'g'), '^0+', '') = s.norm_key
             AND l.end_date IS NULL
           RETURNING l.lecture_vt_no
         ),
-
-        -- 3) 삽입 후보(정규화 키 기준으로 조인)
+        -- 2) 삽입 후보: next_ep = (해당 키의) MAX(episode_no) + 1
         cand AS (
           SELECT
-            s.lecture_key,
+            s.norm_key,
             s.lecture_vt_no_raw,
             s.student_user_no,
             s.fst_months,
             s.start_date,
             s.tutoring_state,
-            COALESCE(st.max_ep, 0) + 1 AS next_ep,
-            COALESCE(st.has_open, FALSE) AS has_open
+            COALESCE((
+              SELECT MAX(l.episode_no)
+              FROM kpis.lvt_log l
+              WHERE REGEXP_REPLACE(REGEXP_REPLACE(LOWER(TRIM(l.lecture_vt_no::text)), '\\s|-', '', 'g'), '^0+', '') = s.norm_key
+            ), 0) + 1 AS next_ep
           FROM new_src s
-          LEFT JOIN state st USING (lecture_key)
         ),
-
-        -- 4) 삽입: 닫기 후에도 남은 특이 케이스는 ON CONFLICT로 멱등 처리
+        -- 3) 삽입(필터 없이 시도) + 멱등
         ins AS (
           INSERT INTO kpis.lvt_log (
             lecture_vt_no, episode_no, student_user_no, fst_months,
             start_date, end_date, tutoring_state, created_at, updated_at
           )
           SELECT
-            c.lecture_vt_no_raw,         -- 원본 값으로 저장 (키 정규화는 조인 용도)
+            c.lecture_vt_no_raw,
             c.next_ep,
             c.student_user_no,
             c.fst_months,
@@ -219,33 +207,23 @@ def km_weekly_full():
             c.tutoring_state,
             NOW(), NOW()
           FROM cand c
-          -- NOTE: 'WHERE c.has_open = FALSE' 를 의도적으로 제거 (닫기 후에도 남은 케이스 삽입 시도)
           ON CONFLICT (lecture_vt_no, episode_no) DO NOTHING
-          RETURNING lecture_vt_no
+          RETURNING lecture_vt_no, episode_no
         )
-
         SELECT
-          (SELECT COUNT(*)::int FROM new_src) AS src_rows,
+          (SELECT COUNT(*)::int FROM new_src) AS source_rows,
           (SELECT COUNT(*)::int FROM closed)  AS closed_rows,
-          (SELECT COUNT(*)::int FROM ins)     AS inserted_rows,
-          -- 삽입 못한 후보 중 has_open=TRUE 샘플
-          COALESCE((
-            SELECT json_agg(x) FROM (
-              SELECT lecture_vt_no_raw AS lecture_vt_no, start_date
-              FROM cand
-              WHERE has_open = TRUE
-              ORDER BY start_date, lecture_vt_no_raw
-              LIMIT 20
-            ) x
-          ), '[]'::json) AS skipped_open_samples;
+          (SELECT COUNT(*)::int FROM cand)    AS candidate_rows,
+          (SELECT COUNT(*)::int FROM ins)     AS inserted_rows;
         """
-        src_rows, closed_rows, inserted_rows, skipped_json = hook.get_first(sql, parameters=window)
+        source_rows, closed_rows, candidate_rows, inserted_rows = hook.get_first(sql, parameters=window)
         return {
-            "source_rows": int(src_rows or 0),
+            "source_rows": int(source_rows or 0),
             "closed_rows": int(closed_rows or 0),
+            "candidate_rows": int(candidate_rows or 0),
             "inserted_new": int(inserted_rows or 0),
-            "skipped_open_samples": skipped_json,
         }
+
 
 
 
