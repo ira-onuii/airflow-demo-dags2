@@ -142,13 +142,14 @@ def km_weekly_full():
     @task()
     def insert_new(window: dict):
         """
-        new_lecture → lvt_log INSERT
+        new_lecture → lvt_log INSERT (겹침 자동 종료)
         - 이번 주(start_date ∈ [week_start, week_end]) 신규만
-        - 같은 lecture_vt_no에 열린 episode가 없을 때만 새 episode_no로 INSERT
-        - tutoring_state는 new_lecture에서 그대로(없으면 NULL)
-        - idempotent: 동일 (lecture_vt_no, episode_no, start_date) 있으면 건너뜀
+        - 동일 lecture에 열린 episode가 있으면 새 start_date-1 로 자동 종료 후 새 episode 삽입
+        - 멱등성: ON CONFLICT (lecture_vt_no, episode_no) DO NOTHING
+        - 반환: 이번 실행에서 실제 INSERT된 row 수
         """
         hook = PostgresHook(postgres_conn_id=CONN_ID)
+
         sql = """
         WITH params AS (
           SELECT %(week_start)s::date AS week_start, %(week_end)s::date AS week_end
@@ -163,6 +164,24 @@ def km_weekly_full():
           FROM kpis.new_lecture n, params p
           WHERE n.start_date::date BETWEEN p.week_start AND p.week_end
         ),
+
+        /* 1) 겹침 자동 종료: 같은 lecture에 열린 에피소드가 있고,
+              새 start_date가 더 뒤면 기존 open episode를 (start_date - 1일)로 닫아준다. */
+        closed AS (
+          UPDATE kpis.lvt_log l
+          SET end_date  = GREATEST(
+                            COALESCE(l.end_date, (s.start_date - INTERVAL '1 day')::date),
+                            (s.start_date - INTERVAL '1 day')::date
+                          ),
+              updated_at = NOW()
+          FROM new_src s
+          WHERE l.lecture_vt_no = s.lecture_vt_no
+            AND l.end_date IS NULL           -- 열린 에피소드만
+            AND s.start_date > l.start_date  -- 새 에피소드가 뒤에 온 경우만
+          RETURNING l.lecture_vt_no
+        ),
+
+        /* 2) (닫은 이후) lecture별 현재 상태 재집계 */
         state AS (
           SELECT
             l.lecture_vt_no,
@@ -171,6 +190,8 @@ def km_weekly_full():
           FROM kpis.lvt_log l
           GROUP BY l.lecture_vt_no
         ),
+
+        /* 3) 삽입 후보 산출 */
         cand AS (
           SELECT
             n.lecture_vt_no,
@@ -182,38 +203,34 @@ def km_weekly_full():
             COALESCE(s.has_open, FALSE) AS has_open
           FROM new_src n
           LEFT JOIN state s ON s.lecture_vt_no = n.lecture_vt_no
+        ),
+
+        /* 4) 삽입 & 이번 실행에서 실제 삽입된 건수 리턴 */
+        ins AS (
+          INSERT INTO kpis.lvt_log (
+            lecture_vt_no, episode_no, student_user_no, fst_months,
+            start_date, end_date, tutoring_state, created_at, updated_at
+          )
+          SELECT
+            c.lecture_vt_no,
+            c.next_ep AS episode_no,
+            c.student_user_no,
+            c.fst_months,
+            c.start_date,
+            NULL AS end_date,
+            c.tutoring_state,
+            NOW(), NOW()
+          FROM cand c
+          WHERE c.has_open = FALSE
+          ON CONFLICT (lecture_vt_no, episode_no) DO NOTHING
+          RETURNING 1
         )
-        INSERT INTO kpis.lvt_log (
-          lecture_vt_no, episode_no, student_user_no, fst_months,
-          start_date, end_date, tutoring_state, created_at, updated_at
-        )
-        SELECT
-          c.lecture_vt_no,
-          c.next_ep AS episode_no,
-          c.student_user_no,
-          c.fst_months,
-          c.start_date,
-          NULL AS end_date,
-          c.tutoring_state,
-          NOW(), NOW()
-        FROM cand c
-        WHERE c.has_open = FALSE
-          AND NOT EXISTS (
-            SELECT 1
-            FROM kpis.lvt_log x
-            WHERE x.lecture_vt_no = c.lecture_vt_no
-              AND x.episode_no    = c.next_ep
-              AND x.start_date    = c.start_date
-          );
+        SELECT COUNT(*)::int AS inserted_rows FROM ins;
         """
-        hook.run(sql, parameters=window)
-        # 통계
-        cnt_sql = """
-        WITH p AS (SELECT %(week_start)s::date AS ws, %(week_end)s::date AS we)
-        SELECT COUNT(*) FROM kpis.lvt_log, p WHERE start_date BETWEEN p.ws AND p.we;
-        """
-        cnt = hook.get_first(cnt_sql, parameters=window)[0]
-        return {"inserted_new": int(cnt)}
+
+        inserted = hook.get_first(sql, parameters=window)[0]
+        return {"inserted_new": int(inserted)}
+
 
     @task()
     def update_pause(window: dict):
@@ -484,6 +501,6 @@ def km_weekly_full():
     a = aggregate_weekly_actuals(w)
     r = retrain_km(w)
 
-    [n, p] >> a >> r >> promote_model(r)
+    p >> n >> a >> r >> promote_model(r)
 
 km_weekly_full()
