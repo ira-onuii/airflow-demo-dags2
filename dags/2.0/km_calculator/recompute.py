@@ -33,11 +33,15 @@ HORIZON_WEEKS = 52
 # -----------------------------
 # 유틸
 # -----------------------------
-def _week_bounds_kst(now_ts: pendulum.DateTime):
-    """해당 주 월~일까지 범위(날짜 문자열)"""
-    week_end = now_ts.end_of("week")     # 일요일 23:59:59
-    week_start = week_end.start_of("week")  # 월요일 00:00:00
-    return week_start.date().isoformat(), week_end.date().isoformat()
+def _week_bounds_last_full_kst(now_kst: pendulum.DateTime):
+    """
+    '막 끝난 주(월~일)'를 반환.
+    실행 시각이 언제든 KST 기준 어제 날짜가 속한 주를 집계 대상으로 삼음.
+    """
+    ref = now_kst - timedelta(days=1)           # ← 핵심: 어제
+    wk_mon = _monday(ref).date()                # 월요일(날짜)
+    wk_sun = (pendulum.instance(wk_mon, tz=SEOUL) + timedelta(days=6)).date()
+    return wk_mon, wk_sun
 
 def _ensure_weekly_actuals(hook: PostgresHook):
     # 1) 테이블 생성 (없으면). 스키마 명시!
@@ -107,8 +111,9 @@ def _ensure_km_tables(hook: PostgresHook):
     """)
 
 
-def _monday(d: pd.Timestamp) -> pd.Timestamp:
-    return d - pd.Timedelta(days=d.weekday())
+def _monday(ts: pendulum.DateTime) -> pendulum.DateTime:
+    return ts - timedelta(days=ts.weekday())
+
 
 # -----------------------------
 # DAG
@@ -124,18 +129,27 @@ def _monday(d: pd.Timestamp) -> pd.Timestamp:
 def km_weekly_full():
 
     @task()
-    def compute_window():
-        now_kst = pendulum.now(SEOUL)
-        week_start, week_end = _week_bounds_kst(now_kst)
-        # 재학습 창: 최근 FIT_MONTHS개월 (월요일 정렬)
-        fit_end = pd.to_datetime(week_end)
-        fit_start = (fit_end - pd.DateOffset(months=FIT_MONTHS)).normalize()
-        fit_start = _monday(fit_start)  # 창 시작을 월요일로 정렬(선택)
+    def compute_window(**context):
+        # 가능하면 Airflow logical time 사용(더 결정론적)
+        # data_interval_end가 들어오면 그 시각의 KST-1일을 기준으로 잡아도 됨
+        logical_end_utc = context.get("data_interval_end") or context.get("execution_date")
+        if logical_end_utc:
+            now_kst = pendulum.instance(logical_end_utc).in_timezone(SEOUL)
+        else:
+            now_kst = pendulum.now(SEOUL)
+
+        week_start, week_end = _week_bounds_last_full_kst(now_kst)
+
+        # 재학습 윈도우: 최근 FIT_MONTHS개월 (월요일 정렬)
+        fit_end = pendulum.instance(week_end, tz=SEOUL)
+        fit_start_ts = (fit_end - pendulum.duration(months=FIT_MONTHS)).start_of("day")
+        fit_start_ts = _monday(fit_start_ts)  # 월요일 정렬
+
         return {
-            "week_start": week_start,   # 월요일
-            "week_end": week_end,       # 일요일
-            "fit_start": fit_start.date().isoformat(),
-            "fit_end": week_end,        # as-of와 동일 주 종료일
+            "week_start": week_start.isoformat(),          # 'YYYY-MM-DD'
+            "week_end":   week_end.isoformat(),            # 'YYYY-MM-DD'
+            "fit_start":  fit_start_ts.date().isoformat(), # 'YYYY-MM-DD'
+            "fit_end":    week_end.isoformat(),            # 'YYYY-MM-DD'
             "horizon_weeks": HORIZON_WEEKS,
         }
     ### 고정 window (백필용) ###
