@@ -142,21 +142,23 @@ def km_weekly_full():
     @task()
     def insert_new(window: dict):
         """
-        new_lecture → lvt_log INSERT (강제 겹침 종료 버전)
-        - 이번 주(start_date ∈ [week_start, week_end]) 신규만
-        - 동일 lecture에 열린 episode가 있으면 무조건 닫고(end_date = min(start_date-1, week_end)), 새 episode 삽입
-        - 멱등성: ON CONFLICT (lecture_vt_no, episode_no) DO NOTHING
-        - 반환: 실제 insert 수, 스킵 사유 샘플
+        new_lecture → lvt_log INSERT (키 정규화 + 겹침 자동 종료)
+        - 이번 주(KST 고려 X: 이미 날짜는 date 컬럼으로 가정) 신규만
+        - lecture 키를 trim/text로 정규화해 조인 불일치를 제거
+        - 열린 episode는 start_date-1로 닫고 새 episode 삽입
+        - 멱등: ON CONFLICT(lecture_vt_no, episode_no) DO NOTHING
         """
         hook = PostgresHook(postgres_conn_id=CONN_ID)
-
         sql = """
         WITH params AS (
           SELECT %(week_start)s::date AS week_start, %(week_end)s::date AS week_end
         ),
+
+        -- 0) 소스 정규화: lecture_key = trim(lecture_vt_no::text)
         new_src AS (
           SELECT
-            n.lecture_vt_no,
+            TRIM(BOTH FROM n.lecture_vt_no::text) AS lecture_key,
+            n.lecture_vt_no                      AS lecture_vt_no_raw,   -- 원본 보존(삽입에 사용)
             n.student_user_no,
             n.fst_months,
             n.start_date::date AS start_date,
@@ -165,102 +167,86 @@ def km_weekly_full():
           WHERE n.start_date::date BETWEEN p.week_start AND p.week_end
         ),
 
-        /* 1) 겹침 무조건 종료:
-              - 같은 lecture에 열린 에피소드가 있으면 전부 닫음
-              - end_date = LEAST(start_date-1, week_end) */
+        -- 1) 기존 상태 정규화: 같은 방식으로 키 생성
+        state AS (
+          SELECT
+            TRIM(BOTH FROM l.lecture_vt_no::text) AS lecture_key,
+            MAX(l.episode_no)                      AS max_ep,
+            BOOL_OR(l.end_date IS NULL)            AS has_open
+          FROM kpis.lvt_log l
+          GROUP BY 1
+        ),
+
+        -- 2) 겹침 자동 종료(무조건): 같은 키의 열린 건 다 닫음 (end_date = LEAST(start_date-1, week_end))
         closed AS (
           UPDATE kpis.lvt_log l
           SET end_date  = LEAST((s.start_date - INTERVAL '1 day')::date, (SELECT week_end FROM params)),
               updated_at = NOW()
           FROM new_src s
-          WHERE l.lecture_vt_no = s.lecture_vt_no
+          WHERE TRIM(BOTH FROM l.lecture_vt_no::text) = s.lecture_key
             AND l.end_date IS NULL
           RETURNING l.lecture_vt_no
         ),
 
-        /* 2) (닫은 이후) lecture별 상태 재집계 */
-        state AS (
-          SELECT
-            l.lecture_vt_no,
-            MAX(l.episode_no) AS max_ep,
-            BOOL_OR(l.end_date IS NULL) AS has_open
-          FROM kpis.lvt_log l
-          GROUP BY l.lecture_vt_no
-        ),
-
-        /* 3) 삽입 후보 산출 */
+        -- 3) 삽입 후보(정규화 키 기준으로 조인)
         cand AS (
           SELECT
-            n.lecture_vt_no,
-            n.student_user_no,
-            n.fst_months,
-            n.start_date,
-            n.tutoring_state,
-            COALESCE(s.max_ep, 0) + 1 AS next_ep,
-            COALESCE(s.has_open, FALSE) AS has_open
-          FROM new_src n
-          LEFT JOIN state s ON s.lecture_vt_no = n.lecture_vt_no
+            s.lecture_key,
+            s.lecture_vt_no_raw,
+            s.student_user_no,
+            s.fst_months,
+            s.start_date,
+            s.tutoring_state,
+            COALESCE(st.max_ep, 0) + 1 AS next_ep,
+            COALESCE(st.has_open, FALSE) AS has_open
+          FROM new_src s
+          LEFT JOIN state st USING (lecture_key)
         ),
 
-        /* 4) 삽입 */
+        -- 4) 삽입: 닫기 후에도 남은 특이 케이스는 ON CONFLICT로 멱등 처리
         ins AS (
           INSERT INTO kpis.lvt_log (
             lecture_vt_no, episode_no, student_user_no, fst_months,
             start_date, end_date, tutoring_state, created_at, updated_at
           )
           SELECT
-            c.lecture_vt_no,
-            c.next_ep AS episode_no,
+            c.lecture_vt_no_raw,         -- 원본 값으로 저장 (키 정규화는 조인 용도)
+            c.next_ep,
             c.student_user_no,
             c.fst_months,
             c.start_date,
-            NULL AS end_date,
+            NULL,
             c.tutoring_state,
             NOW(), NOW()
           FROM cand c
-          WHERE c.has_open = FALSE
+          -- NOTE: 'WHERE c.has_open = FALSE' 를 의도적으로 제거 (닫기 후에도 남은 케이스 삽입 시도)
           ON CONFLICT (lecture_vt_no, episode_no) DO NOTHING
           RETURNING lecture_vt_no
         )
 
         SELECT
-          (SELECT COUNT(*)::int FROM ins)           AS inserted_rows,
-          (SELECT COUNT(*)::int FROM new_src)       AS src_rows,
-          (SELECT COUNT(*)::int FROM closed)        AS closed_rows,
-          (SELECT COUNT(*)::int FROM cand WHERE has_open = TRUE) AS skipped_open_rows;
+          (SELECT COUNT(*)::int FROM new_src) AS src_rows,
+          (SELECT COUNT(*)::int FROM closed)  AS closed_rows,
+          (SELECT COUNT(*)::int FROM ins)     AS inserted_rows,
+          -- 삽입 못한 후보 중 has_open=TRUE 샘플
+          COALESCE((
+            SELECT json_agg(x) FROM (
+              SELECT lecture_vt_no_raw AS lecture_vt_no, start_date
+              FROM cand
+              WHERE has_open = TRUE
+              ORDER BY start_date, lecture_vt_no_raw
+              LIMIT 20
+            ) x
+          ), '[]'::json) AS skipped_open_samples;
         """
-
-        inserted_rows, src_rows, closed_rows, skipped_open_rows = hook.get_first(sql, parameters=window)
-
-        # 🔎 추가 진단: 스킵 대상 샘플(열린 에피소드가 남아서 못 들어간 케이스 확인)
-        skip_sql = """
-        WITH params AS (SELECT %(week_start)s::date AS ws, %(week_end)s::date AS we),
-        new_src AS (
-          SELECT n.lecture_vt_no, n.student_user_no, n.fst_months, n.start_date::date AS start_date
-          FROM kpis.new_lecture n, params p
-          WHERE n.start_date::date BETWEEN p.ws AND p.we
-        ),
-        state AS (
-          SELECT l.lecture_vt_no, BOOL_OR(l.end_date IS NULL) AS has_open
-          FROM kpis.lvt_log l
-          GROUP BY l.lecture_vt_no
-        )
-        SELECT ns.lecture_vt_no, ns.start_date, s.has_open
-        FROM new_src ns
-        LEFT JOIN state s ON s.lecture_vt_no = ns.lecture_vt_no
-        WHERE COALESCE(s.has_open, FALSE) = TRUE
-        ORDER BY ns.start_date, ns.lecture_vt_no
-        LIMIT 50;
-        """
-        skipped_samples = hook.get_records(skip_sql, parameters=window)
-
+        src_rows, closed_rows, inserted_rows, skipped_json = hook.get_first(sql, parameters=window)
         return {
-            "inserted_new": int(inserted_rows or 0),
             "source_rows": int(src_rows or 0),
             "closed_rows": int(closed_rows or 0),
-            "skipped_open_rows": int(skipped_open_rows or 0),
-            "skipped_samples": skipped_samples,  # [(lecture_vt_no, start_date, has_open), ...]
+            "inserted_new": int(inserted_rows or 0),
+            "skipped_open_samples": skipped_json,
         }
+
 
 
 
