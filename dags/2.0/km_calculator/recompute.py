@@ -142,11 +142,11 @@ def km_weekly_full():
     @task()
     def insert_new(window: dict):
         """
-        new_lecture → lvt_log INSERT (겹침 자동 종료)
+        new_lecture → lvt_log INSERT (강제 겹침 종료 버전)
         - 이번 주(start_date ∈ [week_start, week_end]) 신규만
-        - 동일 lecture에 열린 episode가 있으면 새 start_date-1 로 자동 종료 후 새 episode 삽입
+        - 동일 lecture에 열린 episode가 있으면 무조건 닫고(end_date = min(start_date-1, week_end)), 새 episode 삽입
         - 멱등성: ON CONFLICT (lecture_vt_no, episode_no) DO NOTHING
-        - 반환: 이번 실행에서 실제 INSERT된 row 수
+        - 반환: 실제 insert 수, 스킵 사유 샘플
         """
         hook = PostgresHook(postgres_conn_id=CONN_ID)
 
@@ -165,23 +165,20 @@ def km_weekly_full():
           WHERE n.start_date::date BETWEEN p.week_start AND p.week_end
         ),
 
-        /* 1) 겹침 자동 종료: 같은 lecture에 열린 에피소드가 있고,
-              새 start_date가 더 뒤면 기존 open episode를 (start_date - 1일)로 닫아준다. */
+        /* 1) 겹침 무조건 종료:
+              - 같은 lecture에 열린 에피소드가 있으면 전부 닫음
+              - end_date = LEAST(start_date-1, week_end) */
         closed AS (
           UPDATE kpis.lvt_log l
-          SET end_date  = GREATEST(
-                            COALESCE(l.end_date, (s.start_date - INTERVAL '1 day')::date),
-                            (s.start_date - INTERVAL '1 day')::date
-                          ),
+          SET end_date  = LEAST((s.start_date - INTERVAL '1 day')::date, (SELECT week_end FROM params)),
               updated_at = NOW()
           FROM new_src s
           WHERE l.lecture_vt_no = s.lecture_vt_no
-            AND l.end_date IS NULL           -- 열린 에피소드만
-            AND s.start_date > l.start_date  -- 새 에피소드가 뒤에 온 경우만
+            AND l.end_date IS NULL
           RETURNING l.lecture_vt_no
         ),
 
-        /* 2) (닫은 이후) lecture별 현재 상태 재집계 */
+        /* 2) (닫은 이후) lecture별 상태 재집계 */
         state AS (
           SELECT
             l.lecture_vt_no,
@@ -205,7 +202,7 @@ def km_weekly_full():
           LEFT JOIN state s ON s.lecture_vt_no = n.lecture_vt_no
         ),
 
-        /* 4) 삽입 & 이번 실행에서 실제 삽입된 건수 리턴 */
+        /* 4) 삽입 */
         ins AS (
           INSERT INTO kpis.lvt_log (
             lecture_vt_no, episode_no, student_user_no, fst_months,
@@ -223,13 +220,48 @@ def km_weekly_full():
           FROM cand c
           WHERE c.has_open = FALSE
           ON CONFLICT (lecture_vt_no, episode_no) DO NOTHING
-          RETURNING 1
+          RETURNING lecture_vt_no
         )
-        SELECT COUNT(*)::int AS inserted_rows FROM ins;
+
+        SELECT
+          (SELECT COUNT(*)::int FROM ins)           AS inserted_rows,
+          (SELECT COUNT(*)::int FROM new_src)       AS src_rows,
+          (SELECT COUNT(*)::int FROM closed)        AS closed_rows,
+          (SELECT COUNT(*)::int FROM cand WHERE has_open = TRUE) AS skipped_open_rows;
         """
 
-        inserted = hook.get_first(sql, parameters=window)[0]
-        return {"inserted_new": int(inserted)}
+        inserted_rows, src_rows, closed_rows, skipped_open_rows = hook.get_first(sql, parameters=window)
+
+        # 🔎 추가 진단: 스킵 대상 샘플(열린 에피소드가 남아서 못 들어간 케이스 확인)
+        skip_sql = """
+        WITH params AS (SELECT %(week_start)s::date AS ws, %(week_end)s::date AS we),
+        new_src AS (
+          SELECT n.lecture_vt_no, n.student_user_no, n.fst_months, n.start_date::date AS start_date
+          FROM kpis.new_lecture n, params p
+          WHERE n.start_date::date BETWEEN p.ws AND p.we
+        ),
+        state AS (
+          SELECT l.lecture_vt_no, BOOL_OR(l.end_date IS NULL) AS has_open
+          FROM kpis.lvt_log l
+          GROUP BY l.lecture_vt_no
+        )
+        SELECT ns.lecture_vt_no, ns.start_date, s.has_open
+        FROM new_src ns
+        LEFT JOIN state s ON s.lecture_vt_no = ns.lecture_vt_no
+        WHERE COALESCE(s.has_open, FALSE) = TRUE
+        ORDER BY ns.start_date, ns.lecture_vt_no
+        LIMIT 50;
+        """
+        skipped_samples = hook.get_records(skip_sql, parameters=window)
+
+        return {
+            "inserted_new": int(inserted_rows or 0),
+            "source_rows": int(src_rows or 0),
+            "closed_rows": int(closed_rows or 0),
+            "skipped_open_rows": int(skipped_open_rows or 0),
+            "skipped_samples": skipped_samples,  # [(lecture_vt_no, start_date, has_open), ...]
+        }
+
 
 
     @task()
