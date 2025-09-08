@@ -318,6 +318,7 @@ def km_weekly_full():
         fit_end   = pd.to_datetime(window["fit_end"])
         as_of     = pd.to_datetime(window["week_end"])  # .date() 빼기
         horizon   = int(window["horizon_weeks"])
+        as_of = pd.Timestamp(window["week_end"]).normalize()
 
         df = pd.read_sql(
             """
