@@ -131,20 +131,21 @@ def km_weekly_full():
         fit_end = pd.to_datetime(week_end)
         fit_start = (fit_end - pd.DateOffset(months=FIT_MONTHS)).normalize()
         fit_start = _monday(fit_start)  # 창 시작을 월요일로 정렬(선택)
-        # return {
-        #     "week_start": week_start,   # 월요일
-        #     "week_end": week_end,       # 일요일
-        #     "fit_start": fit_start.date().isoformat(),
-        #     "fit_end": week_end,        # as-of와 동일 주 종료일
-        #     "horizon_weeks": HORIZON_WEEKS,
-        # }
         return {
-          "week_start": "2025-09-01",
-          "week_end":   "2025-09-07",
-          "fit_start":  "2024-09-02",
-          "fit_end":    "2025-09-07",
-          "horizon_weeks": 52,
+            "week_start": week_start,   # 월요일
+            "week_end": week_end,       # 일요일
+            "fit_start": fit_start.date().isoformat(),
+            "fit_end": week_end,        # as-of와 동일 주 종료일
+            "horizon_weeks": HORIZON_WEEKS,
         }
+    ### 고정 window (백필용) ###
+        # return {
+        #   "week_start": "2025-09-01",
+        #   "week_end":   "2025-09-07",
+        #   "fit_start":  "2024-09-02",
+        #   "fit_end":    "2025-09-07",
+        #   "horizon_weeks": 52,
+        # }
 
     @task()
     def insert_new(window: dict):
