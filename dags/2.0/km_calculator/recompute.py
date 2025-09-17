@@ -40,7 +40,7 @@ def _week_bounds_last_full_kst(now_kst: pendulum.DateTime):
     """
     ref = now_kst - timedelta(days=1)           # ← 핵심: 어제
     wk_mon = _monday(ref).date()                # 월요일(날짜)
-    wk_sun = (pendulum.instance(wk_mon, tz=SEOUL) + timedelta(days=6)).date()
+    wk_sun = (pendulum.instance(wk_mon, tz=SEOUL) + timedelta(days=6))
     return wk_mon, wk_sun
 
 def _ensure_weekly_actuals(hook: PostgresHook):
