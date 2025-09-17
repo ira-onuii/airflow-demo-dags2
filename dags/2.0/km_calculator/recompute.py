@@ -148,7 +148,7 @@ def km_weekly_full():
         return {
             "week_start": week_start.isoformat(),          # 'YYYY-MM-DD'
             "week_end":   week_end.isoformat(),            # 'YYYY-MM-DD'
-            "fit_start":  fit_start_ts.date().isoformat(), # 'YYYY-MM-DD'
+            "fit_start":  fit_start_ts.isoformat(), # 'YYYY-MM-DD'
             "fit_end":    week_end.isoformat(),            # 'YYYY-MM-DD'
             "horizon_weeks": HORIZON_WEEKS,
         }
