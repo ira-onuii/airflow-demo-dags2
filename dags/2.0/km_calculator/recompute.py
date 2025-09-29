@@ -120,7 +120,7 @@ def _monday(ts: pendulum.DateTime) -> pendulum.DateTime:
 # -----------------------------
 @dag(
     dag_id="km_weekly_full",
-    schedule="59 23 * * SUN",  # 매주 일요일 23:59
+    schedule="59 23 * * MON",  # 매주 일요일 23:59
     start_date=datetime(2025, 1, 1, tzinfo=SEOUL),
     catchup=False,
     default_args={"retries": 2, "retry_delay": timedelta(minutes=10)},
