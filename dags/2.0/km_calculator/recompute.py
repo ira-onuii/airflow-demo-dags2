@@ -207,7 +207,7 @@ def km_weekly_full():
             s.fst_months,
             s.start_date,
             s.tutoring_state,
-            s.grade
+            s.grade,
             COALESCE((
               SELECT MAX(l.episode_no)
               FROM kpis.lvt_log l
