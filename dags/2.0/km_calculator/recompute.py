@@ -37,15 +37,15 @@ HORIZON_WEEKS = 52      # KM horizon(주)
 def _monday(ts: pendulum.DateTime) -> pendulum.DateTime:
     return ts - timedelta(days=ts.weekday())
 
-def _week_bounds_last_full_kst(now_kst: pendulum.DateTime):
+def _week_bounds_last_full_kst(now_kst):
     """
-    '막 끝난 주(월~일)'를 반환.
-    실행 시각과 무관하게 KST 기준 '어제'가 포함된 주를 집계 대상으로 삼음.
+    '막 끝난 주(월~일)'의 (월요일, 일요일)를 date로 반환.
     """
-    ref = now_kst - timedelta(days=1)      # 핵심: 어제
-    wk_mon = _monday(ref).date()
-    wk_sun = (pendulum.instance(wk_mon, tz=SEOUL) + timedelta(days=6)).date()
+    ref = (now_kst - timedelta(days=1)).date()  # 어제(=date)
+    wk_mon = ref - timedelta(days=ref.weekday())  # 월요일(date)
+    wk_sun = wk_mon + timedelta(days=6)           # 일요일(date)
     return wk_mon, wk_sun
+
 
 # -----------------------------
 # DDL/제약 보강
@@ -132,18 +132,21 @@ def km_daily_full():
         logical_end_utc = context.get("data_interval_end") or context.get("execution_date")
         now_kst = pendulum.instance(logical_end_utc).in_timezone(SEOUL) if logical_end_utc else pendulum.now(SEOUL)
 
-        week_start, week_end = _week_bounds_last_full_kst(now_kst)
-        fit_end = pendulum.instance(week_end, tz=SEOUL)
-        fit_start_ts = (fit_end - pendulum.duration(months=FIT_MONTHS)).start_of("day")
-        fit_start_ts = _monday(fit_start_ts)  # 월요일 정렬
+        week_start, week_end = _week_bounds_last_full_kst(now_kst)  # 둘 다 date
+
+        # pendulum DateTime으로 승격
+        fit_end_dt = pendulum.datetime(week_end.year, week_end.month, week_end.day, tz=SEOUL)
+        fit_start_dt = (fit_end_dt - pendulum.duration(months=FIT_MONTHS)).start_of("day")
+        fit_start_dt = _monday(fit_start_dt)  # 월요일로 보정 (pendulum.DateTime 사용)
 
         return {
-            "week_start": str(week_start),        # YYYY-MM-DD
-            "week_end":   str(week_end),          # YYYY-MM-DD
-            "fit_start":  fit_start_ts.to_date_string(),
-            "fit_end":    str(week_end),
+            "week_start": week_start.isoformat(),   # 'YYYY-MM-DD'
+            "week_end":   week_end.isoformat(),     # 'YYYY-MM-DD'
+            "fit_start":  fit_start_dt.to_date_string(),  # 'YYYY-MM-DD'
+            "fit_end":    week_end.isoformat(),     # 'YYYY-MM-DD'
             "horizon_weeks": HORIZON_WEEKS,
         }
+
 
     @task()
     def ensure_ddl():
