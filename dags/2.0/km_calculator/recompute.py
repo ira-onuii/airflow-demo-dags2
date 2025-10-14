@@ -115,7 +115,6 @@ def _ensure_base_tables(hook: PostgresHook):
     );
     """)
 
-
 # -----------------------------
 # DAG
 # -----------------------------
@@ -168,54 +167,65 @@ def km_daily_full():
         hook = PostgresHook(postgres_conn_id=CONN_ID)
         sql = """
         WITH p AS (
-          SELECT %(week_start)s::date AS ws, %(week_end)s::date AS we
-        ),
-        src AS (
-          SELECT
-            n.lecture_vt_no::text            AS lecture_vt_no,
-            n.student_user_no,
-            n.fst_months,
-            n.start_date::date               AS start_date,
-            COALESCE(n.tutoring_state,'')    AS tutoring_state,
-            n.grade
-          FROM kpis.new_lecture n, p
-          WHERE n.start_date::date BETWEEN p.ws AND p.we
-        ),
-        -- 과거 '열린' episode만 종료 (새 시작일 이전분만)
-        closed AS (
-          UPDATE kpis.lvt_log l
-          SET end_date   = GREATEST(l.start_date, s.start_date - INTERVAL '1 day'),
-              updated_at = NOW()
-          FROM src s
-          WHERE l.lecture_vt_no = s.lecture_vt_no
-            AND l.end_date IS NULL
-            AND l.start_date < s.start_date
-          RETURNING l.lecture_vt_no
-        ),
-        next_ep AS (
-          SELECT
-            s.*,
-            COALESCE((
-              SELECT MAX(l.episode_no) FROM kpis.lvt_log l
-              WHERE l.lecture_vt_no = s.lecture_vt_no
-            ),0) + 1 AS episode_no_new
-          FROM src s
-        ),
-        ins AS (
-          INSERT INTO kpis.lvt_log
-            (lecture_vt_no, episode_no, student_user_no, fst_months,
-             start_date, end_date, tutoring_state, grade, created_at, updated_at)
-          SELECT
-            n.lecture_vt_no, n.episode_no_new, n.student_user_no, n.fst_months,
-            n.start_date, NULL, n.tutoring_state, n.grade, NOW(), NOW()
-          FROM next_ep n
-          ON CONFLICT (lecture_vt_no, start_date) DO NOTHING   -- 멱등 핵심
-          RETURNING lecture_vt_no, episode_no
-        )
-        SELECT
-          (SELECT COUNT(*) FROM src)    AS source_rows,
-          (SELECT COUNT(*) FROM closed) AS closed_rows,
-          (SELECT COUNT(*) FROM ins)    AS inserted_rows;
+  SELECT %(week_start)s::date AS ws, %(week_end)s::date AS we
+    ),
+    src AS (
+      SELECT
+        n.lecture_vt_no              AS lecture_vt_no,   -- ★ 캐스팅 제거 (원형 유지)
+        n.student_user_no,
+        n.fst_months,
+        n.start_date::date           AS start_date,
+        COALESCE(n.tutoring_state,'') AS tutoring_state,
+        n.grade
+      FROM kpis.new_lecture n, p
+      WHERE n.start_date::date BETWEEN p.ws AND p.we
+    ),
+
+    -- 과거 '열린' episode만 종료 (새 시작일 이전분만)
+    closed AS (
+      UPDATE kpis.lvt_log l
+      SET end_date   = GREATEST(l.start_date, s.start_date - INTERVAL '1 day'),
+          updated_at = NOW()
+      FROM src s
+      WHERE l.lecture_vt_no::text = s.lecture_vt_no::text   -- ★ 타입 맞춤 (bigint/text 혼재 대비)
+        AND l.end_date IS NULL
+        AND l.start_date < s.start_date
+      RETURNING l.lecture_vt_no
+    ),
+
+    next_ep AS (
+      SELECT
+        s.*,
+        COALESCE((
+          SELECT MAX(l.episode_no)
+          FROM kpis.lvt_log l
+          WHERE l.lecture_vt_no::text = s.lecture_vt_no::text  -- ★ 타입 맞춤
+        ),0) + 1 AS episode_no_new
+      FROM src s
+    ),
+
+    ins AS (
+      INSERT INTO kpis.lvt_log
+        (lecture_vt_no, episode_no, student_user_no, fst_months,
+        start_date, end_date, tutoring_state, grade, created_at, updated_at)
+      SELECT
+        n.lecture_vt_no,             -- ★ 원형 그대로 넣기(타깃 타입에 DB가 맞춤)
+        n.episode_no_new,
+        n.student_user_no,
+        n.fst_months,
+        n.start_date,
+        NULL,
+        n.tutoring_state,
+        n.grade,
+        NOW(), NOW()
+      FROM next_ep n
+      ON CONFLICT (lecture_vt_no, start_date) DO NOTHING
+      RETURNING lecture_vt_no, episode_no
+    )
+    SELECT
+      (SELECT COUNT(*) FROM src)    AS source_rows,
+      (SELECT COUNT(*) FROM closed) AS closed_rows,
+      (SELECT COUNT(*) FROM ins)    AS inserted_rows;
         """
         r = hook.get_first(sql, parameters=window)
         return {"source_rows": int(r[0] or 0), "closed_rows": int(r[1] or 0), "inserted_new": int(r[2] or 0)}
