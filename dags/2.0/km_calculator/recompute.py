@@ -51,43 +51,44 @@ def _week_bounds_last_full_kst(now_kst):
 # DDL/제약 보강
 # -----------------------------
 def _ensure_base_tables(hook: PostgresHook):
-    # lvt_log 존재 가정, 필요한 컬럼/제약 보강
+    # 1) 테이블이 없으면 생성 (최소 스키마)
     hook.run("""
-    ALTER TABLE IF NOT EXISTS kpis.lvt_log
-      ADD COLUMN IF NOT EXISTS episode_no integer,
-      ADD COLUMN IF NOT EXISTS grade varchar(16),
-      ADD COLUMN IF NOT EXISTS created_at timestamptz DEFAULT now(),
-      ADD COLUMN IF NOT EXISTS updated_at timestamptz DEFAULT now();
+    CREATE TABLE IF NOT EXISTS kpis.lvt_log (
+      lecture_vt_no    varchar NOT NULL,
+      student_user_no  bigint,
+      fst_months       integer,
+      start_date       date,
+      end_date         date,
+      tutoring_state   varchar(32)
+    );
     """)
 
-    # (lecture_vt_no, start_date) 유니크 보장 → 일일 실행 시 신규 중복 방지
+    # 2) 컬럼 보강 (ALTER TABLE에는 IF NOT EXISTS를 'ADD COLUMN'에만 사용)
+    hook.run("ALTER TABLE kpis.lvt_log ADD COLUMN IF NOT EXISTS episode_no integer;")
+    hook.run("ALTER TABLE kpis.lvt_log ADD COLUMN IF NOT EXISTS grade varchar(16);")
+    hook.run("ALTER TABLE kpis.lvt_log ADD COLUMN IF NOT EXISTS created_at timestamptz DEFAULT now();")
+    hook.run("ALTER TABLE kpis.lvt_log ADD COLUMN IF NOT EXISTS updated_at timestamptz DEFAULT now();")
+
+    # 3) 멱등 유니크 인덱스 (일일 스케줄 대비 중복 방지)
     hook.run("""
-    DO $$
-    BEGIN
-      IF NOT EXISTS (
-        SELECT 1 FROM pg_indexes
-        WHERE schemaname='kpis' AND indexname='lvt_log_uniq_lvt_startdate'
-      ) THEN
-        CREATE UNIQUE INDEX lvt_log_uniq_lvt_startdate
-        ON kpis.lvt_log(lecture_vt_no, start_date);
-      END IF;
-    END$$;
+    CREATE UNIQUE INDEX IF NOT EXISTS lvt_log_uniq_lvt_startdate
+      ON kpis.lvt_log(lecture_vt_no, start_date);
     """)
 
-    # weekly_actuals PK/스키마 보장
+    # 4) weekly_actuals (PK 포함)
     hook.run("""
     CREATE TABLE IF NOT EXISTS kpis.weekly_actuals (
-      week_start date NOT NULL,
+      week_start    date NOT NULL,
       cohort_months integer NOT NULL,
-      new_actual integer NOT NULL DEFAULT 0,
-      pause_actual integer NOT NULL DEFAULT 0,
-      source varchar(32),
-      closed_at timestamptz,
+      new_actual    integer NOT NULL DEFAULT 0,
+      pause_actual  integer NOT NULL DEFAULT 0,
+      source        varchar(32),
+      closed_at     timestamptz,
       PRIMARY KEY (week_start, cohort_months)
     );
     """)
 
-    # km_models / model_versions 기본 스키마 보장
+    # 5) km_models / model_versions 기본 스키마 보장
     hook.run("""
     CREATE TABLE IF NOT EXISTS kpis.km_models (
       fit_window_start date,
@@ -113,6 +114,7 @@ def _ensure_base_tables(hook: PostgresHook):
       PRIMARY KEY (fit_window_start, fit_window_end, time_unit)
     );
     """)
+
 
 # -----------------------------
 # DAG
