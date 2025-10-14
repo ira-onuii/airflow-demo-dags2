@@ -241,7 +241,7 @@ def km_daily_full():
         sql = """
         WITH p AS (SELECT %(week_start)s::date AS ws, %(week_end)s::date AS we),
         src AS (
-          SELECT lecture_vt_no::text AS lecture_vt_no,
+          SELECT lecture_vt_no AS lecture_vt_no,
                  end_date::date      AS end_date,
                  COALESCE(tutoring_state,'') AS tutoring_state
           FROM kpis.pause_lecture, p
