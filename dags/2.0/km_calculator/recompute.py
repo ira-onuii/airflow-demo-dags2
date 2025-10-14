@@ -183,7 +183,8 @@ def km_weekly_full():
             n.student_user_no,
             n.fst_months,
             n.start_date::date     AS start_date,
-            n.tutoring_state
+            n.tutoring_state,
+            n.grade
           FROM kpis.new_lecture n, params p
           WHERE n.start_date::date BETWEEN p.week_start AND p.week_end
         ),
@@ -206,6 +207,7 @@ def km_weekly_full():
             s.fst_months,
             s.start_date,
             s.tutoring_state,
+            s.grade
             COALESCE((
               SELECT MAX(l.episode_no)
               FROM kpis.lvt_log l
@@ -217,7 +219,7 @@ def km_weekly_full():
         ins AS (
           INSERT INTO kpis.lvt_log (
             lecture_vt_no, episode_no, student_user_no, fst_months,
-            start_date, end_date, tutoring_state, created_at, updated_at
+            start_date, end_date, tutoring_state, created_at, updated_at,grade
           )
           SELECT
             c.lecture_vt_no_raw,
@@ -228,6 +230,7 @@ def km_weekly_full():
             NULL,
             c.tutoring_state,
             NOW(), NOW()
+            , c.grade
           FROM cand c
           ON CONFLICT (lecture_vt_no, episode_no) DO NOTHING
           RETURNING lecture_vt_no, episode_no

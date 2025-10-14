@@ -12,10 +12,10 @@ from pendulum import timezone
 
 KST = timezone("Asia/Seoul")
 
-new_column_list = ['lecture_vt_no', 'student_user_no','fst_months','start_date','end_date','tutoring_state','created_at']
+new_column_list = ['lecture_vt_no', 'student_user_no','fst_months','start_date','end_date','tutoring_state','created_at','grade']
 new_columns_str = ", ".join(f'"{col}"' for col in new_column_list)
 
-pause_column_list = ['lecture_vt_no', 'student_user_no','fst_months','start_date','end_date','tutoring_state','created_at']
+pause_column_list = ['lecture_vt_no', 'student_user_no','fst_months','start_date','end_date','tutoring_state','created_at','grade']
 pause_columns_str = ", ".join(f'"{col}"' for col in pause_column_list)
 
 def authorize_gspread():
@@ -42,7 +42,7 @@ def filter_today_new_list():
     target_date = (datetime.now() - timedelta(days=1)).date()
 
     sheet = open_worksheet('신규 수업 명단')
-    col_range = "B1:E"
+    col_range = "B1:G"
     col_values = sheet.get(col_range)
 
     df = pd.DataFrame(col_values[1:], columns=col_values[0])
@@ -81,7 +81,7 @@ def filter_today_pause_list():
     target_date = (datetime.now() - timedelta(days=1)).date()
 
     sheet = open_worksheet('중단 수업 명단')
-    col_range = "B1:E"
+    col_range = "B1:G"
     col_values = sheet.get(col_range)
 
     df = pd.DataFrame(col_values[1:], columns=col_values[0])
