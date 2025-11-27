@@ -88,7 +88,7 @@ def _ensure_base_tables(hook: PostgresHook):
     );
     """)
 
-    # 5) km_models / model_versions 기본 스키마 보장
+    # 5) km_models / model_versions 기본 스키마 보장 
     hook.run("""
     CREATE TABLE IF NOT EXISTS kpis.km_models (
       fit_window_start date,
@@ -120,7 +120,7 @@ def _ensure_base_tables(hook: PostgresHook):
 # -----------------------------
 @dag(
     dag_id="km_daily_full",
-    schedule="30 00 * * *",  # 매일 00:30 KST
+    schedule="30 1 * * *",  # 매일 00:30 KST
     start_date=datetime(2025, 1, 1, tzinfo=SEOUL),
     catchup=False,
     default_args={"retries": 2, "retry_delay": timedelta(minutes=10)},
