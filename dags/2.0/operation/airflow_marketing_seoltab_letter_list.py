@@ -122,25 +122,25 @@ def clear_sheet(sheet_name):
 
 
 
-def update_google_sheet_active_student(range_start_cell, dataframe):
+def update_google_sheet_active_student(dataframe):
     sheet = google_conn(sheet_name='학생_수강생')
     sheet = sheet.batch_clear(["A2:C"])
-    sheet.update(range_start_cell, dataframe)
+    sheet.update(["A2:C"], dataframe)
 
-def update_google_sheet_inactive_student(range_start_cell, dataframe):
+def update_google_sheet_inactive_student(dataframe):
     sheet = google_conn(sheet_name='학생_중단')
     sheet = sheet.batch_clear(["A2:C"])
-    sheet.update(range_start_cell, dataframe)
+    sheet.update(["A2:C"], dataframe)
 
-def update_google_sheet_active_parent(range_start_cell, dataframe):
+def update_google_sheet_active_parent(dataframe):
     sheet = google_conn(sheet_name='학부모_수강생')
     sheet = sheet.batch_clear(["A2:C"])
-    sheet.update(range_start_cell, dataframe)
+    sheet.update(["A2:C"], dataframe)
 
-def update_google_sheet_inactive_parent(range_start_cell, dataframe):
+def update_google_sheet_inactive_parent(dataframe):
     sheet = google_conn(sheet_name='학부모_중단')
     sheet = sheet.batch_clear(["A2:C"])
-    sheet.update(range_start_cell, dataframe)
+    sheet.update(["A2:C"], dataframe)
 
 
 def run_query_active_student():
@@ -179,16 +179,16 @@ def run_query_inactive_parent():
 
 
 def active_student_listup():
-    update_google_sheet_active_student(range_start_cell=["A2:C"], dataframe=run_query_active_student())
+    update_google_sheet_active_student(dataframe=run_query_active_student())
 
 def inactive_student_listup():
-    update_google_sheet_active_student(range_start_cell=["A2:C"], dataframe=run_query_inactive_student())
+    update_google_sheet_active_student(dataframe=run_query_inactive_student())
 
 def active_parent_listup():
-    update_google_sheet_active_student(range_start_cell=["A2:C"], dataframe=run_query_active_parent())
+    update_google_sheet_active_student(dataframe=run_query_active_parent())
 
 def inactive_parent_listup():
-    update_google_sheet_active_student(range_start_cell=["A2:C"], dataframe=run_query_inactive_parent())
+    update_google_sheet_active_student(dataframe=run_query_inactive_parent())
 
 
 def upload_backup_table(sql : str):
