@@ -9,6 +9,86 @@ from pendulum import timezone
 KST = timezone("Asia/Seoul")
 
 
+active_student_query = '''
+    with list as (
+select lvt.student_user_no, u.phone_number, ttn.name as grade
+	from mysql.onuei.lecture_video_tutoring lvt 
+	inner join mysql.onuei."user" u on lvt.student_user_No = u.user_No 
+	inner join mysql.onuei.student s on student_user_No = s.user_No 
+	inner join mysql.onuei.term_taxonomy_name ttn on s."year" = ttn.term_taxonomy_id 
+	where student_type in ('PAYED','PAYED_B')
+	and tutoring_state not in ('FINISH','AUTO_FINISH','DONE')
+	and u.email_id not like '%test%'
+	and ttn.name not in ('N수생','초1','초2','초3','초4','초5','초6')
+	group by lvt.student_user_No, u.phone_number, ttn.name 
+)
+select student_user_no, phone_number, grade, now() as updated_at
+    from list
+'''
+
+inative_student_query = '''
+-- 중단_학생
+with list as (
+select lvt.student_user_no, u.phone_number, ttn.name as grade, max(lvt.update_datetime) as max_done_time
+	from mysql.onuei.lecture_video_tutoring lvt 
+	inner join mysql.onuei."user" u on lvt.student_user_No = u.user_No 
+	inner join mysql.onuei.student s on student_user_No = s.user_No 
+	inner join mysql.onuei.term_taxonomy_name ttn on s."year" = ttn.term_taxonomy_id 
+	where student_type in ('PAYED','PAYED_B')
+	and tutoring_state in ('FINISH','AUTO_FINISH','DONE')
+	and u.email_id not like '%test%'
+	and ttn.name not in ('N수생','초1','초2','초3','초4','초5','초6')
+	group by lvt.student_user_No, u.phone_number, ttn.name 
+)
+select list.student_user_no, list.phone_number, list.grade, now() as updated_at
+	from list
+	where list.student_user_no not in (
+	select student_user_No 
+		from mysql.onuei.lecture_video_tutoring lvt 
+		where tutoring_state not in ('FINISH','AUTO_FINISH','DONE')
+	)
+	and max_done_time <= '2024-08-01 23:59:59'
+'''
+
+active_parent_query = '''
+    with list as (
+select lvt.student_user_no, s.parent_phone_number, ttn.name as grade
+	from mysql.onuei.lecture_video_tutoring lvt 
+	inner join mysql.onuei."user" u on lvt.student_user_No = u.user_No 
+	inner join mysql.onuei.student s on student_user_No = s.user_No 
+	inner join mysql.onuei.term_taxonomy_name ttn on s."year" = ttn.term_taxonomy_id 
+	where student_type in ('PAYED','PAYED_B')
+	and tutoring_state not in ('FINISH','AUTO_FINISH','DONE')
+	and u.email_id not like '%test%'
+	and ttn.name not in ('N수생','초1','초2','초3','초4','초5','초6')
+	group by lvt.student_user_No, u.phone_number, ttn.name 
+)
+select student_user_no, parent_phone_number, grade, now() as updated_at
+    from list
+'''
+
+inactive_parent_query = '''-- 중단_학부모
+with list as (
+select lvt.student_user_no, s.parent_phone_number, ttn.name as grade, max(lvt.update_datetime) as max_done_time
+	from mysql.onuei.lecture_video_tutoring lvt 
+	inner join mysql.onuei."user" u on lvt.student_user_No = u.user_No 
+	inner join mysql.onuei.student s on student_user_No = s.user_No 
+	inner join mysql.onuei.term_taxonomy_name ttn on s."year" = ttn.term_taxonomy_id 
+	where student_type in ('PAYED','PAYED_B')
+	and tutoring_state in ('FINISH','AUTO_FINISH','DONE')
+	and u.email_id not like '%test%'
+	and ttn.name not in ('N수생','초1','초2','초3','초4','초5','초6')
+	group by lvt.student_user_No, u.phone_number, ttn.name 
+)
+select list.student_user_no, list.parent_phone_number, list.grade, now() as updated_at
+	from list
+	where list.student_user_no not in (
+	select student_user_No 
+		from mysql.onuei.lecture_video_tutoring lvt 
+		where tutoring_state not in ('FINISH','AUTO_FINISH','DONE')
+	)
+	and max_done_time <= '2024-08-01 23:59:59'
+'''
 
 # 구글 인증 설정
 def authorize_gspread():
@@ -65,22 +145,7 @@ def update_google_sheet_inactive_parent(range_start_cell, dataframe):
 
 def run_query_active_student():
     from airflow.providers.trino.hooks.trino import TrinoHook
-    query = '''
-    with list as (
-select lvt.student_user_no, u.phone_number, ttn.name as grade
-	from mysql.onuei.lecture_video_tutoring lvt 
-	inner join mysql.onuei."user" u on lvt.student_user_No = u.user_No 
-	inner join mysql.onuei.student s on student_user_No = s.user_No 
-	inner join mysql.onuei.term_taxonomy_name ttn on s."year" = ttn.term_taxonomy_id 
-	where student_type in ('PAYED','PAYED_B')
-	and tutoring_state not in ('FINISH','AUTO_FINISH','DONE')
-	and u.email_id not like '%test%'
-	and ttn.name not in ('N수생','초1','초2','초3','초4','초5','초6')
-	group by lvt.student_user_No, u.phone_number, ttn.name 
-)
-select student_user_no, phone_number, grade, now() as updated_at
-    from list
-    '''
+    query = active_student_query
     trino_hook = TrinoHook(trino_conn_id='trino_conn')
     trino_engine = trino_hook.get_sqlalchemy_engine()
     df = pd.read_sql(query, trino_engine)
@@ -89,28 +154,7 @@ select student_user_no, phone_number, grade, now() as updated_at
 
 def run_query_inactive_student():
     from airflow.providers.trino.hooks.trino import TrinoHook
-    query = '''-- 중단_학생
-with list as (
-select lvt.student_user_no, u.phone_number, ttn.name as grade, max(lvt.update_datetime) as max_done_time
-	from mysql.onuei.lecture_video_tutoring lvt 
-	inner join mysql.onuei."user" u on lvt.student_user_No = u.user_No 
-	inner join mysql.onuei.student s on student_user_No = s.user_No 
-	inner join mysql.onuei.term_taxonomy_name ttn on s."year" = ttn.term_taxonomy_id 
-	where student_type in ('PAYED','PAYED_B')
-	and tutoring_state in ('FINISH','AUTO_FINISH','DONE')
-	and u.email_id not like '%test%'
-	and ttn.name not in ('N수생','초1','초2','초3','초4','초5','초6')
-	group by lvt.student_user_No, u.phone_number, ttn.name 
-)
-select list.student_user_no, list.phone_number, list.grade, now() as updated_at
-	from list
-	where list.student_user_no not in (
-	select student_user_No 
-		from mysql.onuei.lecture_video_tutoring lvt 
-		where tutoring_state not in ('FINISH','AUTO_FINISH','DONE')
-	)
-	and max_done_time <= '2024-08-01 23:59:59'
-    '''
+    query = incative_student_query
     trino_hook = TrinoHook(trino_conn_id='trino_conn')
     trino_engine = trino_hook.get_sqlalchemy_engine()
     df = pd.read_sql(query, trino_engine)
@@ -118,22 +162,7 @@ select list.student_user_no, list.phone_number, list.grade, now() as updated_at
 
 def run_query_active_parent():
     from airflow.providers.trino.hooks.trino import TrinoHook
-    query = '''
-    with list as (
-select lvt.student_user_no, s.parent_phone_number, ttn.name as grade
-	from mysql.onuei.lecture_video_tutoring lvt 
-	inner join mysql.onuei."user" u on lvt.student_user_No = u.user_No 
-	inner join mysql.onuei.student s on student_user_No = s.user_No 
-	inner join mysql.onuei.term_taxonomy_name ttn on s."year" = ttn.term_taxonomy_id 
-	where student_type in ('PAYED','PAYED_B')
-	and tutoring_state not in ('FINISH','AUTO_FINISH','DONE')
-	and u.email_id not like '%test%'
-	and ttn.name not in ('N수생','초1','초2','초3','초4','초5','초6')
-	group by lvt.student_user_No, u.phone_number, ttn.name 
-)
-select student_user_no, parent_phone_number, grade, now() as updated_at
-    from list
-    '''
+    query = active_parent_query
     trino_hook = TrinoHook(trino_conn_id='trino_conn')
     trino_engine = trino_hook.get_sqlalchemy_engine()
     df = pd.read_sql(query, trino_engine)
@@ -142,28 +171,7 @@ select student_user_no, parent_phone_number, grade, now() as updated_at
 
 def run_query_inactive_parent():
     from airflow.providers.trino.hooks.trino import TrinoHook
-    query = '''-- 중단_학생
-with list as (
-select lvt.student_user_no, s.parent_phone_number, ttn.name as grade, max(lvt.update_datetime) as max_done_time
-	from mysql.onuei.lecture_video_tutoring lvt 
-	inner join mysql.onuei."user" u on lvt.student_user_No = u.user_No 
-	inner join mysql.onuei.student s on student_user_No = s.user_No 
-	inner join mysql.onuei.term_taxonomy_name ttn on s."year" = ttn.term_taxonomy_id 
-	where student_type in ('PAYED','PAYED_B')
-	and tutoring_state in ('FINISH','AUTO_FINISH','DONE')
-	and u.email_id not like '%test%'
-	and ttn.name not in ('N수생','초1','초2','초3','초4','초5','초6')
-	group by lvt.student_user_No, u.phone_number, ttn.name 
-)
-select list.student_user_no, list.parent_phone_number, list.grade, now() as updated_at
-	from list
-	where list.student_user_no not in (
-	select student_user_No 
-		from mysql.onuei.lecture_video_tutoring lvt 
-		where tutoring_state not in ('FINISH','AUTO_FINISH','DONE')
-	)
-	and max_done_time <= '2024-08-01 23:59:59'
-    '''
+    query = inactive_parent
     trino_hook = TrinoHook(trino_conn_id='trino_conn')
     trino_engine = trino_hook.get_sqlalchemy_engine()
     df = pd.read_sql(query, trino_engine)
@@ -183,11 +191,12 @@ def inactive_parent_listup():
     update_google_sheet_active_student(range_start_cell=["A2:C"], dataframe=run_query_inactive_parent())
 
 
-def upload_backup_table(dataframe):
+def upload_backup_table(sql : str):
     from airflow.providers.postgres.hooks.postgres import PostgresHook
     pg_hook = PostgresHook(postgres_conn_id='postgres_marketing')  
     pg_engine = pg_hook.get_sqlalchemy_engine()
-    dataframe.to_sql(
+    df = pd.read_sql(sql, pg_engine)
+    df.to_sql(
         name='seoltab_letter_backup',
         con=pg_engine,
         schema='public',
@@ -241,28 +250,40 @@ with DAG(
 
     upload_backup_active_student = PythonOperator(
         task_id='upload_weekly_active_student_data_backup',
-        python_callable=upload_backup_table(run_query_active_student),
+        python_callable=upload_backup_table,
+        op_kwargs={
+            "sql": active_student_query
+        },
         retries=5,
         retry_delay=timedelta(seconds=2),
     )
 
     upload_backup_inactive_student = PythonOperator(
         task_id='upload_weekly_inactive_student_data_backup',
-        python_callable=upload_backup_table(run_query_inactive_student),
+        python_callable=upload_backup_table,
+        op_kwargs={
+            "sql": inative_student_query
+        },
         retries=5,
         retry_delay=timedelta(seconds=2),
     )
 
     upload_backup_active_parent = PythonOperator(
         task_id='upload_weekly_active_parent_data_backup',
-        python_callable=upload_backup_table(run_query_active_parent),
+        python_callable=upload_backup_table,
         retries=5,
+        op_kwargs={
+            "sql": active_parent_query
+        },
         retry_delay=timedelta(seconds=2),
     )
 
     upload_backup_inactive_parent = PythonOperator(
         task_id='upload_weekly_inactive_parent_data_backup',
-        python_callable=upload_backup_table(run_query_inactive_parent),
+        python_callable=upload_backup_table,
+        op_kwargs={
+            "sql": inactive_parent_query
+        },
         retries=5,
         retry_delay=timedelta(seconds=2),
     )
