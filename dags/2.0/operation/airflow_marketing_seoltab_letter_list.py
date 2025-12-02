@@ -190,13 +190,13 @@ def active_student_listup():
     update_google_sheet_active_student(dataframe=run_query_active_student())
 
 def inactive_student_listup():
-    update_google_sheet_active_student(dataframe=run_query_inactive_student())
+    update_google_sheet_inactive_student(dataframe=run_query_inactive_student())
 
 def active_parent_listup():
-    update_google_sheet_active_student(dataframe=run_query_active_parent())
+    update_google_sheet_active_parent(dataframe=run_query_active_parent())
 
 def inactive_parent_listup():
-    update_google_sheet_active_student(dataframe=run_query_inactive_parent())
+    update_google_sheet_inactive_parent(dataframe=run_query_inactive_parent())
 
 
 def upload_backup_table(sql : str, source: str, **context):
