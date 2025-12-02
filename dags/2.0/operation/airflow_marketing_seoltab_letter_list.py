@@ -126,29 +126,29 @@ def update_google_sheet_active_student(dataframe):
     df = dataframe.copy()
     df = df.where(df.notnull(), "").astype(str) 
     sheet = google_conn(sheet_name='학생_수강생')
-    sheet.batch_clear(["A2:C"])
-    sheet.update("A2:C", df.values.tolist())
+    sheet.batch_clear(["A2:D"])
+    sheet.update("A2:D", df.values.tolist())
 
 def update_google_sheet_inactive_student(dataframe):
     df = dataframe.copy()
     df = df.where(df.notnull(), "").astype(str) 
     sheet = google_conn(sheet_name='학생_중단')
-    sheet.batch_clear(["A2:C"])
-    sheet.update("A2:C", df.values.tolist())
+    sheet.batch_clear(["A2:D"])
+    sheet.update("A2:D", df.values.tolist())
 
 def update_google_sheet_active_parent(dataframe):
     df = dataframe.copy()
     df = df.where(df.notnull(), "").astype(str) 
     sheet = google_conn(sheet_name='학부모_수강생')
-    sheet.batch_clear(["A2:C"])
-    sheet.update("A2:C", df.values.tolist())
+    sheet.batch_clear(["A2:D"])
+    sheet.update("A2:D", df.values.tolist())
 
 def update_google_sheet_inactive_parent(dataframe):
     df = dataframe.copy()
     df = df.where(df.notnull(), "").astype(str) 
     sheet = google_conn(sheet_name='학부모_중단')
-    sheet.batch_clear(["A2:C"])
-    sheet.update("A2:C", df.values.tolist())
+    sheet.batch_clear(["A2:D"])
+    sheet.update("A2:D", df.values.tolist())
 
 
 def run_query_active_student():
