@@ -161,7 +161,7 @@ default_args = {
 }
 
 with DAG(
-    dag_id='marketing_seoltab_letter_google_sheet_update_dag',
+    dag_id='marketing_seoltab_letter_student_google_sheet_update_dag',
     default_args=default_args,
     schedule_interval='0 6 * * 6',  # 매주 토요일 오전 6시
     catchup=False,
