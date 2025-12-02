@@ -22,7 +22,7 @@ select lvt.student_user_no, u.phone_number, ttn.name as grade
 	and ttn.name not in ('N수생','초1','초2','초3','초4','초5','초6')
 	group by lvt.student_user_No, u.phone_number, ttn.name 
 )
-select student_user_no, phone_number, grade, now() as updated_at
+select student_user_no, phone_number, grade, now() + interval '9' hour as updated_at
     from list
 '''
 
@@ -40,7 +40,7 @@ select lvt.student_user_no, u.phone_number, ttn.name as grade, max(lvt.update_da
 	and ttn.name not in ('N수생','초1','초2','초3','초4','초5','초6')
 	group by lvt.student_user_No, u.phone_number, ttn.name 
 )
-select list.student_user_no, list.phone_number, list.grade, now() as updated_at
+select list.student_user_no, list.phone_number, list.grade, now() + interval '9' hour as updated_at
 	from list
 	where list.student_user_no not in (
 	select student_user_No 
@@ -63,7 +63,7 @@ select lvt.student_user_no, s.parent_phone_number, ttn.name as grade
 	and ttn.name not in ('N수생','초1','초2','초3','초4','초5','초6')
 	group by lvt.student_user_No, u.phone_number, ttn.name 
 )
-select student_user_no, parent_phone_number, grade, now() as updated_at
+select student_user_no, parent_phone_number, grade, now() + interval '9' hour as updated_at
     from list
 '''
 
@@ -80,7 +80,7 @@ select lvt.student_user_no, s.parent_phone_number, ttn.name as grade, max(lvt.up
 	and ttn.name not in ('N수생','초1','초2','초3','초4','초5','초6')
 	group by lvt.student_user_No, u.phone_number, ttn.name 
 )
-select list.student_user_no, list.parent_phone_number, list.grade, now() as updated_at
+select list.student_user_no, list.parent_phone_number, list.grade, now() + interval '9' hour as updated_at
 	from list
 	where list.student_user_no not in (
 	select student_user_No 
@@ -199,7 +199,7 @@ def inactive_parent_listup():
     update_google_sheet_active_student(dataframe=run_query_inactive_parent())
 
 
-def upload_backup_table(sql : str):
+def upload_backup_table(sql : str, source: str, **context):
     from airflow.providers.postgres.hooks.postgres import PostgresHook
     from sqlalchemy import text
     from airflow.providers.trino.hooks.trino import TrinoHook
@@ -211,7 +211,7 @@ def upload_backup_table(sql : str):
     print(f'=================={type(sql)}========================')
     print(sql)
     df = pd.read_sql_query(sql=text(sql), con=trino_engine)
-    print(df)
+    df["source"] = source
     df.to_sql(
         name='seoltab_letter_backup',
         con=pg_engine,
@@ -268,7 +268,8 @@ with DAG(
         task_id='upload_weekly_active_student_data_backup',
         python_callable=upload_backup_table,
         op_kwargs={
-            "sql": active_student_query
+            "sql": active_student_query,
+            "source": "active_student",
         },
         retries=5,
         retry_delay=timedelta(seconds=2),
@@ -278,7 +279,8 @@ with DAG(
         task_id='upload_weekly_inactive_student_data_backup',
         python_callable=upload_backup_table,
         op_kwargs={
-            "sql": inative_student_query
+            "sql": inative_student_query,
+            "source": "inactive_student",
         },
         retries=5,
         retry_delay=timedelta(seconds=2),
@@ -289,7 +291,8 @@ with DAG(
         python_callable=upload_backup_table,
         retries=5,
         op_kwargs={
-            "sql": active_parent_query
+            "sql": active_parent_query,
+            "source": "active_parent",
         },
         retry_delay=timedelta(seconds=2),
     )
@@ -298,7 +301,8 @@ with DAG(
         task_id='upload_weekly_inactive_parent_data_backup',
         python_callable=upload_backup_table,
         op_kwargs={
-            "sql": inactive_parent_query
+            "sql": inactive_parent_query,
+            "source": "inactive_parent",
         },
         retries=5,
         retry_delay=timedelta(seconds=2),
