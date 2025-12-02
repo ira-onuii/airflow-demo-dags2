@@ -63,7 +63,7 @@ select lvt.student_user_no, s.parent_phone_number, ttn.name as grade
 	and ttn.name not in ('N수생','초1','초2','초3','초4','초5','초6')
 	group by lvt.student_user_No, s.parent_phone_number, ttn.name 
 )
-select student_user_no, parent_phone_number, grade, now() + interval '9' hour as updated_at
+select student_user_no, parent_phone_number as phone_number, grade, now() + interval '9' hour as updated_at
     from list
 '''
 
@@ -80,7 +80,7 @@ select lvt.student_user_no, s.parent_phone_number, ttn.name as grade, max(lvt.up
 	and ttn.name not in ('N수생','초1','초2','초3','초4','초5','초6')
 	group by lvt.student_user_No, s.parent_phone_number, ttn.name 
 )
-select list.student_user_no, list.parent_phone_number, list.grade, now() + interval '9' hour as updated_at
+select list.student_user_no, list.parent_phone_number as phone_number, list.grade, now() + interval '9' hour as updated_at
 	from list
 	where list.student_user_no not in (
 	select student_user_No 
