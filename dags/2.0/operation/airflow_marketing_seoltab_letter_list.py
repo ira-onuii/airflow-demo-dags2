@@ -241,28 +241,28 @@ with DAG(
 
     upload_backup_active_student = PythonOperator(
         task_id='upload_weekly_active_student_data_backup',
-        python_callable=upload_backup_table(run_query_active_student()),
+        python_callable=upload_backup_table(run_query_active_student),
         retries=5,
         retry_delay=timedelta(seconds=2),
     )
 
     upload_backup_inactive_student = PythonOperator(
         task_id='upload_weekly_inactive_student_data_backup',
-        python_callable=upload_backup_table(run_query_inactive_student()),
+        python_callable=upload_backup_table(run_query_inactive_student),
         retries=5,
         retry_delay=timedelta(seconds=2),
     )
 
     upload_backup_active_parent = PythonOperator(
         task_id='upload_weekly_active_parent_data_backup',
-        python_callable=upload_backup_table(run_query_active_parent()),
+        python_callable=upload_backup_table(run_query_active_parent),
         retries=5,
         retry_delay=timedelta(seconds=2),
     )
 
     upload_backup_inactive_parent = PythonOperator(
         task_id='upload_weekly_inactive_parent_data_backup',
-        python_callable=upload_backup_table(run_query_inactive_parent()),
+        python_callable=upload_backup_table(run_query_inactive_parent),
         retries=5,
         retry_delay=timedelta(seconds=2),
     )
