@@ -201,12 +201,13 @@ def inactive_parent_listup():
 
 def upload_backup_table(sql : str):
     from airflow.providers.postgres.hooks.postgres import PostgresHook
+    from sqlalchemy import text
     pg_hook = PostgresHook(postgres_conn_id='postgres_marketing')  
     pg_engine = pg_hook.get_sqlalchemy_engine()
     
     print(f'=================={type(sql)}========================')
     print(sql)
-    df = pd.read_sql(sql, pg_engine)
+    df = pd.read_sql_query(sql=text(sql), con=pg_engine)
     print(df)
     df.to_sql(
         name='seoltab_letter_backup',
