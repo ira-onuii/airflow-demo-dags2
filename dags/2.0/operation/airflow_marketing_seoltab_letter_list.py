@@ -204,6 +204,8 @@ def upload_backup_table(sql : str):
     pg_hook = PostgresHook(postgres_conn_id='postgres_marketing')  
     pg_engine = pg_hook.get_sqlalchemy_engine()
     df = pd.read_sql(sql, pg_engine)
+    print(f'=================={type(sql)}========================')
+    print(sql)
     df.to_sql(
         name='seoltab_letter_backup',
         con=pg_engine,
