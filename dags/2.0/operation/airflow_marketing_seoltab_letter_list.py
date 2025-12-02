@@ -162,7 +162,7 @@ def run_query_active_student():
 
 def run_query_inactive_student():
     from airflow.providers.trino.hooks.trino import TrinoHook
-    query = incative_student_query
+    query = inative_student_query
     trino_hook = TrinoHook(trino_conn_id='trino_conn')
     trino_engine = trino_hook.get_sqlalchemy_engine()
     df = pd.read_sql(query, trino_engine)
@@ -179,7 +179,7 @@ def run_query_active_parent():
 
 def run_query_inactive_parent():
     from airflow.providers.trino.hooks.trino import TrinoHook
-    query = inactive_parent
+    query = inactive_parent_query
     trino_hook = TrinoHook(trino_conn_id='trino_conn')
     trino_engine = trino_hook.get_sqlalchemy_engine()
     df = pd.read_sql(query, trino_engine)
