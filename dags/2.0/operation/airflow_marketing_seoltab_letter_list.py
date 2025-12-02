@@ -47,7 +47,7 @@ select list.student_user_no, list.phone_number, list.grade, now() + interval '9'
 		from mysql.onuei.lecture_video_tutoring lvt 
 		where tutoring_state not in ('FINISH','AUTO_FINISH','DONE')
 	)
-	and max_done_time <= '2024-08-01 23:59:59'
+	and max_done_time <= cast('2024-08-01 23:59:59' as timestamp)
 '''
 
 active_parent_query = '''
@@ -87,7 +87,7 @@ select list.student_user_no, list.parent_phone_number, list.grade, now() + inter
 		from mysql.onuei.lecture_video_tutoring lvt 
 		where tutoring_state not in ('FINISH','AUTO_FINISH','DONE')
 	)
-	and max_done_time <= '2024-08-01 23:59:59'
+	and max_done_time <= cast('2024-08-01 23:59:59' as timestamp)
 '''
 
 # 구글 인증 설정
