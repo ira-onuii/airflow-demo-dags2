@@ -44,7 +44,7 @@ select lvt.student_user_no, s.parent_phone_number, ttn.name as grade, max(lvt.up
 usc as (
 select usc.user_no
 	from mysql.onuei.user_service_config usc
-	where usc.term_user_type = 'PARENT'
+	where usc.term_user_type = 'STUDENT'
 	and usc.push_switch like '%ON_AD%'
 )
 select list.student_user_no, list.parent_phone_number as phone_number, list.grade, now() + interval '9' hour as updated_at
