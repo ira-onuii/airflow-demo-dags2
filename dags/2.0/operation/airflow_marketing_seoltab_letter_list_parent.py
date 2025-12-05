@@ -23,16 +23,9 @@ select lvt.student_user_no, s.parent_phone_number, ttn.name as grade
 	and u.email_id not like '%test%'
 	and ttn.name not in ('N수생','초1','초2','초3','초4','초5','초6')
 	group by lvt.student_user_No, s.parent_phone_number, ttn.name 
-),
-usc as (
-select usc.user_no
-	from mysql.onuei.user_service_config usc
-	where usc.term_user_type = 'PARENT'
-	and usc.push_switch like '%ON_AD%'
 )
 select student_user_no, parent_phone_number as phone_number, grade, now() + interval '9' hour as updated_at
     from list
-    inner join usc on usc.user_no = list.student_user_no
 '''
 
 inactive_parent_query = '''-- 중단_학부모

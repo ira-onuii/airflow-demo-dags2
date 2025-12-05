@@ -22,16 +22,9 @@ select lvt.student_user_no, u.phone_number, ttn.name as grade
 	and u.email_id not like '%test%'
 	and ttn.name not in ('N수생','초1','초2','초3','초4','초5','초6')
 	group by lvt.student_user_No, u.phone_number, ttn.name 
-),
-usc as (
-select usc.user_no
-	from mysql.onuei.user_service_config usc
-	where usc.term_user_type = 'STUDENT'
-	and usc.push_switch like '%ON_AD%'
 )
 select student_user_no, phone_number, grade, now() + interval '9' hour as updated_at
     from list
-    inner join usc on list.student_user_no = usc.user_no 
 '''
 
 inative_student_query = '''
