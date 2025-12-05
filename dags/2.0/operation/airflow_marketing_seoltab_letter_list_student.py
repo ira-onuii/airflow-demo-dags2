@@ -10,7 +10,8 @@ KST = timezone("Asia/Seoul")
 
 
 active_student_query = '''
-    with list as (
+-- 학생_수강생	
+with list as (
 select lvt.student_user_no, u.phone_number, ttn.name as grade
 	from mysql.onuei.lecture_video_tutoring lvt 
 	inner join mysql.onuei."user" u on lvt.student_user_No = u.user_No 
@@ -21,9 +22,16 @@ select lvt.student_user_no, u.phone_number, ttn.name as grade
 	and u.email_id not like '%test%'
 	and ttn.name not in ('N수생','초1','초2','초3','초4','초5','초6')
 	group by lvt.student_user_No, u.phone_number, ttn.name 
+),
+usc as (
+select usc.user_no
+	from mysql.onuei.user_service_config usc
+	where usc.term_user_type = 'STUDENT'
+	and usc.push_switch like '%ON_AD%'
 )
 select student_user_no, phone_number, grade, now() + interval '9' hour as updated_at
     from list
+    inner join usc on list.student_user_no = usc.user_no 
 '''
 
 inative_student_query = '''
@@ -39,15 +47,22 @@ select lvt.student_user_no, u.phone_number, ttn.name as grade, max(lvt.update_da
 	and u.email_id not like '%test%'
 	and ttn.name not in ('N수생','초1','초2','초3','초4','초5','초6')
 	group by lvt.student_user_No, u.phone_number, ttn.name 
+),
+usc as (
+select usc.user_no
+	from mysql.onuei.user_service_config usc
+	where usc.term_user_type = 'STUDENT'
+	and usc.push_switch like '%ON_AD%'
 )
 select list.student_user_no, list.phone_number, list.grade, now() + interval '9' hour as updated_at
 	from list
+	inner join usc on list.student_user_no = usc.user_no
 	where list.student_user_no not in (
 	select student_user_No 
 		from mysql.onuei.lecture_video_tutoring lvt 
 		where tutoring_state not in ('FINISH','AUTO_FINISH','DONE')
 	)
-	and max_done_time <= cast('2024-08-01 23:59:59' as timestamp)
+	and max_done_time >= cast('2024-08-01 00:00:00' as timestamp)
 '''
 
 
