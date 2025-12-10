@@ -104,7 +104,7 @@ default_args = {
 with DAG(
     dag_id='experience_feedback_1_2511',
     default_args=default_args,
-    schedule_interval='0 6 * * 6',  # 매주 토요일 오전 6시
+    schedule_interval='0 0 * * *',  # 매주 토요일 오전 6시
     catchup=False,
     tags=['2.0', 'operation', 'experience'],
 ) as dag:
