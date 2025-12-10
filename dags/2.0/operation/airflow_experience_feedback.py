@@ -12,13 +12,13 @@ feeddback_cycle_1 = '''
 -- 1회차 raw
 with fdb_o_t as (
 select A.lecture_vt_no,A.cycle_count,A.created_at,A.tutor_user_id,date_format(A.created_at,'%Y-%m-%d') as "제출일시",
-	max(CASE WHEN A.key in ('"WRdlQ5IHesSBwlRMtm7n"','"PGA4wcjTzXD8gUcA1CEJ"','"uW2XnB5kgOPiF2uNN5bF"','"xOcsN1JRX8Z7eHvc5D9u"') THEN A.value END) AS "수업 추천 점수"
-	,max(CASE WHEN A.key in ('"cycle01_01_hello"','"cycle02_01_ready"','"cycle03_01_ready"','"cycle04_01_ready"') THEN A.value END) AS "1.상담메세지발송/수업준비태도"
-	,max(CASE WHEN A.key in ('"cycle01_02_promise"','"cycle02_02_question"','"cycle03_02_question"','"cycle04_02_question"') THEN A.value END) AS "2.첫수업가이드/질문하는수업"
-	,max(CASE WHEN A.key in ('"cycle01_03_question"','"cycle02_03_compliment"','"cycle03_03_compliment"','"cycle04_03_compliment"') THEN A.value END) AS "3.질문하는수업/칭찬"
-	,max(CASE WHEN A.key in ('"cycle01_04_monthlyplan"','"cycle02_04_summary"','"cycle03_04_summary"','"cycle04_04_summary"') THEN A.value END) AS "4.맞춤학습계획서/수업요약"
-	,max(CASE WHEN A.key in ('"cycle01_05_respect"','"cycle02_05_respect"','"cycle03_05_respect"','"cycle04_05_respect"') THEN A.value END) AS "5.존중하는태도"
-	,max(CASE WHEN A.key in ('"cyMj2Q5EbCE2gOZPuvJs"','"SbXI6fGKqJeuGagtJFqU"','"9qiFkIjQ4ztJE5vyy0rY"','"WwZI08GtA8p7KANNMTuJ"') THEN A.value END) AS "선생님 추천 점수"
+	cast(max(CASE WHEN A.key in ('"WRdlQ5IHesSBwlRMtm7n"','"PGA4wcjTzXD8gUcA1CEJ"','"uW2XnB5kgOPiF2uNN5bF"','"xOcsN1JRX8Z7eHvc5D9u"') THEN A.value END) as int) AS "수업 추천 점수"
+	,cast(max(CASE WHEN A.key in ('"cycle01_01_hello"','"cycle02_01_ready"','"cycle03_01_ready"','"cycle04_01_ready"') THEN A.value END) as int) AS "1.상담메세지발송/수업준비태도"
+	,cast(max(CASE WHEN A.key in ('"cycle01_02_promise"','"cycle02_02_question"','"cycle03_02_question"','"cycle04_02_question"') THEN A.value END) as int) AS "2.첫수업가이드/질문하는수업"
+	,cast(max(CASE WHEN A.key in ('"cycle01_03_question"','"cycle02_03_compliment"','"cycle03_03_compliment"','"cycle04_03_compliment"') THEN A.value END) as int) AS "3.질문하는수업/칭찬"
+	,cast(max(CASE WHEN A.key in ('"cycle01_04_monthlyplan"','"cycle02_04_summary"','"cycle03_04_summary"','"cycle04_04_summary"') THEN A.value END) as int) AS "4.맞춤학습계획서/수업요약"
+	,cast(max(CASE WHEN A.key in ('"cycle01_05_respect"','"cycle02_05_respect"','"cycle03_05_respect"','"cycle04_05_respect"') THEN A.value END) as int) AS "5.존중하는태도"
+	,cast(max(CASE WHEN A.key in ('"cyMj2Q5EbCE2gOZPuvJs"','"SbXI6fGKqJeuGagtJFqU"','"9qiFkIjQ4ztJE5vyy0rY"','"WwZI08GtA8p7KANNMTuJ"') THEN A.value END) as int) AS "선생님 추천 점수"
 	from 		
 		(WITH cte AS (
 				select row_number() over(partition by sf.lecture_vt_no order by created_at asc) as rn 
@@ -52,12 +52,13 @@ select glvt.lecture_vt_no, glvt.group_lecture_vt_no, glvt.student_user_no, ttn2.
 	and ttn2.name in ('중1','중2','중3','고1','고2')
 ),
 list as (
-select glvt.lecture_vt_no, glvt.student_user_no, glvt.name as subject, glvt.tutoring_state
-	, case when done_timestamp is not null then 'done'
+select glvt.lecture_vt_no, glvt.student_user_no, cast(glvt.name as varchar) as subject, cast(glvt.tutoring_state as varchar) as tutoring_state
+	, cast(case when done_timestamp is not null then 'done'
 		when done_timestamp is null and tutoring_state in ('DONE','FINISH','AUTO_FINISH') then 'done' 
 		when done_timestamp is null and min_tutoring_datetime is null and tutoring_state in ('REGISTER','REMATCH','MATCHED','REMATCH_B') then 'active'
 		when done_timestamp is null and min_tutoring_datetime is not null then 'active'
 		else 'error' end
+		as varchar)
 			as active_state
 	, glvt.done_month, glvt.active_timestamp, glvt.done_timestamp
 	, fdb_o_t.created_at, fdb_o_t."1.상담메세지발송/수업준비태도", fdb_o_t."2.첫수업가이드/질문하는수업", fdb_o_t."3.질문하는수업/칭찬",fdb_o_t."4.맞춤학습계획서/수업요약",fdb_o_t."5.존중하는태도",fdb_o_t."선생님 추천 점수"
