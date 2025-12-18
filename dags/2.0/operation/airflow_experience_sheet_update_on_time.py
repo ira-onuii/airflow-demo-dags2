@@ -266,7 +266,7 @@ def google_conn(sheet_name):
 def update_google_sheet_query_result(dataframe):
     df = dataframe.copy()
      # Timestamp/Datetime 컬럼만 골라서 처리
-    dt_cols = df.select_dtypes(include=["datetime64[ns]", "datetime64[ns, UTC]","Timestamp"]).columns
+    dt_cols = df.select_dtypes(include=["datetime64[ns]", "datetime64[ns, UTC]"]).columns
 
     for c in dt_cols:
         # NaT -> "" 처리 후 문자열로
