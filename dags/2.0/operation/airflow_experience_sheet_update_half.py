@@ -298,7 +298,7 @@ default_args = {
 }
 
 with DAG(
-    dag_id='experience_query_google_sheet_update_dag',
+    dag_id='experience_query_google_sheet_update_dag_half',
     default_args=default_args,
     schedule_interval='30 18 * * *',  # 매주 토요일 오전 6시
     catchup=False,
