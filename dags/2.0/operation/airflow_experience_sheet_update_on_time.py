@@ -281,7 +281,7 @@ def update_google_sheet_query_result(dataframe):
     })
 
     sheet = google_conn(sheet_name='raw')
-    sheet.batch_clear(["B6:AI"])
+    #sheet.batch_clear(["B6:AI"])
     sheet.update("B6:AI", df.values.tolist(), value_input_option="USER_ENTERED")
 
 
