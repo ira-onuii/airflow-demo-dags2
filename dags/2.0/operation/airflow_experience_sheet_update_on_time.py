@@ -265,7 +265,8 @@ def google_conn(sheet_name):
 
 def update_google_sheet_query_result(dataframe):
     df = dataframe.copy()
-    df = df.where(df.notnull(), "").astype("object")
+    df = df.astype("object")
+    df = df.where(pd.notnull(df), "")
     sheet = google_conn(sheet_name='시트161')
     sheet.batch_clear(["B6:AI"])
     sheet.update("B6:AI", df.values.tolist())
