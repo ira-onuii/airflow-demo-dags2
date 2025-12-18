@@ -254,7 +254,9 @@ def authorize_gspread():
 
 def google_conn(sheet_name):
     client = authorize_gspread()
-    sheet = client.open_by_key('1JN1V9SFmtIASDplAERz3oDtRhgZgAauqtjg9TbSVHg0').worksheet(sheet_name)
+    sheet = client.open_by_key('1JN1V9SFmtIASDplAERz3oDtRhgZgAauqtjg9TbSVHg0').worksheet(sheet_name) 
+    #테스트 : 1htuBC0kD-o1B8_JjYW81fEJ6WDr7_Ox-2mVJtQGsePQ 
+    #라이브 : 1JN1V9SFmtIASDplAERz3oDtRhgZgAauqtjg9TbSVHg0
     return sheet
 
 
@@ -263,10 +265,25 @@ def google_conn(sheet_name):
 
 def update_google_sheet_query_result(dataframe):
     df = dataframe.copy()
-    df = df.where(df.notnull(), "").astype(str) 
+    
+    # 전부 문자열로 변환 (Timestamp 포함)
+    df = df.astype(str)
+
+    # 결측/특수문자열을 빈칸으로 통일
+    df = df.replace({
+        "NaT": "",
+        "nan": "",
+        "NaN": "",
+        "None": "",
+        "<NA>": "",
+        "inf": "",
+        "-inf": "",
+    })
+
     sheet = google_conn(sheet_name='raw')
-    sheet.batch_clear(["B6:AI"])
-    sheet.update("B6:AI", df.values.tolist())
+    #sheet.batch_clear(["B6:AI"])
+    sheet.update("B6:AI", df.values.tolist(), value_input_option="USER_ENTERED")
+
 
 
 
