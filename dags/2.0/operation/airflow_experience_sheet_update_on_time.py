@@ -300,7 +300,7 @@ default_args = {
 with DAG(
     dag_id='experience_query_google_sheet_update_dag',
     default_args=default_args,
-    schedule_interval='0 6 * * 6',  # 매주 토요일 오전 6시
+    schedule_interval='0 9,12,14,17 * * *',
     catchup=False,
     tags=['2.0', 'operation', 'experience'],
 ) as dag:
