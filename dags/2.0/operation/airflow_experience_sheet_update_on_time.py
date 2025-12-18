@@ -254,7 +254,7 @@ def authorize_gspread():
 
 def google_conn(sheet_name):
     client = authorize_gspread()
-    sheet = client.open_by_key('1htuBC0kD-o1B8_JjYW81fEJ6WDr7_Ox-2mVJtQGsePQ').worksheet(sheet_name) 
+    sheet = client.open_by_key('1JN1V9SFmtIASDplAERz3oDtRhgZgAauqtjg9TbSVHg0').worksheet(sheet_name) 
     #테스트 : 1htuBC0kD-o1B8_JjYW81fEJ6WDr7_Ox-2mVJtQGsePQ 
     #라이브 : 1JN1V9SFmtIASDplAERz3oDtRhgZgAauqtjg9TbSVHg0
     return sheet
@@ -280,7 +280,7 @@ def update_google_sheet_query_result(dataframe):
         "-inf": "",
     })
 
-    sheet = google_conn(sheet_name='시트161')
+    sheet = google_conn(sheet_name='raw')
     sheet.batch_clear(["B6:AI"])
     sheet.update("B6:AI", df.values.tolist(), value_input_option="USER_ENTERED")
 
