@@ -254,7 +254,7 @@ def authorize_gspread():
 
 def google_conn(sheet_name):
     client = authorize_gspread()
-    sheet = client.open_by_key('1htuBC0kD-o1B8_JjYW81fEJ6WDr7_Ox-2mVJtQGsePQ').worksheet(sheet_name)
+    sheet = client.open_by_key('1JN1V9SFmtIASDplAERz3oDtRhgZgAauqtjg9TbSVHg0').worksheet(sheet_name)
     return sheet
 
 
@@ -264,7 +264,7 @@ def google_conn(sheet_name):
 def update_google_sheet_query_result(dataframe):
     df = dataframe.copy()
     df = df.where(df.notnull(), "").astype(str) 
-    sheet = google_conn(sheet_name='시트161')
+    sheet = google_conn(sheet_name='raw')
     sheet.batch_clear(["B6:AI"])
     sheet.update("B6:AI", df.values.tolist())
 
