@@ -267,7 +267,7 @@ def update_google_sheet_query_result(dataframe):
     df = dataframe.copy()
     
     # 전부 문자열로 변환 (Timestamp 포함)
-    df = df.astype(str)
+    #df = df.astype(str)
 
     # 결측/특수문자열을 빈칸으로 통일
     df = df.replace({
@@ -281,8 +281,8 @@ def update_google_sheet_query_result(dataframe):
     })
 
     sheet = google_conn(sheet_name='시트161')
-    sheet.clear(["B6:AI"])
-    sheet.update("B6:AI", df.values.tolist())
+    sheet.batch_clear(["B6:AI"])
+    sheet.update("B6:AI", df.values.tolist(), value_input_option="USER_ENTERED")
 
 
 
