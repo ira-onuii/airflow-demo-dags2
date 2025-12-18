@@ -265,8 +265,14 @@ def google_conn(sheet_name):
 
 def update_google_sheet_query_result(dataframe):
     df = dataframe.copy()
-    df = df.astype("object")
-    df = df.where(pd.notnull(df), "")
+     # Timestamp/Datetime 컬럼만 골라서 처리
+    dt_cols = df.select_dtypes(include=["datetime64[ns]", "datetime64[ns, UTC]", "datetime64[ns, KST]","timestamp]"]).columns
+
+    for c in dt_cols:
+        # NaT -> "" 처리 후 문자열로
+        df[c] = df[c].where(df[c].notna(), "").astype(str)
+        # 혹시 남는 "NaT" 방어(환경 따라 생길 수 있어서)
+        df[c] = df[c].replace("NaT", "")
     sheet = google_conn(sheet_name='시트161')
     sheet.batch_clear(["B6:AI"])
     sheet.update("B6:AI", df.values.tolist())
