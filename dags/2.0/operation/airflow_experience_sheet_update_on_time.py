@@ -10,7 +10,7 @@ KST = timezone("Asia/Seoul")
 
 
 list_query = '''
-"-- 책임 수업 & 매칭 제도 대상자 추출
+-- 책임 수업 & 매칭 제도 대상자 추출
 with 
     glvt as (
             select glvt.group_lecture_vt_no,glvt.lecture_vt_no , glvt.active_timestamp , glvt.done_month ,glvt.done_timestamp,
@@ -234,7 +234,7 @@ select glvt.group_lecture_vt_no ,
         left join matchingdata md on glvt.group_lecture_vt_no = md.group_lecture_vt_no and md.tutor_id = sch.teacher_user_no and md.rn = 1
         left join ltvt on ltvt.group_lecture_vt_no = glvt.group_lecture_vt_no and ltvt.teacher_user_no = t.user_no
         left join ticket on glvt.lecture_vt_no = ticket.lecture_vt_no and ticket.tname = t.t_name
-        order by sch.create_datetime , glvt.lecture_vt_no asc"
+        order by sch.create_datetime , glvt.lecture_vt_no asc
 '''
 
 
