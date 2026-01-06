@@ -19,7 +19,7 @@ with
                     where glvt.active_timestamp >= timestamp '2025-11-01 00:00:00'
                 ),
     lvts as (
-            select lvt.lecture_vt_no ,lvt.student_type, u.user_no, u.name,u.phone_number,u.email_id,s.parent_name ,s.parent_phone_number ,lvt.payment_item , lvt.application_datetime, lvt.tutoring_state, ttn.name as ""subject"",lvt.lecture_subject_id, lvt.total_subject_done_month
+            select lvt.lecture_vt_no ,lvt.student_type, u.user_no, u.name,u.phone_number,u.email_id,s.parent_name ,s.parent_phone_number ,lvt.payment_item , lvt.application_datetime, lvt.tutoring_state, ttn.name as "subject",lvt.lecture_subject_id, lvt.total_subject_done_month
             from mysql.onuei.lecture_video_tutoring lvt
             inner join 
                     (select u.user_no, u.name, u.phone_number, u.email_id
@@ -72,20 +72,20 @@ with
                         ),
         nps as (
                 select concat(cast(A.lecture_vt_no as varchar),'_',cast(A.tutor_user_id as varchar),'_',cast(A.cycle_count as varchar))as key_no,
-                        A.rn, A.lecture_vt_no,A.cycle_count,A.tutor_user_id,date_format(A.created_at + interval '9' hour, '%Y-%m-%d %H:%i:%s') as ""제출일시"",A.student_user_id
-                        ,max(CASE WHEN A.key in ('""cycle01_01_hello""','""cycle02_01_ready""','""cycle03_01_ready""') THEN A.value END) AS ""1번""
-                        ,max(CASE WHEN A.key in ('""cycle01_02_promise""','""cycle02_02_question""','""cycle03_02_question""') THEN A.value END) AS ""2번""
-                        ,max(CASE WHEN A.key in ('""cycle01_03_question""','""cycle02_03_compliment""','""cycle03_03_compliment""') THEN A.value END) AS ""3번""
-                        ,max(CASE WHEN A.key in ('""cycle01_04_monthlyplan""','""cycle02_04_summary""','""cycle03_04_summary""') THEN A.value END) AS ""4번""
-                        ,max(CASE WHEN A.key in ('""cycle01_05_respect""','""cycle02_05_respect""','""cycle03_05_respect""') THEN A.value END) AS ""5번""
-                        ,max(CASE WHEN A.key in ('""cyMj2Q5EbCE2gOZPuvJs""','""SbXI6fGKqJeuGagtJFqU""','""9qiFkIjQ4ztJE5vyy0rY""') THEN A.value END) AS ""선생님 추천 점수""
-                        ,max(CASE WHEN A.key in ('""V3m8LmkMKv265jK0gqGR""','""CO6txyeWj4VL8EQIrkgd""','""WuBLJuA2fRJPHxfp0W3i""') THEN A.value END) AS ""중립_개선점""
-                        ,max(CASE WHEN A.key in ('""cycle01_under_8_change_tutor""','""cycle02_under_8_change_tutor""','""cycle03_under_8_change_tutor""') THEN A.value END) AS ""중립_선생님 변경 희망 여부""
-                        ,max(CASE WHEN A.key in ('""y6SQ8lSRfrrhzusiamMo""','""dKuaT9i0aX76oV3wbr6C""','""30y5Fl6sTpwI38EVY41g""') THEN A.value END) AS ""비추천_개선점""
-                        ,max(CASE WHEN A.key in ('""cycle01_under_6_change_tutor""','""cycle02_under_6_change_tutor""','""cycle03_under_6_change_tutor""') THEN A.value END) AS ""비추천_선생님 변경 희망 여부""
+                        A.rn, A.lecture_vt_no,A.cycle_count,A.tutor_user_id,date_format(A.created_at + interval '9' hour, '%Y-%m-%d %H:%i:%s') as "제출일시",A.student_user_id
+                        ,max(CASE WHEN A.key in ('"cycle01_01_hello"','"cycle02_01_ready"','"cycle03_01_ready"') THEN A.value END) AS "1번"
+                        ,max(CASE WHEN A.key in ('"cycle01_02_promise"','"cycle02_02_question"','"cycle03_02_question"') THEN A.value END) AS "2번"
+                        ,max(CASE WHEN A.key in ('"cycle01_03_question"','"cycle02_03_compliment"','"cycle03_03_compliment"') THEN A.value END) AS "3번"
+                        ,max(CASE WHEN A.key in ('"cycle01_04_monthlyplan"','"cycle02_04_summary"','"cycle03_04_summary"') THEN A.value END) AS "4번"
+                        ,max(CASE WHEN A.key in ('"cycle01_05_respect"','"cycle02_05_respect"','"cycle03_05_respect"') THEN A.value END) AS "5번"
+                        ,max(CASE WHEN A.key in ('"cyMj2Q5EbCE2gOZPuvJs"','"SbXI6fGKqJeuGagtJFqU"','"9qiFkIjQ4ztJE5vyy0rY"') THEN A.value END) AS "선생님 추천 점수"
+                        ,max(CASE WHEN A.key in ('"V3m8LmkMKv265jK0gqGR"','"CO6txyeWj4VL8EQIrkgd"','"WuBLJuA2fRJPHxfp0W3i"') THEN A.value END) AS "중립_개선점"
+                        ,max(CASE WHEN A.key in ('"cycle01_under_8_change_tutor"','"cycle02_under_8_change_tutor"','"cycle03_under_8_change_tutor"') THEN A.value END) AS "중립_선생님 변경 희망 여부"
+                        ,max(CASE WHEN A.key in ('"y6SQ8lSRfrrhzusiamMo"','"dKuaT9i0aX76oV3wbr6C"','"30y5Fl6sTpwI38EVY41g"') THEN A.value END) AS "비추천_개선점"
+                        ,max(CASE WHEN A.key in ('"cycle01_under_6_change_tutor"','"cycle02_under_6_change_tutor"','"cycle03_under_6_change_tutor"') THEN A.value END) AS "비추천_선생님 변경 희망 여부"
                         from (
                                 select rn,lecture_vt_no,cycle_count,created_at,tutor_user_id,student_user_id 
-                                                ,replace(replace(concat_ws('',map_keys.key),'{',''),'}','') as key,replace(replace(replace(concat_ws('',map_keys.value),'{',''),'}',''),'""','') as value
+                                                ,replace(replace(concat_ws('',map_keys.key),'{',''),'}','') as key,replace(replace(replace(concat_ws('',map_keys.value),'{',''),'}',''),'"','') as value
                                         from (
                                             select *
                                                     from
@@ -94,7 +94,7 @@ with
                                                             where sf.created_at > timestamp '2025-11-01 00:00:00') sf
                                                     where sf.rn <= 3
                                                     ) nps_raw
-                                    CROSS JOIN UNNEST(split_to_multimap(nps_raw.body_list_map, '"",', ':')) map_keys(key, value)
+                                    CROSS JOIN UNNEST(split_to_multimap(nps_raw.body_list_map, '",', ':')) map_keys(key, value)
                                 ) A
                 group by A.rn,A.lecture_vt_no,A.cycle_count,A.created_at,A.tutor_user_id,student_user_id 
                 ),
@@ -175,7 +175,7 @@ select glvt.group_lecture_vt_no ,
                     when sch.schedule_state in ('CANCEL') then '취소'
                     else ' '
                 end
-                        as ""회차"",
+                        as "회차",
                 glvt.active_timestamp,
                 glvt.user_no , 
                 glvt.name , 
@@ -189,24 +189,24 @@ select glvt.group_lecture_vt_no ,
                 case 
                         when sch.schedule_state in ('DONE') then sch.update_datetime 
                         else null
-                end as ""마치기 시점"",
-                nps.""제출일시"",
-                nps.""선생님 추천 점수"" ,
-                nps.""1번"" ,
-                nps.""2번"" ,
-                nps.""3번"" ,
-                nps.""4번"" ,
-                nps.""5번"",
+                end as "마치기 시점",
+                nps."제출일시",
+                nps."선생님 추천 점수" ,
+                nps."1번" ,
+                nps."2번" ,
+                nps."3번" ,
+                nps."4번" ,
+                nps."5번",
                 case
-                        when nps.""중립_개선점"" is not null then nps.""중립_개선점""
-                        when nps.""비추천_개선점"" is not null then nps.""비추천_개선점""
+                        when nps."중립_개선점" is not null then nps."중립_개선점"
+                        when nps."비추천_개선점" is not null then nps."비추천_개선점"
                         else '없음'
-                end as ""개선점"",
+                end as "개선점",
                 case
-                        when nps.""중립_선생님 변경 희망 여부"" in ('yes', 'yes_timechange') then nps.""중립_선생님 변경 희망 여부""
-                        when nps.""비추천_선생님 변경 희망 여부"" in ('yes', 'yes_timechange') then nps.""비추천_선생님 변경 희망 여부""
+                        when nps."중립_선생님 변경 희망 여부" in ('yes', 'yes_timechange') then nps."중립_선생님 변경 희망 여부"
+                        when nps."비추천_선생님 변경 희망 여부" in ('yes', 'yes_timechange') then nps."비추천_선생님 변경 희망 여부"
                         else 'X'
-                end as ""변경희망여부"",
+                end as "변경희망여부",
                 link.link,
                 glvt.tutoring_state,
                 glvt.lecture_subject_id ,
@@ -219,7 +219,7 @@ select glvt.group_lecture_vt_no ,
                     WHEN date_diff('hour', md.matchedat, ticket.update_datetime) < 24 THEN '통과'
                     when sch.schedule_state not in ('DONE') or sch.schedule_state is null then ''
                     ELSE '확인 필요'
-                        END AS ""위반""
+                        END AS "위반"
         from (select glvt.group_lecture_vt_no , glvt.active_timestamp , glvt.done_month , lvts.*
                             from glvt
                         left join lvts on glvt.lecture_vt_no = lvts.lecture_vt_no
