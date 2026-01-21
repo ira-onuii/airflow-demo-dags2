@@ -132,6 +132,7 @@ with
                         mlvt.matchedteacher.id as tutor_id
                                  from matching_mongodb.matching.matching_lvt mlvt
                                  where DATE_ADD('hour', 9, mlvt.matchedat) > cast ('2025-11-01 00:00:00' as timestamp)
+                                 AND DATE_ADD('hour', 9, mlvt.matchedat) < CAST('2026-01-21 00:00:00' AS timestamp)
                             )md on glvt.lecture_vt_no = md.lecture_id and glvt.active_timestamp < md.matchedat
                         left join t on md.tutor_id = t.user_no
                         ),
