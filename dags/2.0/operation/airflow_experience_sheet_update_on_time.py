@@ -9,14 +9,14 @@ from pendulum import timezone
 KST = timezone("Asia/Seoul")
 
 
-list_query = '''
--- 책임 수업 & 매칭 제도 대상자 추출
+list_query = '''-- 책임 수업 & 매칭 제도 대상자 추출
 with 
     glvt as (
             select glvt.group_lecture_vt_no,glvt.lecture_vt_no , glvt.active_timestamp , glvt.done_month ,glvt.done_timestamp,
                     LEAD(active_timestamp) OVER (PARTITION BY lecture_vt_no ORDER BY active_timestamp) AS next_active_timestamp
                     from data_warehouse.raw_data.group_lvt glvt
                     where glvt.active_timestamp >= timestamp '2025-11-01 00:00:00'
+                    and glvt.active_timestamp < timestamp '2026-01-21 00:00:00'  -- 🔧 active_timestamp 날짜 제한 추가
                 ),
     lvts as (
             select lvt.lecture_vt_no ,lvt.student_type, u.user_no, u.name,u.phone_number,u.email_id,s.parent_name ,s.parent_phone_number ,lvt.payment_item , lvt.application_datetime, lvt.tutoring_state, ttn.name as "subject",lvt.lecture_subject_id, lvt.total_subject_done_month
@@ -121,6 +121,11 @@ with
     matchingdata as (
             select glvt.group_lecture_vt_no, glvt.active_timestamp, glvt.lecture_vt_no
                                     ,row_number () over (partition by glvt.group_lecture_vt_no, md.tutor_id order by md.matchedat asc) as rn, md.*, t.t_name
+                                    -- 🔧 날짜 필터 플래그 추가
+                                    ,CASE 
+                                        WHEN md.matchedat >= CAST('2026-01-21 00:00:00' AS timestamp) THEN 'EXCLUDE'
+                                        ELSE NULL
+                                     END AS date_filter_flag
                     from glvt                
                         left join
                         (SELECT
@@ -131,7 +136,8 @@ with
                         mlvt.updatedat,
                         mlvt.matchedteacher.id as tutor_id
                                  from matching_mongodb.matching.matching_lvt mlvt
-                                 where DATE_ADD('hour', 9, mlvt.matchedat) > cast ('2025-11-01 00:00:00' as timestamp)
+                                 where DATE_ADD('hour', 9, mlvt.matchedat) >= cast ('2025-11-01 00:00:00' as timestamp)
+                                 -- 🔧 날짜 제한 제거 (모든 데이터 가져오기)
                             )md on glvt.lecture_vt_no = md.lecture_id and glvt.active_timestamp < md.matchedat
                         left join t on md.tutor_id = t.user_no
                         ),
@@ -234,6 +240,7 @@ select glvt.group_lecture_vt_no ,
         left join matchingdata md on glvt.group_lecture_vt_no = md.group_lecture_vt_no and md.tutor_id = sch.teacher_user_no and md.rn = 1
         left join ltvt on ltvt.group_lecture_vt_no = glvt.group_lecture_vt_no and ltvt.teacher_user_no = t.user_no
         left join ticket on glvt.lecture_vt_no = ticket.lecture_vt_no and ticket.tname = t.t_name
+        where (md.date_filter_flag IS NULL OR md.date_filter_flag != 'EXCLUDE')  -- 🔧 1/21 이후 매칭 데이터는 제외, NULL은 포함
         order by sch.create_datetime , glvt.lecture_vt_no asc
 '''
 
