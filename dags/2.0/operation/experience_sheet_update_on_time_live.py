@@ -1,3 +1,9 @@
+import sys
+import os
+
+# 현재 파일이 있는 디렉토리를 sys.path에 추가
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime, timedelta
