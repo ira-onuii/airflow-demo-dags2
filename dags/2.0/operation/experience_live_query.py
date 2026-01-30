@@ -814,8 +814,7 @@ select sch.lecture_vt_no,
             when sch.done_rank = 2 and sch.schedule_state = 'DONE' then '2'
             when sch.done_rank = 3 and sch.schedule_state = 'DONE' then '3'
         end as "회차",
-        glvt.phone_number as "학생 전화번호",
-        sch.update_datetime as "마치기 시점"
+        glvt.phone_number as "학생 전화번호"
 from (select glvt.group_lecture_vt_no , glvt.active_timestamp , glvt.done_month , lvts.*
                             from glvt
                         left join lvts on glvt.lecture_vt_no = lvts.lecture_vt_no
