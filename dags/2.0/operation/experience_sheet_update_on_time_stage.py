@@ -9,8 +9,7 @@ from pendulum import timezone
 KST = timezone("Asia/Seoul")
 
 
-list_query = '''
--- 책임 수업 & 매칭 제도 대상자 추출
+list_query = '''-- 책임 수업 & 매칭 제도 대상자 추출
 with 
     glvt as (
             select glvt.group_lecture_vt_no,glvt.lecture_vt_no , glvt.active_timestamp , glvt.done_month ,glvt.done_timestamp,
@@ -296,7 +295,6 @@ def update_google_sheet_query_result(dataframe):
 
 
 
-
 def run_query():
     from airflow.providers.trino.hooks.trino import TrinoHook
     query = list_query
@@ -324,11 +322,11 @@ default_args = {
 }
 
 with DAG(
-    dag_id='experience_query_google_sheet_update_dag_half',
+    dag_id='experience_query_google_sheet_update_dag_stage_on_time',
     default_args=default_args,
-    schedule_interval='30 18 * * *',  # 매주 토요일 오전 6시
+    schedule_interval='0 9,12,14,17 * * *',
     catchup=False,
-    tags=['2.0', 'operation', 'experience'],
+    tags=['2.0', 'operation', 'experience','stage'],
 ) as dag:
 
     upload_query_result = PythonOperator(
