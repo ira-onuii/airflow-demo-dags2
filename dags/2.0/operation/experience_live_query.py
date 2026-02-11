@@ -379,7 +379,7 @@ order by "제출일시" asc, create_datetime asc, lecture_vt_no asc
 
 
 operation_sheet_query = '''
--- 추출 쿼리
+-- 추출 쿼리 (0211 수정버전)
 with 
     glvt_all as (
         select
@@ -624,6 +624,8 @@ with
           and lv.email_id not like ('%@seoltab.test%')
           and (case when sn.schedule_state = 'DONE' then sn.update_datetime else null end) is not null
           and md.matchedat >= timestamp '2026-01-21 00:00:00'
+          and sn.create_datetime >= timestamp '2026-01-21 00:00:00'
+          and nm.create_at >= timestamp '2026-01-21 00:00:00'
     )
 select
     lecture_vt_no,
