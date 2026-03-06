@@ -18,7 +18,7 @@ KST = timezone("Asia/Seoul")
 
 raw_query = experience_live_query.raw_sheet_query
 monitoring_query = experience_live_query.monitoring_sheet_query
-operation_qeury = experience_live_query.operation_sheet_query
+
 
 
 # 구글 인증 설정
@@ -91,26 +91,7 @@ def update_monitoring_sheet_query_result(dataframe):
 
 
 
-def update_operation_sheet_query_result(dataframe):
-    opertation_df = dataframe.copy()
-    
-    # 전부 문자열로 변환 (Timestamp 포함)
-    opertation_df = opertation_df.astype(str)
 
-    # 결측/특수문자열을 빈칸으로 통일
-    opertation_df = opertation_df.replace({
-        "NaT": "",
-        "nan": "",
-        "NaN": "",
-        "None": "",
-        "<NA>": "",
-        "inf": "",
-        "-inf": "",
-    })
-
-    sheet = google_conn(sheet_name='[학생/학부모] 책임 매칭 제도')
-    #sheet.batch_clear(["B6:AI"])
-    sheet.update("B6:O", opertation_df.values.tolist(), value_input_option="USER_ENTERED")
 
 
 
@@ -132,13 +113,6 @@ def run_monitoring_query():
     return df
 
 
-def run_operation_query():
-    from airflow.providers.trino.hooks.trino import TrinoHook
-    query = operation_qeury
-    trino_hook = TrinoHook(trino_conn_id='trino_conn')
-    trino_engine = trino_hook.get_sqlalchemy_engine()
-    df = pd.read_sql(query, trino_engine)
-    return df
 
 
 
@@ -150,8 +124,7 @@ def update_raw_query_result():
 def update_monitoring_query_result():
     update_monitoring_sheet_query_result(dataframe=run_monitoring_query())
 
-def update_operation_query_result():
-    update_operation_sheet_query_result(dataframe=run_operation_query())
+
 
 
 
@@ -165,7 +138,7 @@ default_args = {
 }
 
 with DAG(
-    dag_id='experience_query_sheet_update_dag_live_on_time',
+    dag_id='experience_query_lecture_sheet_update_dag_live_on_time',
     default_args=default_args,
     schedule_interval='0 9,11,14,17 * * *',
     catchup=False,
@@ -186,13 +159,8 @@ with DAG(
         retry_delay=timedelta(seconds=2),
     )
 
-    upload_operation_query_result = PythonOperator(
-        task_id='upload_operation_query_result',
-        python_callable=update_operation_query_result,
-        retries=5,
-        retry_delay=timedelta(seconds=2),
-    )
+    
 
 
     
-    upload_raw_query_result >>  upload_monitoring_query_result >> upload_operation_query_result
+    upload_raw_query_result >>  upload_monitoring_query_result 

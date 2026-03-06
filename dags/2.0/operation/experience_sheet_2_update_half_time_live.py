@@ -103,7 +103,7 @@ default_args = {
 }
 
 with DAG(
-    dag_id='experience_query_sheet_2_update_dag_live_half_time',
+    dag_id='experience_query_matching_sheet_update_dag_live_half_time',
     default_args=default_args,
     schedule_interval='30 18 * * *',
     catchup=False,
