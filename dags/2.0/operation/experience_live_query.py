@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 date = str(((datetime.now()) + timedelta(hours=9)).strftime("%Y-%m-%d"))
 
 raw_sheet_query = '''
--- 책임 수업 & 매칭 제도 대상자 추출
+--0310 수정버전
 with 
     glvt_all as (
             select glvt.group_lecture_vt_no, glvt.lecture_vt_no, glvt.active_timestamp,
@@ -57,8 +57,9 @@ with
             ),
     nps as (
             select concat(cast(A.lecture_vt_no as varchar),'_',cast(A.tutor_user_id as varchar),'_',cast(A.cycle_count as varchar))as key_no,
-                    date_format(A.created_at + interval '9' hour, '%Y-%m-%d %H:%i:%s') as "제출일시"
-                    ,max(CASE WHEN A.key in ('"cycle01_01_hello"','"cycle02_01_ready"','"cycle03_01_ready"') THEN A.value END) AS "1번"
+                    date_format(A.created_at + interval '9' hour, '%Y-%m-%d %H:%i:%s') as "제출일시",
+                    A.created_at + interval '9' hour as created_at_kst,
+                    max(CASE WHEN A.key in ('"cycle01_01_hello"','"cycle02_01_ready"','"cycle03_01_ready"') THEN A.value END) AS "1번"
                     ,max(CASE WHEN A.key in ('"cycle01_02_promise"','"cycle02_02_question"','"cycle03_02_question"') THEN A.value END) AS "2번"
                     ,max(CASE WHEN A.key in ('"cycle01_03_question"','"cycle02_03_compliment"','"cycle03_03_compliment"') THEN A.value END) AS "3번"
                     ,max(CASE WHEN A.key in ('"cycle01_04_monthlyplan"','"cycle02_04_summary"','"cycle03_04_summary"') THEN A.value END) AS "4번"
@@ -83,7 +84,7 @@ with
                                                 ) nps_raw
                                 CROSS JOIN UNNEST(split_to_multimap(nps_raw.body_list_map, '",', ':')) map_keys(key, value)
                             ) A
-            group by A.lecture_vt_no,A.tutor_user_id,A.cycle_count,A.created_at
+            group by A.lecture_vt_no, A.tutor_user_id, A.cycle_count, A.created_at
             ),
     link as (
             select s.schedule_no, lvc.durations
@@ -176,6 +177,7 @@ left join lvts lv on sn.lecture_vt_no = lv.lecture_vt_no
 left join t on sn.teacher_user_no = t.teacher_user_no
 left join feedback fb on sn.schedule_no = fb.schedule_no
 left join nps on nps.key_no = fb.key_no
+    and nps.created_at_kst > sn.create_datetime
 left join link lk on lk.schedule_no = sn.schedule_no
 left join matchingdata md on nm.group_lecture_vt_no = md.group_lecture_vt_no
    and md.tutor_id = sn.teacher_user_no and md.rn = 1
@@ -191,7 +193,7 @@ order by "마치기 시점" asc, sn.create_datetime asc, sn.lecture_vt_no asc
 
 
 monitoring_sheet_query = '''
--- 추출 쿼리
+---0310 수정 버전
 with 
     glvt_all as (
             select glvt.group_lecture_vt_no,glvt.lecture_vt_no , glvt.active_timestamp,
@@ -249,6 +251,7 @@ with
             select
                     concat(cast(A.lecture_vt_no as varchar),'_',cast(A.tutor_user_id as varchar),'_',cast(A.cycle_count as varchar)) as key_no,
                     date_format(A.created_at + interval '9' hour, '%Y-%m-%d %H:%i:%s') as "제출일시",
+                    A.created_at + interval '9' hour as created_at_kst,
                     max(CASE WHEN A.key in ('"cycle01_01_hello"','"cycle02_01_ready"','"cycle03_01_ready"') THEN A.value END) AS "1번",
                     max(CASE WHEN A.key in ('"cycle01_02_promise"','"cycle02_02_question"','"cycle03_02_question"') THEN A.value END) AS "2번",
                     max(CASE WHEN A.key in ('"cycle01_03_question"','"cycle02_03_compliment"','"cycle03_03_compliment"') THEN A.value END) AS "3번",
@@ -354,6 +357,7 @@ with
                     left join t on sn.teacher_user_no = t.teacher_user_no
                     left join feedback fb on sn.schedule_no = fb.schedule_no
                     left join nps on nps.key_no = fb.key_no
+                        and nps.created_at_kst > sn.update_datetime
                     left join link lk on lk.schedule_no = sn.schedule_no
                     left join matchingdata md on nm.group_lecture_vt_no = md.group_lecture_vt_no
                        and md.tutor_id = sn.teacher_user_no and md.rn = 1
@@ -379,7 +383,7 @@ order by "제출일시" asc, create_datetime asc, lecture_vt_no asc
 
 
 operation_sheet_query = '''
--- 추출 쿼리 (0211 수정버전)
+--0310 수정버전
 with 
     glvt_all as (
         select
@@ -505,6 +509,7 @@ with
                 cast(A.cycle_count as varchar)
             ) as key_no,
             date_format(A.created_at + interval '9' hour, '%Y-%m-%d %H:%i:%s') as "제출일시",
+            A.created_at + interval '9' hour as created_at_kst,
             max(CASE WHEN A.key in ('"cycle01_01_hello"','"cycle02_01_ready"','"cycle03_01_ready"') THEN A.value END) AS "1번",
             max(CASE WHEN A.key in ('"cycle01_02_promise"','"cycle02_02_question"','"cycle03_02_question"') THEN A.value END) AS "2번",
             max(CASE WHEN A.key in ('"cycle01_03_question"','"cycle02_03_compliment"','"cycle03_03_compliment"') THEN A.value END) AS "3번",
@@ -615,6 +620,7 @@ with
             on sn.schedule_no = fb.schedule_no
         left join nps
             on nps.key_no = fb.key_no
+            and sn.update_datetime < nps.created_at_kst
         left join matchingdata md
             on nm.group_lecture_vt_no = md.group_lecture_vt_no
            and md.tutor_id = sn.teacher_user_no
