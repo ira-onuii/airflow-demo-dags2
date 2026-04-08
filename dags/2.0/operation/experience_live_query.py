@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 date = str(((datetime.now()) + timedelta(hours=9)).strftime("%Y-%m-%d"))
 
 raw_sheet_query = '''
---0310 수정버전
+---0407 수정버전
 with 
     glvt_all as (
             select glvt.group_lecture_vt_no, glvt.lecture_vt_no, glvt.active_timestamp,
@@ -161,12 +161,13 @@ select nm.group_lecture_vt_no,
             when nps."비추천_선생님 변경 희망 여부" in ('yes', 'yes_timechange') then nps."비추천_선생님 변경 희망 여부"
             else 'X'
         end as "변경희망여부",
-        md.matchedat,
+        -- ▼ md.matchedat 없을 경우 nm.create_at으로 폴백
+        COALESCE(md.matchedat, nm.create_at) as matchedat,
         nm.total_done_month,
         lk.durations,
         case
-            when date_diff('hour', md.matchedat, tk.update_datetime) >= 24 then '초과'
-            when date_diff('hour', md.matchedat, tk.update_datetime) < 24 then '통과'
+            when date_diff('hour', COALESCE(md.matchedat, nm.create_at), tk.update_datetime) >= 24 then '초과'
+            when date_diff('hour', COALESCE(md.matchedat, nm.create_at), tk.update_datetime) < 24 then '통과'
             when sn.schedule_state not in ('DONE') or sn.schedule_state is null then ''
             else '확인 필요'
         end as "위반",
@@ -187,13 +188,14 @@ where lv.name not like ('%테스트%')
   and lv.email_id not like ('%@seoltab.test%')
   and (case when sn.schedule_state in ('DONE') then sn.update_datetime else null end) is not null
   and sn.create_datetime >= timestamp '2026-01-21 00:00:00'
-  and md.matchedat >= timestamp '2026-01-21 00:00:00'
+  and COALESCE(md.matchedat, nm.create_at) >= timestamp '2026-01-21 00:00:00'
+  and sn.update_datetime >= timestamp '2026-03-24 00:00:00'
 order by "마치기 시점" asc, sn.create_datetime asc, sn.lecture_vt_no asc
 '''
 
 
 monitoring_sheet_query = '''
----0310 수정 버전
+--- 0407 쿼리
 with 
     glvt_all as (
             select glvt.group_lecture_vt_no,glvt.lecture_vt_no , glvt.active_timestamp,
@@ -339,18 +341,21 @@ with
                         when sn.schedule_state in ('CANCEL') then '취소'
                         else ' '
                     end as "회차",
-                    sn.schedule_state, sn.teacher_user_no, t.t_name, t.lecture_phone_number, lv.name, lv.subject, lv.tutoring_state,
+                    sn.schedule_state, sn.teacher_user_no, t.t_name, t.lecture_phone_number,
+                    lv.name,
+                    lv.subject, lv.tutoring_state,
                     case when sn.schedule_state = 'DONE' then sn.update_datetime else null end as "마치기 시점",
                     sn.tutoring_datetime, nps."제출일시", lk.link,
                     case 
-                        when date_diff('hour', md.matchedat, tk.update_datetime) >= 24 then '초과'
-                        when date_diff('hour', md.matchedat, tk.update_datetime) < 24 then '통과'
+                        when date_diff('hour', COALESCE(md.matchedat, nm.create_at), tk.update_datetime) >= 24 then '초과'
+                        when date_diff('hour', COALESCE(md.matchedat, nm.create_at), tk.update_datetime) < 24 then '통과'
                         when sn.schedule_state <> 'DONE' or sn.schedule_state is null then ''
                         else '확인 필요'
                     end as "위반",
                     sn.create_datetime,
                     nps."1번" as q1, nps."2번" as q2, nps."3번" as q3, nps."4번" as q4, nps."5번" as q5,
-                    md.matchedat
+                    COALESCE(md.matchedat, nm.create_at) as matchedat,
+                    sn.student_user_no  -- ▼ 추가
                     from ltvt_new_mapped nm
                     join sch_new sn on nm.lecture_teacher_vt_no = sn.lecture_teacher_vt_no
                     left join lvts lv on sn.lecture_vt_no = lv.lecture_vt_no
@@ -367,7 +372,7 @@ with
                         and lv.email_id not like ('%@seoltab.test%')
                         and (case when sn.schedule_state = 'DONE' then sn.update_datetime else null end) is not null
             )
-select lecture_vt_no, "회차", schedule_state, teacher_user_no, t_name, lecture_phone_number, name, subject as "과목명", tutoring_state, "마치기 시점", tutoring_datetime, "제출일시", link, "위반"
+select lecture_vt_no, "회차", schedule_state, teacher_user_no, t_name, lecture_phone_number, name as "학생 이름", subject as "과목명", tutoring_state, "마치기 시점", tutoring_datetime, "제출일시", link, student_user_no as "학생유저번호"
 from final_base
 where (
     (q1 is not null and TRY_CAST(q1 as integer) = 0)
@@ -378,12 +383,13 @@ where (
   )
   and create_datetime >= timestamp '2026-01-21 00:00:00'
   and matchedat >= timestamp '2026-01-21 00:00:00'
+  and "제출일시" >= '2026-03-24 00:00:00'
 order by "제출일시" asc, create_datetime asc, lecture_vt_no asc
 '''
 
 
 operation_sheet_query = '''
---0310 수정버전
+--0407 수정버전
 with 
     glvt_all as (
         select
@@ -608,7 +614,8 @@ with
             nps."3번" as q3,
             nps."4번" as q4,
             nps."5번" as q5,
-            md.matchedat
+            -- ▼ 수정: md.matchedat 없을 경우 nm.create_at 폴백
+            COALESCE(md.matchedat, nm.create_at) as matchedat
         from ltvt_new_mapped nm
         join sch_new sn
             on nm.lecture_teacher_vt_no = sn.lecture_teacher_vt_no
@@ -629,7 +636,8 @@ with
           and lv.phone_number not like ('%00000000%')
           and lv.email_id not like ('%@seoltab.test%')
           and (case when sn.schedule_state = 'DONE' then sn.update_datetime else null end) is not null
-          and md.matchedat >= timestamp '2026-01-21 00:00:00'
+          -- ▼ 수정: COALESCE 적용
+          and COALESCE(md.matchedat, nm.create_at) >= timestamp '2026-01-21 00:00:00'
           and sn.create_datetime >= timestamp '2026-01-21 00:00:00'
           and nm.create_at >= timestamp '2026-01-21 00:00:00'
     )
