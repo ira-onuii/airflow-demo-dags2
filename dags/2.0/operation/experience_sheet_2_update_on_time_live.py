@@ -67,7 +67,7 @@ def update_operation_sheet_query_result(dataframe):
 
     sheet = google_conn(sheet_name='[학생/학부모] 책임 매칭 제도')
     #sheet.batch_clear(["B6:AI"])
-    sheet.update("B6:O", opertation_df.values.tolist(), value_input_option="USER_ENTERED")
+    sheet.update("B6:Q", opertation_df.values.tolist(), value_input_option="USER_ENTERED")
 
 
 
