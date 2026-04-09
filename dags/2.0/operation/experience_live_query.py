@@ -189,207 +189,13 @@ where lv.name not like ('%테스트%')
   and (case when sn.schedule_state in ('DONE') then sn.update_datetime else null end) is not null
   and sn.create_datetime >= timestamp '2026-01-21 00:00:00'
   and COALESCE(md.matchedat, nm.create_at) >= timestamp '2026-01-21 00:00:00'
-  and sn.update_datetime >= timestamp '2026-03-24 00:00:00'
+  and sn.update_datetime >= timestamp '2026-03-14 00:00:00'
 order by "마치기 시점" asc, sn.create_datetime asc, sn.lecture_vt_no asc
 '''
 
 
-monitoring_sheet_query = '''
---- 0407 쿼리
-with 
-    glvt_all as (
-            select glvt.group_lecture_vt_no,glvt.lecture_vt_no , glvt.active_timestamp,
-                    LEAD(glvt.active_timestamp) OVER (PARTITION BY glvt.lecture_vt_no ORDER BY glvt.active_timestamp) AS next_active_timestamp
-                    from data_warehouse.raw_data.group_lvt glvt
-                ),
-    lvts as (
-            select lvt.lecture_vt_no, u.user_no, u.name, u.phone_number, u.email_id, s.parent_name, s.parent_phone_number, lvt.tutoring_state, ttn.name as subject, lvt.lecture_subject_id
-            from mysql.onuei.lecture_video_tutoring lvt
-            join mysql.onuei.user u on lvt.student_user_no = u.user_no
-            left join mysql.onuei.student s on lvt.student_user_no = s.user_no
-            left join mysql.onuei.term_taxonomy_name ttn on lvt.lecture_subject_id = ttn.term_taxonomy_id
-            where lvt.student_type not in ('CTEST')
-          ),
-    t as (
-            select te.user_no as teacher_user_no, ut.name as t_name, te.lecture_phone_number
-                    from mysql.onuei.teacher te
-                    left join mysql.onuei.user ut on te.user_no = ut.user_no 
-                    where te.seoltab_state is not null
-                    and te.lecture_phone_number not in ('01000000000','01099999999')
-            ),
-    ltvt_new_base as (
-            select ltvt.lecture_teacher_vt_no, ltvt.lecture_vt_no, ltvt.teacher_user_no, ltvt.teacher_vt_status, ltvt.total_done_month, ltvt.create_at
-                    from mysql.onuei.lecture_teacher_vt ltvt
-                    where ltvt.create_at >= timestamp '2026-01-21 00:00:00'
-            ),
-    ltvt_new_mapped as (
-            select g.group_lecture_vt_no, g.active_timestamp, g.next_active_timestamp, nb.lecture_teacher_vt_no, nb.lecture_vt_no, nb.teacher_user_no, nb.teacher_vt_status, nb.total_done_month, nb.create_at
-                    from ltvt_new_base nb
-                    join glvt_all g on nb.lecture_vt_no = g.lecture_vt_no
-                       and nb.create_at >= g.active_timestamp
-                       and (g.next_active_timestamp is null or nb.create_at < g.next_active_timestamp)
-            ),
-    sch_new as (
-            select * from (
-                select nm.group_lecture_vt_no, nm.lecture_teacher_vt_no, lvs.lecture_vt_no, lvs.schedule_no, lvs.create_datetime, lvs.tutoring_datetime, lvs.update_datetime, lvs.schedule_state, sf.teacher_user_no, sf.follow_no, lvs.lecture_cycle_no, sf.student_user_no,
-                        ROW_NUMBER() OVER (PARTITION BY nm.lecture_teacher_vt_no ORDER BY lvs.create_datetime ASC, lvs.schedule_no ASC) AS schedule_rank,
-                        SUM(CASE WHEN lvs.schedule_state = 'DONE' THEN 1 ELSE 0 END)
-                            OVER (PARTITION BY nm.lecture_teacher_vt_no ORDER BY lvs.create_datetime ASC, lvs.schedule_no ASC) AS done_rank
-                        from ltvt_new_mapped nm
-                        join mysql.onuei.lecture_vt_schedules lvs on nm.lecture_vt_no = lvs.lecture_vt_no 
-                            and lvs.create_datetime >= nm.create_at
-                        join mysql.onuei.student_follow sf on lvs.follow_no = sf.follow_no
-                           and sf.teacher_user_no = nm.teacher_user_no
-            ) x
-            where schedule_rank <= 4
-        ),
-    feedback as (
-            select concat(cast(lsf.lecture_vt_no as varchar),'_',cast(lsf.teacher_id as varchar),'_',cast(lsf.feedback_cycle as varchar))as key_no, lsf.schedule_no
-                    from mysql.onuei.lecture_student_feedback lsf 
-                    where lsf.created_at >= timestamp '2025-11-01 00:00:00'
-                    and feedback_cycle <= 3
-            ),
-    nps as (
-            select
-                    concat(cast(A.lecture_vt_no as varchar),'_',cast(A.tutor_user_id as varchar),'_',cast(A.cycle_count as varchar)) as key_no,
-                    date_format(A.created_at + interval '9' hour, '%Y-%m-%d %H:%i:%s') as "제출일시",
-                    A.created_at + interval '9' hour as created_at_kst,
-                    max(CASE WHEN A.key in ('"cycle01_01_hello"','"cycle02_01_ready"','"cycle03_01_ready"') THEN A.value END) AS "1번",
-                    max(CASE WHEN A.key in ('"cycle01_02_promise"','"cycle02_02_question"','"cycle03_02_question"') THEN A.value END) AS "2번",
-                    max(CASE WHEN A.key in ('"cycle01_03_question"','"cycle02_03_compliment"','"cycle03_03_compliment"') THEN A.value END) AS "3번",
-                    max(CASE WHEN A.key in ('"cycle01_04_monthlyplan"','"cycle02_04_summary"','"cycle03_04_summary"') THEN A.value END) AS "4번",
-                    max(CASE WHEN A.key in ('"cycle01_05_respect"','"cycle02_05_respect"','"cycle03_05_respect"') THEN A.value END) AS "5번",
-                    max(CASE WHEN A.key in ('"cyMj2Q5EbCE2gOZPuvJs"','"SbXI6fGKqJeuGagtJFqU"','"9qiFkIjQ4ztJE5vyy0rY"') THEN A.value END) AS "선생님 추천 점수",
-                    max(CASE WHEN A.key in ('"V3m8LmkMKv265jK0gqGR"','"CO6txyeWj4VL8EQIrkgd"','"WuBLJuA2fRJPHxfp0W3i"') THEN A.value END) AS "중립_개선점",
-                    max(CASE WHEN A.key in ('"cycle01_under_8_change_tutor"','"cycle02_under_8_change_tutor"','"cycle03_under_8_change_tutor"') THEN A.value END) AS "중립_선생님 변경 희망 여부",
-                    max(CASE WHEN A.key in ('"y6SQ8lSRfrrhzusiamMo"','"dKuaT9i0aX76oV3wbr6C"','"30y5Fl6sTpwI38EVY41g"') THEN A.value END) AS "비추천_개선점",
-                    max(CASE WHEN A.key in ('"cycle01_under_6_change_tutor"','"cycle02_under_6_change_tutor"','"cycle03_under_6_change_tutor"') THEN A.value END) AS "비추천_선생님 변경 희망 여부"
-            from (
-                    select
-                            lecture_vt_no,
-                            cycle_count,
-                            created_at,
-                            tutor_user_id,
-                            student_user_id,
-                            replace(replace(concat_ws('',map_keys.key),'{',''),'}','') as key,
-                            replace(replace(replace(concat_ws('',map_keys.value),'{',''),'}',''),'"','') as value
-                    from (
-                            select *
-                            from (
-                                    select
-                                            row_number() over(
-                                                partition by sf.lecture_vt_no, sf.tutor_user_id, sf.cycle_count
-                                                order by sf.created_at desc
-                                            ) as rn,
-                                            sf.*
-                                    from marketing_scylladb.marketing_mbti.student_feedback_projects sf
-                                    where sf.created_at > timestamp '2025-11-01 00:00:00'
-                                      and sf.cycle_count <= 3
-                            ) sf
-                            where sf.rn = 1
-                    ) nps_raw
-                    CROSS JOIN UNNEST(split_to_multimap(nps_raw.body_list_map, '",', ':')) map_keys(key, value)
-            ) A
-            group by A.lecture_vt_no, A.tutor_user_id, A.cycle_count, A.created_at
-    ),
-    link as ( 
-            select s.schedule_no,
-                    concat('https://app.pagecall.net/replay/',
-                        trim(cast(lvc.page_call_room_id as varchar)),
-                        '?access_token=',
-                        trim(cast(lt.pagecall_access_token as varchar)),
-                        '&debug=1') as link,
-                    lvc.durations
-                    from sch_new s
-                left join mysql.onuei.lecture_vt_cycles lvc on s.lecture_cycle_no = lvc.lecture_cycle_no
-                left join mysql.onuei.lecture_tutor lt on lt.user_no = s.teacher_user_no
-            ),
-    matchingdata as (
-            select g.group_lecture_vt_no, g.lecture_vt_no, md.tutor_id, md.matchedat,
-                    ROW_NUMBER() OVER (PARTITION BY g.group_lecture_vt_no, md.tutor_id ORDER BY md.matchedat ASC) AS rn
-                    from glvt_all g
-                    left join (
-                        select mlvt.lectures[1].id AS lecture_id,
-                               date_add('hour', 9, mlvt.matchedat) as matchedat,
-                               mlvt.matchedteacher.id as tutor_id
-                                 from matching_mongodb.matching.matching_lvt mlvt
-                                 where date_add('hour', 9, mlvt.matchedat) >= timestamp '2026-01-21 00:00:00'
-                        ) md on g.lecture_vt_no = md.lecture_id and g.active_timestamp < md.matchedat
-            ),
-    ticket as (
-            select * from (
-                select cst.lecture_vt_no, cst.update_datetime, substr(cst.content, 34, 3) as tname,
-                       row_number() over (partition by cst.lecture_vt_no, substr(cst.content, 34, 3) order by cst.update_datetime desc) as rn
-                from mysql.onuei.customer_service_ticket cst 
-                where cst.update_datetime > timestamp '2025-11-01 00:00:00'
-                  and cst.content like ('%첫 메시지 도착%')
-            ) sub
-            where rn = 1
-            ),
-    final_base as (
-            select sn.lecture_vt_no,
-                    case
-                        when sn.done_rank = 0 and sn.schedule_state in ('RESERVATION','CONTRACT') then '첫 수업 전'
-                        when sn.done_rank = 1 and sn.schedule_state in ('DONE') then '1회차 완료'
-                        when sn.done_rank = 1 and sn.schedule_state in ('RESERVATION') then '2회차 전'
-                        when sn.done_rank = 2 and sn.schedule_state in ('DONE') then '2회차 완료'
-                        when sn.done_rank = 2 and sn.schedule_state in ('RESERVATION') then '3회차 전'
-                        when sn.done_rank = 3 and sn.schedule_state in ('DONE') then '3회차 완료'
-                        when sn.done_rank = 3 and sn.schedule_state not in ('DONE') then '종료'
-                        when sn.done_rank >= 4 then '종료'
-                        when sn.schedule_state in ('TUTORING') then '수업 중'
-                        when sn.schedule_state in ('CANCEL') then '취소'
-                        else ' '
-                    end as "회차",
-                    sn.schedule_state, sn.teacher_user_no, t.t_name, t.lecture_phone_number,
-                    lv.name,
-                    lv.subject, lv.tutoring_state,
-                    case when sn.schedule_state = 'DONE' then sn.update_datetime else null end as "마치기 시점",
-                    sn.tutoring_datetime, nps."제출일시", lk.link,
-                    case 
-                        when date_diff('hour', COALESCE(md.matchedat, nm.create_at), tk.update_datetime) >= 24 then '초과'
-                        when date_diff('hour', COALESCE(md.matchedat, nm.create_at), tk.update_datetime) < 24 then '통과'
-                        when sn.schedule_state <> 'DONE' or sn.schedule_state is null then ''
-                        else '확인 필요'
-                    end as "위반",
-                    sn.create_datetime,
-                    nps."1번" as q1, nps."2번" as q2, nps."3번" as q3, nps."4번" as q4, nps."5번" as q5,
-                    COALESCE(md.matchedat, nm.create_at) as matchedat,
-                    sn.student_user_no  -- ▼ 추가
-                    from ltvt_new_mapped nm
-                    join sch_new sn on nm.lecture_teacher_vt_no = sn.lecture_teacher_vt_no
-                    left join lvts lv on sn.lecture_vt_no = lv.lecture_vt_no
-                    left join t on sn.teacher_user_no = t.teacher_user_no
-                    left join feedback fb on sn.schedule_no = fb.schedule_no
-                    left join nps on nps.key_no = fb.key_no
-                        and nps.created_at_kst > sn.update_datetime
-                    left join link lk on lk.schedule_no = sn.schedule_no
-                    left join matchingdata md on nm.group_lecture_vt_no = md.group_lecture_vt_no
-                       and md.tutor_id = sn.teacher_user_no and md.rn = 1
-                    left join ticket tk on sn.lecture_vt_no = tk.lecture_vt_no and tk.tname = t.t_name
-                    where lv.name not like ('%테스트%')
-                        and lv.phone_number not like ('%00000000%')
-                        and lv.email_id not like ('%@seoltab.test%')
-                        and (case when sn.schedule_state = 'DONE' then sn.update_datetime else null end) is not null
-            )
-select lecture_vt_no, "회차", schedule_state, teacher_user_no, t_name, lecture_phone_number, name as "학생 이름", subject as "과목명", tutoring_state, "마치기 시점", tutoring_datetime, "제출일시", link, student_user_no as "학생유저번호"
-from final_base
-where (
-    (q1 is not null and TRY_CAST(q1 as integer) = 0)
-    or (q2 is not null and TRY_CAST(q2 as integer) = 0)
-    or (q3 is not null and TRY_CAST(q3 as integer) = 0)
-    or (q4 is not null and TRY_CAST(q4 as integer) = 0)
-    or (q5 is not null and TRY_CAST(q5 as integer) = 0)
-  )
-  and create_datetime >= timestamp '2026-01-21 00:00:00'
-  and matchedat >= timestamp '2026-01-21 00:00:00'
-  and "제출일시" >= '2026-03-24 00:00:00'
-order by "제출일시" asc, create_datetime asc, lecture_vt_no asc
-'''
-
-
 operation_sheet_query = '''
---0407 수정버전
+--0409 수정버전
 with 
     glvt_all as (
         select
@@ -576,6 +382,11 @@ with
             on g.lecture_vt_no = md.lecture_id
            and g.active_timestamp < md.matchedat
     ),
+    memo_fallback as (
+        select distinct mlvt.lectures[1].id as lecture_vt_no
+        from matching_mongodb.matching.matching_lvt mlvt
+        where mlvt.memo like '%다중%' or mlvt.memo like '%보너스%'
+    ),
     final_base as (
         select
             sn.lecture_vt_no,
@@ -614,8 +425,70 @@ with
             nps."3번" as q3,
             nps."4번" as q4,
             nps."5번" as q5,
-            -- ▼ 수정: md.matchedat 없을 경우 nm.create_at 폴백
-            COALESCE(md.matchedat, nm.create_at) as matchedat
+            case
+                when md.matchedat is not null then md.matchedat
+                when mf.lecture_vt_no is not null then nm.create_at
+                else null
+            end as matchedat,
+            -- ▼ 추가: 아니오 여부 (회차별 0인 항목 개수)
+            case
+                when sn.done_rank = 1 and sn.schedule_state = 'DONE' then
+                    (case when try_cast(nps."1번" as integer) = 0 then 1 else 0 end) +
+                    (case when try_cast(nps."2번" as integer) = 0 then 1 else 0 end) +
+                    (case when try_cast(nps."3번" as integer) = 0 then 1 else 0 end) +
+                    (case when try_cast(nps."4번" as integer) = 0 then 1 else 0 end) +
+                    (case when try_cast(nps."5번" as integer) = 0 then 1 else 0 end)
+                when sn.done_rank = 2 and sn.schedule_state = 'DONE' then
+                    (case when try_cast(nps."1번" as integer) = 0 then 1 else 0 end) +
+                    (case when try_cast(nps."2번" as integer) = 0 then 1 else 0 end) +
+                    (case when try_cast(nps."3번" as integer) = 0 then 1 else 0 end) +
+                    (case when try_cast(nps."4번" as integer) = 0 then 1 else 0 end) +
+                    (case when try_cast(nps."5번" as integer) = 0 then 1 else 0 end)
+                when sn.done_rank = 3 and sn.schedule_state = 'DONE' then
+                    (case when try_cast(nps."1번" as integer) = 0 then 1 else 0 end) +
+                    (case when try_cast(nps."2번" as integer) = 0 then 1 else 0 end) +
+                    (case when try_cast(nps."3번" as integer) = 0 then 1 else 0 end) +
+                    (case when try_cast(nps."4번" as integer) = 0 then 1 else 0 end) +
+                    (case when try_cast(nps."5번" as integer) = 0 then 1 else 0 end)
+                else null
+            end as "아니오 여부",
+            -- ▼ 추가: 아니오 체크 항목 (회차별 0인 키의 텍스트, 없으면 '해당 없음')
+            case
+                when sn.done_rank = 1 and sn.schedule_state = 'DONE' then
+                    coalesce(
+                        nullif(concat_ws(', ',
+                            case when try_cast(nps."1번" as integer) = 0 then '첫 수업 전 인사' end,
+                            case when try_cast(nps."2번" as integer) = 0 then '질문하는수업 약속' end,
+                            case when try_cast(nps."3번" as integer) = 0 then '질문하는 수업 진행' end,
+                            case when try_cast(nps."4번" as integer) = 0 then '학생 맞춤형 학습 계획 설정' end,
+                            case when try_cast(nps."5번" as integer) = 0 then '존중하는 태도' end
+                        ), ''),
+                        '해당 없음'
+                    )
+                when sn.done_rank = 2 and sn.schedule_state = 'DONE' then
+                    coalesce(
+                        nullif(concat_ws(', ',
+                            case when try_cast(nps."1번" as integer) = 0 then '수업 준비 태도' end,
+                            case when try_cast(nps."2번" as integer) = 0 then '질문하는 수업 진행' end,
+                            case when try_cast(nps."3번" as integer) = 0 then '선생님의 칭찬' end,
+                            case when try_cast(nps."4번" as integer) = 0 then '수업 마무리 정리' end,
+                            case when try_cast(nps."5번" as integer) = 0 then '존중하는 태도' end
+                        ), ''),
+                        '해당 없음'
+                    )
+                when sn.done_rank = 3 and sn.schedule_state = 'DONE' then
+                    coalesce(
+                        nullif(concat_ws(', ',
+                            case when try_cast(nps."1번" as integer) = 0 then '수업 준비 태도' end,
+                            case when try_cast(nps."2번" as integer) = 0 then '질문하는 수업 진행' end,
+                            case when try_cast(nps."3번" as integer) = 0 then '선생님의 칭찬' end,
+                            case when try_cast(nps."4번" as integer) = 0 then '수업 마무리 정리' end,
+                            case when try_cast(nps."5번" as integer) = 0 then '존중하는 태도' end
+                        ), ''),
+                        '해당 없음'
+                    )
+                else null
+            end as "아니오 체크 항목"
         from ltvt_new_mapped nm
         join sch_new sn
             on nm.lecture_teacher_vt_no = sn.lecture_teacher_vt_no
@@ -627,17 +500,23 @@ with
             on sn.schedule_no = fb.schedule_no
         left join nps
             on nps.key_no = fb.key_no
-            and sn.update_datetime < nps.created_at_kst
+           and sn.update_datetime < nps.created_at_kst
         left join matchingdata md
             on nm.group_lecture_vt_no = md.group_lecture_vt_no
            and md.tutor_id = sn.teacher_user_no
            and md.rn = 1
+        left join memo_fallback mf
+            on nm.lecture_vt_no = mf.lecture_vt_no
+           and md.matchedat is null
         where lv.name not like ('%테스트%')
           and lv.phone_number not like ('%00000000%')
           and lv.email_id not like ('%@seoltab.test%')
           and (case when sn.schedule_state = 'DONE' then sn.update_datetime else null end) is not null
-          -- ▼ 수정: COALESCE 적용
-          and COALESCE(md.matchedat, nm.create_at) >= timestamp '2026-01-21 00:00:00'
+          and case
+                  when md.matchedat is not null then md.matchedat
+                  when mf.lecture_vt_no is not null then nm.create_at
+                  else null
+              end >= timestamp '2026-01-21 00:00:00'
           and sn.create_datetime >= timestamp '2026-01-21 00:00:00'
           and nm.create_at >= timestamp '2026-01-21 00:00:00'
     )
@@ -655,7 +534,9 @@ select
     parent_phone_number,
     subject,
     score_num as "선생님 추천 점수",
-    "변경희망여부" as "변경 희망 여부"
+    "변경희망여부" as "변경 희망 여부",
+    "아니오 여부",
+    "아니오 체크 항목"
 from final_base
 where (
     score_num <= 7
